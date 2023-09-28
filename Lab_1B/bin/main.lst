@@ -89,78 +89,82 @@ Freescale HC12-Assembler
    77   77                      
    78   78   000000 16xx xx     main: jsr SETUP ; jump to SETUP subroutine
    79   79                            
-   80   80                            
-   81   81                            
-   82   82   000003 1C02 5810   test: bset PORTP, G_LED
-   83   83   000007 16xx xx           jsr DELAY
-   84   84   00000A 1D02 5810         bclr PORTP, G_LED
-   85   85   00000E 16xx xx           jsr DELAY
-   86   86   000011 1C02 5820         bset PORTP, R_LED
-   87   87   000015 16xx xx           jsr DELAY
-   88   88   000018 1D02 5820         bclr PORTP, R_LED
-   89   89   00001C 16xx xx           jsr DELAY
-   90   90   00001F 1C02 5810         bset PORTP, G_LED
-   91   91   000023 1C02 5820         bset PORTP, R_LED
-   92   92   000027 16xx xx           jsr DELAY
-   93   93   00002A 1D02 5810         bclr PORTP, G_LED
-   94   94   00002E 1D02 5820         bclr PORTP, R_LED
-   95   95   000032 16xx xx           jsr DELAY
-   96   96   000035 20CC              bra test
-   97   97                      
-   98   98                      
-   99   99                      ;/------------------------------------------------------------------------------------\
-  100  100                      ;| Subroutines                                                                        |
-  101  101                      ;\------------------------------------------------------------------------------------/
-  102  102                      ; General purpose subroutines go here
-  103  103                      
-  104  104                      ;-----------Delay-----------------------------------------------------------------
-  105  105                      DELAY:
-  106  106   000037 B602 40       ldaa PORTT ; (3) load 8-bit DELAY_CNT from PORTT
-  107  107   00003A 7Axx xx       staa DELAY_CNT ; (3)
-  108  108                      OUTER: ; outer loop
-  109  109   00003D B6xx xx       ldaa DELAY_CNT ; (3)
-  110  110   000040 8100          cmpa #0 ; (1)
-  111  111   000042 2717          beq EXIT ; (1)
-  112  112   000044 73xx xx       dec DELAY_CNT ; (4)
-  113  113   000047 CE00 05       ldx #$0005 ; (2)
-  114  114                      MIDDLE: ; middle loop
-  115  115   00004A 8E00 00       cpx #0 ; (2)
-  116  116   00004D 27EE          beq OUTER ; (1)
-  117  117   00004F 09            dex ; (1)
-  118  118   000050 CD77 10       ldy #$7710 ; (2)
-  119  119                      INNER: ; inner loop
-  120  120   000053 8D00 00       cpy #0 ; (2)
-  121  121   000056 27F2          beq MIDDLE ; (1)
-  122  122   000058 03            dey ; (1)
-  123  123   000059 20F8          bra INNER ; (3)
-  124  124                      EXIT:
-  125  125   00005B 3D            rts ; (5) exit DELAY
-  126  126                        
-  127  127                      SETUP:
-  128  128                        ; setup IO ports
+   80   80   000003 1C02 5810   eee: bset PORTP, G_LED
+   81   81   000007 16xx xx           jsr DELAY
+   82   82   00000A 1D02 5810         bclr PORTP, G_LED
+   83   83   00000E 16xx xx           jsr DELAY  
+   84   84   000011 20F0              bra eee    
+   85   85                            
+   86   86   000013 1C02 5810   test: bset PORTP, G_LED
+   87   87   000017 16xx xx           jsr DELAY
+   88   88   00001A 1D02 5810         bclr PORTP, G_LED
+   89   89   00001E 16xx xx           jsr DELAY
+   90   90   000021 1C02 5820         bset PORTP, R_LED
+   91   91   000025 16xx xx           jsr DELAY
+   92   92   000028 1D02 5820         bclr PORTP, R_LED
+   93   93   00002C 16xx xx           jsr DELAY
+   94   94   00002F 1C02 5810         bset PORTP, G_LED
+   95   95   000033 1C02 5820         bset PORTP, R_LED
+   96   96   000037 16xx xx           jsr DELAY
+   97   97   00003A 1D02 5810         bclr PORTP, G_LED
+   98   98   00003E 1D02 5820         bclr PORTP, R_LED
+   99   99   000042 16xx xx           jsr DELAY
+  100  100   000045 20CC              bra test
+  101  101                      
+  102  102                      
+  103  103                      ;/------------------------------------------------------------------------------------\
+  104  104                      ;| Subroutines                                                                        |
+  105  105                      ;\------------------------------------------------------------------------------------/
+  106  106                      ; General purpose subroutines go here
+  107  107                      
+  108  108                      ;-----------Delay-----------------------------------------------------------------
+  109  109                      DELAY:
+  110  110   000047 B602 40       ldaa PORTT ; (3) load 8-bit DELAY_CNT from PORTT
+  111  111   00004A 7Axx xx       staa DELAY_CNT ; (3)
+  112  112                      OUTER: ; outer loop
+  113  113   00004D B6xx xx       ldaa DELAY_CNT ; (3)
+  114  114   000050 8100          cmpa #0 ; (1)
+  115  115   000052 2717          beq EXIT ; (1)
+  116  116   000054 73xx xx       dec DELAY_CNT ; (4)
+  117  117   000057 CE00 05       ldx #$0005 ; (2)
+  118  118                      MIDDLE: ; middle loop
+  119  119   00005A 8E00 00       cpx #0 ; (2)
+  120  120   00005D 27EE          beq OUTER ; (1)
+  121  121   00005F 09            dex ; (1)
+  122  122   000060 CD77 10       ldy #$7710 ; (2)
+  123  123                      INNER: ; inner loop
+  124  124   000063 8D00 00       cpy #0 ; (2)
+  125  125   000066 27F2          beq MIDDLE ; (1)
+  126  126   000068 03            dey ; (1)
+  127  127   000069 20F8          bra INNER ; (3)
+  128  128                      EXIT:
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  129  129   00005C 7902 42       clr DDRT ; set PORTT to input
-  130  130   00005F 1D02 5830     bclr PORTP, LED_MSK ; initialize LEDs to off
-  131  131   000063 1C02 5A30     bset DDRP,LED_MSK ; set LED pins to output
-  132  132   000067 3D            rts ; exit SETUP
-  133  133                      
-  134  134                      
-  135  135                      ;/------------------------------------------------------------------------------------\
-  136  136                      ;| ASCII Messages and Constant Data                                                   |
-  137  137                      ;\------------------------------------------------------------------------------------/
-  138  138                      ; Any constants can be defined here
-  139  139                      
-  140  140                      
-  141  141                      ;/------------------------------------------------------------------------------------\
-  142  142                      ;| Vectors                                                                            |
-  143  143                      ;\------------------------------------------------------------------------------------/
-  144  144                      ; Add interrupt and reset vectors here
-  145  145                      
-  146  146                              ORG   $FFFE                    ; reset vector address
-  147  147  a00FFFE xxxx                DC.W  Entry
-  148  148                      
+  129  129   00006B 3D            rts ; (5) exit DELAY
+  130  130                        
+  131  131                      SETUP:
+  132  132                        ; setup IO ports
+  133  133   00006C 7902 42       clr DDRT ; set PORTT to input
+  134  134   00006F 1D02 5830     bclr PORTP, LED_MSK ; initialize LEDs to off
+  135  135   000073 1C02 5A30     bset DDRP,LED_MSK ; set LED pins to output
+  136  136   000077 3D            rts ; exit SETUP
+  137  137                      
+  138  138                      
+  139  139                      ;/------------------------------------------------------------------------------------\
+  140  140                      ;| ASCII Messages and Constant Data                                                   |
+  141  141                      ;\------------------------------------------------------------------------------------/
+  142  142                      ; Any constants can be defined here
+  143  143                      
+  144  144                      
+  145  145                      ;/------------------------------------------------------------------------------------\
+  146  146                      ;| Vectors                                                                            |
+  147  147                      ;\------------------------------------------------------------------------------------/
+  148  148                      ; Add interrupt and reset vectors here
+  149  149                      
+  150  150                              ORG   $FFFE                    ; reset vector address
+  151  151  a00FFFE xxxx                DC.W  Entry
+  152  152                      

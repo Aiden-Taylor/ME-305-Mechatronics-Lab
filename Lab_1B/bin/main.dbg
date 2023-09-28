@@ -77,7 +77,11 @@ MyCode:       SECTION
 
 main: jsr SETUP ; jump to SETUP subroutine
       
-      
+eee: bset PORTP, G_LED
+      jsr DELAY
+      bclr PORTP, G_LED
+      jsr DELAY  
+      bra eee    
       
 test: bset PORTP, G_LED
       jsr DELAY
