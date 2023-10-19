@@ -28,9 +28,30 @@ clr COUNT
 __________________________________________________________________________________
 t1state1: ;
 
-;first get the character that has been input 
-        jsr GETCHAR               ;load accumulator b with the keypad input 
-        ldab KEY_BUFF
+;check if its F1
+
+ldaa KEY_BUFF                               ;load accumulator a with F1 
+cmpa $F1
+bne skipF1
+movb #$____ , t1state
+rts
+skipF1:  
+
+;check if its F2
+                          
+cmpa $F2
+bne skipF2
+movb #$____ , t1state                       ;set the state to the appropriate number 
+rts
+skipF2: 
+
+;check if its a digit 
+
+cmpa $F1
+bne skipF1
+movb #$____ , t1state
+rts
+skipF1: 
 
 
 
