@@ -1,0 +1,77 @@
+;-------------TASK_1 MASTERMIND ---------------------------------------------------------
+
+TASK_1: ldaa t1state ; get current t1state and branch accordingly
+        beq t1state0
+        deca
+        beq t1state1
+        deca
+        beq t1state2
+        deca
+        beq t1state3
+        deca
+        beq t1state4
+        deca
+        beq t1state5
+        deca
+        beq t1state6
+        rts ; undefined state - do nothing but return
+__________________________________________________________________________________
+t1state0: ; init TASK_1
+
+;clear all of the flags 
+
+clr COUNT 
+
+
+        movb #$01, t1state ; set next state
+        rts
+__________________________________________________________________________________
+t1state1: ;
+
+;first get the character that has been input 
+        jsr GETCHAR               ;load accumulator b with the keypad input 
+        ldab KEY_BUFF
+
+
+
+
+
+
+
+movb #$02, t1state ; otherwise if done, set next state
+        exit_t1s1:
+        rts
+___________________________________________________________________________________
+
+t1state2: ;Digit Handler 
+;checks if we should proceed with the digit handler state 
+        tst F1_FLG  
+        beq exit_t1s2 ;
+        tst F2_FLG 
+        beq exit_t1s2 ;
+;now proceed with the digit handler
+   
+       ldy #BUFFER
+       
+  input_loop: 
+ 
+       ldaa COUNT              ;load accumulator a with the value of COUNT 
+       cmpa #$05               ;accumulator a - $5    check if COUNT is 5 
+       beq input_exit          ;if count is 5 then we are done and exit the loop 
+           
+       cmpb #$39               ;accumulator b - $39    check if input is a number 
+       bgt input_loop         ;if input is not a number, go to the top of the loop 
+       
+       stab a, y               ;load the contents of accumulator b into buffer 
+       jsr OUTCHAR             ;display the input charater on the LCD 
+       
+       inc COUNT               ;increment count 
+       bra input_loop         ;branch back to the top of the loop 
+
+
+
+movb #$03, t1state ; set next state
+        exit_t1s2:
+        rts
+________________________________________________________________________________________
+t1state3: ;
