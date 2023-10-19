@@ -31,7 +31,7 @@ t1state1: ;
 ;check if its F1
 
 ldaa KEY_BUFF                               ;load accumulator a with F1 
-cmpa $F1
+cmpb $F1
 bne skipF1
 movb #$____ , t1state
 rts
@@ -39,7 +39,7 @@ skipF1:
 
 ;check if its F2
                           
-cmpa $F2
+cmpb $F2
 bne skipF2
 movb #$____ , t1state                       ;set the state to the appropriate number 
 rts
@@ -47,11 +47,11 @@ skipF2:
 
 ;check if its a digit 
 
-cmpa $F1
-bne skipF1
-movb #$____ , t1state
+cmpb #$39
+bne skipDIGIT
+movb #$____ , t1state                       ;set the state to the appropriate number
 rts
-skipF1: 
+skipDIGIT: 
 
 
 
