@@ -1,0 +1,177 @@
+;**************************************************************************************
+;* PS3 main [includes LibV2.2]                                                        *
+;**************************************************************************************
+;* Summary:                                                                           *
+;*   Code for ME 305 PS3                                                              *
+;*                                                                                    *
+;* Author: Aiden Taylor                                                               *
+;*   Cal Poly University                                                              *
+;*   Fall 2023                                                                        *
+;*                                                                                    *
+;* Revision History:                                                                  *
+;*   -                                                                                *
+;*                                                                                    *
+;* ToDo:                                                                              *
+;*   -                                                                                *
+;**************************************************************************************
+
+;/------------------------------------------------------------------------------------\
+;| Include all associated files                                                       |
+;\------------------------------------------------------------------------------------/
+; The following are external files to be included during assembly
+
+
+;/------------------------------------------------------------------------------------\
+;| External Definitions                                                               |
+;\------------------------------------------------------------------------------------/
+; All labels that are referenced by the linker need an external definition
+
+              XDEF  main
+
+;/------------------------------------------------------------------------------------\
+;| External References                                                                |
+;\------------------------------------------------------------------------------------/
+; All labels from other files must have an external reference
+
+              XREF ENABLE_MOTOR, DISABLE_MOTOR
+              XREF STARTUP_MOTOR, UPDATE_MOTOR, CURRENT_MOTOR
+              XREF STARTUP_PWM, STARTUP_ATD0, STARTUP_ATD1
+              XREF OUTDACA, OUTDACB
+              XREF STARTUP_ENCODER, READ_ENCODER
+              XREF INITLCD, SETADDR, GETADDR, CURSOR_ON, CURSOR_OFF, DISP_OFF
+              XREF OUTCHAR, OUTCHAR_AT, OUTSTRING, OUTSTRING_AT
+              XREF INITKEY, LKEY_FLG, GETCHAR
+              XREF LCDTEMPLATE, UPDATELCD_L1, UPDATELCD_L2
+              XREF LVREF_BUF, LVACT_BUF, LERR_BUF,LEFF_BUF, LKP_BUF, LKI_BUF
+              XREF Entry, ISR_KEYPAD
+            
+;/------------------------------------------------------------------------------------\
+;| Assembler Equates                                                                  |
+;\------------------------------------------------------------------------------------/
+; Constant values can be equated here
+
+
+
+
+
+
+;/------------------------------------------------------------------------------------\
+;| Variables in RAM                                                                   |
+;\------------------------------------------------------------------------------------/
+; The following variables are located in unpaged ram
+
+DEFAULT_RAM:  SECTION
+
+count DS.B 1
+buffer DS.B 5
+input DS.B 1
+result DS.B 2
+tmp DS.B 1
+err DS.B 1
+
+
+
+
+;/------------------------------------------------------------------------------------\
+;|  Main Program Code                                                                 |
+;\------------------------------------------------------------------------------------/
+; Your code goes here
+
+MyCode: SECTION
+main:
+		
+		ldx #buffer
+		movb #$01, 0,x
+		movb #$02, 1,x
+		movb #$03, 2,x
+		movb #$04, 3,x
+		movb #$05, 4,x
+		bgnd
+		jsr conversion
+		
+spin: bra spin
+        
+;/------------------------------------------------------------------------------------\
+;| Subroutines |
+;/------------------------------------------------------------------------------------/
+; Add subroutines here:
+
+conversion:
+		
+		;init here
+		clrw result
+		clr tmp
+		clr err
+		ldx #buffer
+		pshy			;pushes registers to stack so that they remain unchanged by the subroutine
+		pshb
+		pshc
+		
+		
+convloop:
+
+		;loop goes here
+		ldaa count		;check if count has finished for loop
+		beq loopfin		;branch to exit if count is done
+		
+		
+		ldy result		;load current value of result into register y for use
+		ldd #$000A		;load hex 10 into accumulator for use
+		emul			;multiply register y and acc d
+		bvs err1
+		std result		;keep the bottom 2 bytes of the emul since we are never dealing with 4 bit nums
+		
+		ldaa tmp		;tmp is used for index addressing
+		ldab a,x		;reference the correct digit in the buffer using tmp
+		subb #$30		;subtract $30 to get the decimal value of the ascii code
+		
+		
+		clra
+		addd result		;add result and acc d 
+		std result		;store addition in result
+		inc tmp			;inc tmp so that buffer digits are correctly referenced
+		dec count		;dec count to track how long the loop has operated for
+		bra convloop
+		
+loopfin:
+		
+		ldx result
+		beq err2
+		
+
+err1:		
+
+		movb #$01, err
+		bra cnvexit
+		
+err2:
+		movb #$02, err
+
+cnvexit:
+
+		ldaa err		;load error into accumulator a
+		pulc
+		pulb
+		puly
+		rts
+
+DELAY_1ms:
+        ldy #$0584
+        INNER: ; inside loop
+        cpy #0
+        beq EXIT
+        dey
+        bra INNER
+        EXIT:
+        rts ; exit DELAY_1ms
+        
+;/------------------------------------------------------------------------------------\
+;| Messages |
+;/------------------------------------------------------------------------------------/
+; Add ASCII messages here:
+;/------------------------------------------------------------------------------------\
+;| Vectors |
+;\------------------------------------------------------------------------------------/
+; Add interrupt and reset vectors here:
+        ORG $FFFE ; reset vector address
+        DC.W Entry
