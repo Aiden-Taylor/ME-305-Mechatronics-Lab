@@ -12,7 +12,7 @@
 ;*   -                                                                                *
 ;*                                                                                    *
 ;* ToDo:                                                                              *
-;*   -                                                                                *
+;*   - Need to fix case for 65536                                                     *
 ;**************************************************************************************
 
 ;/------------------------------------------------------------------------------------\
@@ -81,15 +81,16 @@ MyCode: SECTION
 main:
 		
 		ldx #buffer
-		movb #$01, 0,x
-		movb #$02, 1,x
-		movb #$03, 2,x
-		movb #$04, 3,x
-		movb #$05, 4,x
-		movb #$05, count
+		movb #$36, 0,x
+		movb #$35, 1,x
+		movb #$35, 2,x
+		movb #$33, 3,x
+		movb #$36, 4,x
+		
 	
 		
 spin: 
+    
     bgnd
 		jsr conversion
     bra spin
@@ -103,6 +104,7 @@ spin:
 conversion:
 		
 		;init here
+		movb #$05, count
 		clrw result
 		clr tmp
 		clr err
@@ -122,8 +124,11 @@ convloop:
 		ldy result		;load current value of result into register y for use
 		ldd #$000A		;load hex 10 into accumulator for use
 		emul			;multiply register y and acc d
-		bvs err1
+		tsty
+		bne err1
 		std result		;keep the bottom 2 bytes of the emul since we are never dealing with 4 bit nums
+		
+		
 		
 		ldaa tmp		;tmp is used for index addressing
 		ldab a,x		;reference the correct digit in the buffer using tmp
@@ -133,6 +138,7 @@ convloop:
 		clra
 		addd result		;add result and acc d 
 		std result		;store addition in result
+		bvs err1
 		inc tmp		  	;inc tmp so that buffer digits are correctly referenced
 		dec count		  ;dec count to track how long the loop has operated for
 		bra convloop
