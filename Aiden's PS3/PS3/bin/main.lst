@@ -18,7 +18,7 @@ Freescale HC12-Assembler
    12   12                      ;*   -                                                                                *
    13   13                      ;*                                                                                    *
    14   14                      ;* ToDo:                                                                              *
-   15   15                      ;*   -                                                                                *
+   15   15                      ;*   - Need to fix case for 65536                                                     *
    16   16                      ;**************************************************************************************
    17   17                      
    18   18                      ;/------------------------------------------------------------------------------------\
@@ -74,145 +74,150 @@ Freescale HC12-Assembler
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-   65   65   000000             count DS.B 1
-   66   66   000001             buffer DS.B 5
-   67   67   000006             input DS.B 1
-   68   68   000007             result DS.B 2
-   69   69   000009             tmp DS.B 1
-   70   70   00000A             err DS.B 1
+   65   65   000000             COUNT DS.B 1
+   66   66   000001             BUFFER DS.B 5
+   67   67   000006             RESULT DS.B 2
+   68   68   000008             TMP DS.B 1
+   69   69   000009             ERR DS.B 1
+   70   70                      
    71   71                      
    72   72                      
    73   73                      
-   74   74                      
-   75   75                      ;/------------------------------------------------------------------------------------\
-   76   76                      ;|  Main Program Code                                                                 |
-   77   77                      ;\------------------------------------------------------------------------------------/
-   78   78                      ; Your code goes here
-   79   79                      
-   80   80                      MyCode: SECTION
-   81   81                      main:
-   82   82                      		
-   83   83   000000 CExx xx     		ldx #buffer
-   84   84   000003 1808 0036   		movb #$36, 0,x
-   85   85   000007 1808 0135   		movb #$35, 1,x
-   86   86   00000B 1808 0235   		movb #$35, 2,x
-   87   87   00000F 1808 0333   		movb #$33, 3,x
-   88   88   000013 1808 0436   		movb #$36, 4,x
-   89   89                      		
-   90   90                      	
-   91   91                      		
-   92   92                      spin: 
-   93   93                          
-   94   94   000017 00              bgnd
-   95   95   000018 16xx xx     		jsr conversion
-   96   96   00001B 20FA            bra spin
-   97   97                          
-   98   98                              
-   99   99                      ;/------------------------------------------------------------------------------------\
-  100  100                      ;| Subroutines |
-  101  101                      ;/------------------------------------------------------------------------------------/
-  102  102                      ; Add subroutines here:
-  103  103                      
-  104  104                      conversion:
-  105  105                      		
-  106  106                      		;init here
-  107  107   00001D 180B 05xx   		movb #$05, count
-             000021 xx         
-  108  108   000022 1879 xxxx   		clrw result
-  109  109   000026 79xx xx     		clr tmp
-  110  110   000029 79xx xx     		clr err
-  111  111   00002C CExx xx     		ldx #buffer
-  112  112   00002F 35          		pshy			;pushes registers to stack so that they remain unchanged by the subroutine
-  113  113   000030 37          		pshb
-  114  114   000031 39          		pshc
-  115  115                      		
-  116  116                      		
-  117  117                      convloop:
-  118  118                      
-  119  119                      		;loop goes here
-  120  120   000032 B6xx xx     		ldaa count		;check if count has finished for loop
-  121  121   000035 272D        		beq loopfin		;branch to exit if count is done
-  122  122                      		
-  123  123                      		
-  124  124   000037 FDxx xx     		ldy result		;load current value of result into register y for use
-  125  125   00003A CC00 0A     		ldd #$000A		;load hex 10 into accumulator for use
-  126  126   00003D 13          		emul			;multiply register y and acc d
-  127  127   00003E 18D7        		tsty
+   74   74                      ;/------------------------------------------------------------------------------------\
+   75   75                      ;|  Main Program Code                                                                 |
+   76   76                      ;\------------------------------------------------------------------------------------/
+   77   77                      ; Your code goes here
+   78   78                      
+   79   79                      MyCode: SECTION
+   80   80                      main:
+   81   81                      		
+   82   82   000000 CExx xx     		ldx #BUFFER
+   83   83   000003 1808 0030   		movb #$30, 0,x     ;loading ASCII into the the BUFFER
+   84   84   000007 1808 0130   		movb #$30, 1,x
+   85   85   00000B 1808 0230   		movb #$30, 2,x
+   86   86   00000F 1808 0330   		movb #$30, 3,x
+   87   87   000013 1808 0430   		movb #$30, 4,x
+   88   88   000017 CD00 32     		ldy #$32           ;loads random set values into y and b to confirm that they are preserved
+   89   89   00001A C633        		ldab #$33
+   90   90                      		
+   91   91                      spin:		
+   92   92                      		
+   93   93   00001C 180B 05xx   		movb #$05, COUNT   ;sets COUNT to 5
+             000020 xx         
+   94   94                      		
+   95   95   000021 00          		bgnd               ;bgnd for debugging
+   96   96                      		
+   97   97   000022 16xx xx     	  jsr conversion     ;calls conversion	  
+   98   98                      	  
+   99   99   000025 20F5            bra spin           ;loops 
+  100  100                      		
+  101  101                      
+  102  102                      		
+  103  103                          
+  104  104                              
+  105  105                      ;/------------------------------------------------------------------------------------\
+  106  106                      ;| Subroutines |
+  107  107                      ;/------------------------------------------------------------------------------------/
+  108  108                      ; Add subroutines here:
+  109  109                      
+  110  110                      conversion:
+  111  111                      		
+  112  112                      		;init here
+  113  113   000027 1879 xxxx   		clrw RESULT
+  114  114   00002B 79xx xx     		clr TMP
+  115  115   00002E 79xx xx     		clr ERR
+  116  116   000031 CExx xx     		ldx #BUFFER
+  117  117   000034 35          		pshy			;pushes registers to stack so that they remain unchanged by the subroutine
+  118  118   000035 37          		pshb
+  119  119   000036 39          		pshc
+  120  120                      		
+  121  121                      		
+  122  122                      convloop:
+  123  123                      
+  124  124                      		;loop goes here
+  125  125   000037 B6xx xx     		ldaa COUNT		;check if COUNT has finished for loop
+  126  126   00003A 272D        		beq loopfin		;branch to exit if COUNT is done
+  127  127                      		
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  128  128   000040 261B        		bne err1
-  129  129   000042 7Cxx xx     		std result		;keep the bottom 2 bytes of the emul since we are never dealing with 4 bit nums
-  130  130                      		
-  131  131                      		
-  132  132                      		
-  133  133   000045 B6xx xx     		ldaa tmp		;tmp is used for index addressing
-  134  134   000048 E6E4        		ldab a,x		;reference the correct digit in the buffer using tmp
-  135  135   00004A C030        		subb #$30		;subtract $30 to get the decimal value of the ascii code
+  128  128                      		
+  129  129   00003C FDxx xx     		ldy RESULT		;load current value of RESULT into register y for use
+  130  130   00003F CC00 0A     		ldd #$000A		;load hex 10 into accumulator for use
+  131  131   000042 13          		emul			    ;multiply register y and acc d
+  132  132   000043 18D7        		tsty          ;sets flag for y
+  133  133   000045 261B        		bne ERR1      ;checks if the multiplication overflowed to y
+  134  134   000047 7Cxx xx     		std RESULT		;keep the bottom 2 bytes of the emul since we are never dealing with 4 bit nums
+  135  135                      		
   136  136                      		
   137  137                      		
-  138  138   00004C 87          		clra
-  139  139   00004D F3xx xx     		addd result		;add result and acc d 
-  140  140   000050 7Cxx xx     		std result		;store addition in result
-  141  141   000053 2908        		bvs err1
-  142  142   000055 72xx xx     		inc tmp		  	;inc tmp so that buffer digits are correctly referenced
-  143  143   000058 73xx xx     		dec count		  ;dec count to track how long the loop has operated for
-  144  144   00005B 20D5        		bra convloop
-  145  145                      			
-  146  146                      
-  147  147                      err1:		
-  148  148                      
-  149  149   00005D 180B 01xx   		movb #$01, err
-             000061 xx         
-  150  150   000062 200A        		bra cnvexit
-  151  151                      	
-  152  152                      loopfin:
-  153  153                      		
-  154  154   000064 FExx xx     		ldx result
-  155  155   000067 2605        		bne cnvexit	
-  156  156                      		
-  157  157                      err2:
-  158  158                      
-  159  159   000069 180B 02xx   		movb #$02, err
-             00006D xx         
-  160  160                      
-  161  161                      cnvexit:
-  162  162                      
-  163  163   00006E B6xx xx     		ldaa err		;load error into accumulator a
-  164  164   000071 38          		pulc
-  165  165   000072 33          		pulb
-  166  166   000073 31          		puly
-  167  167   000074 3D          		rts
-  168  168                      
-  169  169                      
-  170  170                      
-  171  171                      DELAY_1ms:
-  172  172   000075 CD05 84             ldy #$0584
-  173  173                              INNER: ; inside loop
-  174  174   000078 8D00 00             cpy #0
-  175  175   00007B 2703                beq EXIT
-  176  176   00007D 03                  dey
-  177  177   00007E 20F8                bra INNER
-  178  178                      
-  179  179                      EXIT:
-  180  180   000080 3D                  rts ; exit DELAY_1ms
-  181  181                              
-  182  182                      ;/------------------------------------------------------------------------------------\
-  183  183                      ;| Messages |
-  184  184                      ;/------------------------------------------------------------------------------------/
-  185  185                      ; Add ASCII messages here:
-  186  186                      ;/------------------------------------------------------------------------------------\
-  187  187                      ;| Vectors |
-  188  188                      ;\------------------------------------------------------------------------------------/
-  189  189                      ; Add interrupt and reset vectors here:
+  138  138   00004A B6xx xx     		ldaa TMP		;TMP is used for index addressing
+  139  139   00004D E6E4        		ldab a,x		;reference the correct digit in the BUFFER using TMP
+  140  140   00004F C030        		subb #$30		;subtract $30 to get the decimal value of the ascii code
+  141  141                      		
+  142  142                      		
+  143  143   000051 87          		clra
+  144  144   000052 F3xx xx     		addd RESULT		;add RESULT and acc d 
+  145  145   000055 250B        		bcs ERR1      ;branch if the addition triggers an overflow, causing error 1
+  146  146   000057 7Cxx xx     		std RESULT		;store addition in RESULT
+  147  147   00005A 72xx xx     		inc TMP		  	;inc TMP so that BUFFER digits are correctly referenced
+  148  148   00005D 73xx xx     		dec COUNT		  ;dec COUNT to track how long the loop has operated for
+  149  149   000060 20D5        		bra convloop
+  150  150                      			
+  151  151                      
+  152  152                      ERR1:		
+  153  153                      
+  154  154   000062 180B 01xx   		movb #$01, ERR ;set ERR for MAGNITUDE TOO LARGE
+             000066 xx         
+  155  155   000067 200A        		bra cnvexit
+  156  156                      	
+  157  157                      loopfin:
+  158  158                      		
+  159  159   000069 FExx xx     		ldx RESULT     ;happens at the end of the loop to check for error 2
+  160  160   00006C 2605        		bne cnvexit	
+  161  161                      		
+  162  162                      ERR2:
+  163  163                      
+  164  164   00006E 180B 02xx   		movb #$02, ERR  ;set ERR for ZERO MAGNITUDE INAPPROPRIATE
+             000072 xx         
+  165  165                      
+  166  166                      cnvexit:
+  167  167                      
+  168  168   000073 B6xx xx     		ldaa ERR		;load ERRor into accumulator a
+  169  169   000076 38          		pulc        ;pulls registers from stack to restore them to pre-subroutine states
+  170  170   000077 33          		pulb
+  171  171   000078 31          		puly
+  172  172   000079 3D          		rts         ;return
+  173  173                      
+  174  174                      
+  175  175                      
+  176  176                      DELAY_1ms:
+  177  177   00007A CD05 84             ldy #$0584
+  178  178                              INNER: ; inside loop
+  179  179   00007D 8D00 00             cpy #0
+  180  180   000080 2703                beq EXIT
+  181  181   000082 03                  dey
+  182  182   000083 20F8                bra INNER
+  183  183                      
+  184  184                      EXIT:
+  185  185   000085 3D                  rts ; exit DELAY_1ms
+  186  186                              
+  187  187                      ;/------------------------------------------------------------------------------------\
+  188  188                      ;| Messages |
+  189  189                      ;/------------------------------------------------------------------------------------/
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  190  190                              ORG $FFFE ; reset vector address
-  191  191  a00FFFE xxxx                DC.W Entry
+  190  190                      ; Add ASCII messages here:
+  191  191                      ;/------------------------------------------------------------------------------------\
+  192  192                      ;| Vectors |
+  193  193                      ;\------------------------------------------------------------------------------------/
+  194  194                      ; Add intERRupt and reset vectors here:
+  195  195                              ORG $FFFE ; reset vector address
+  196  196  a00FFFE xxxx                DC.W Entry

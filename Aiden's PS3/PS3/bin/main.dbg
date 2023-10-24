@@ -12,7 +12,7 @@
 ;*   -                                                                                *
 ;*                                                                                    *
 ;* ToDo:                                                                              *
-;*   -                                                                                *
+;*   - Need to fix case for 65536                                                     *
 ;**************************************************************************************
 
 ;/------------------------------------------------------------------------------------\
@@ -62,12 +62,11 @@
 
 DEFAULT_RAM:  SECTION
 
-count DS.B 1
-buffer DS.B 5
-input DS.B 1
-result DS.B 2
-tmp DS.B 1
-err DS.B 1
+COUNT DS.B 1
+BUFFER DS.B 5
+RESULT DS.B 2
+TMP DS.B 1
+ERR DS.B 1
 
 
 
@@ -80,20 +79,27 @@ err DS.B 1
 MyCode: SECTION
 main:
 		
-		ldx #buffer
-		movb #$36, 0,x
-		movb #$35, 1,x
-		movb #$35, 2,x
-		movb #$33, 3,x
-		movb #$36, 4,x
+		ldx #BUFFER
+		movb #$30, 0,x     ;loading ASCII into the the BUFFER
+		movb #$30, 1,x
+		movb #$30, 2,x
+		movb #$30, 3,x
+		movb #$30, 4,x
+		ldy #$32           ;loads random set values into y and b to confirm that they are preserved
+		ldab #$33
 		
-	
+spin:		
 		
-spin: 
-    
-    bgnd
-		jsr conversion
-    bra spin
+		movb #$05, COUNT   ;sets COUNT to 5
+		
+		bgnd               ;bgnd for debugging
+		
+	  jsr conversion     ;calls conversion	  
+	  
+    bra spin           ;loops 
+		
+
+		
     
         
 ;/------------------------------------------------------------------------------------\
@@ -104,11 +110,10 @@ spin:
 conversion:
 		
 		;init here
-		movb #$05, count
-		clrw result
-		clr tmp
-		clr err
-		ldx #buffer
+		clrw RESULT
+		clr TMP
+		clr ERR
+		ldx #BUFFER
 		pshy			;pushes registers to stack so that they remain unchanged by the subroutine
 		pshb
 		pshc
@@ -117,54 +122,54 @@ conversion:
 convloop:
 
 		;loop goes here
-		ldaa count		;check if count has finished for loop
-		beq loopfin		;branch to exit if count is done
+		ldaa COUNT		;check if COUNT has finished for loop
+		beq loopfin		;branch to exit if COUNT is done
 		
 		
-		ldy result		;load current value of result into register y for use
+		ldy RESULT		;load current value of RESULT into register y for use
 		ldd #$000A		;load hex 10 into accumulator for use
-		emul			;multiply register y and acc d
-		tsty
-		bne err1
-		std result		;keep the bottom 2 bytes of the emul since we are never dealing with 4 bit nums
+		emul			    ;multiply register y and acc d
+		tsty          ;sets flag for y
+		bne ERR1      ;checks if the multiplication overflowed to y
+		std RESULT		;keep the bottom 2 bytes of the emul since we are never dealing with 4 bit nums
 		
 		
 		
-		ldaa tmp		;tmp is used for index addressing
-		ldab a,x		;reference the correct digit in the buffer using tmp
+		ldaa TMP		;TMP is used for index addressing
+		ldab a,x		;reference the correct digit in the BUFFER using TMP
 		subb #$30		;subtract $30 to get the decimal value of the ascii code
 		
 		
 		clra
-		addd result		;add result and acc d 
-		std result		;store addition in result
-		bvs err1
-		inc tmp		  	;inc tmp so that buffer digits are correctly referenced
-		dec count		  ;dec count to track how long the loop has operated for
+		addd RESULT		;add RESULT and acc d 
+		bcs ERR1      ;branch if the addition triggers an overflow, causing error 1
+		std RESULT		;store addition in RESULT
+		inc TMP		  	;inc TMP so that BUFFER digits are correctly referenced
+		dec COUNT		  ;dec COUNT to track how long the loop has operated for
 		bra convloop
 			
 
-err1:		
+ERR1:		
 
-		movb #$01, err
+		movb #$01, ERR ;set ERR for MAGNITUDE TOO LARGE
 		bra cnvexit
 	
 loopfin:
 		
-		ldx result
+		ldx RESULT     ;happens at the end of the loop to check for error 2
 		bne cnvexit	
 		
-err2:
+ERR2:
 
-		movb #$02, err
+		movb #$02, ERR  ;set ERR for ZERO MAGNITUDE INAPPROPRIATE
 
 cnvexit:
 
-		ldaa err		;load error into accumulator a
-		pulc
+		ldaa ERR		;load ERRor into accumulator a
+		pulc        ;pulls registers from stack to restore them to pre-subroutine states
 		pulb
 		puly
-		rts
+		rts         ;return
 
 
 
@@ -186,6 +191,6 @@ EXIT:
 ;/------------------------------------------------------------------------------------\
 ;| Vectors |
 ;\------------------------------------------------------------------------------------/
-; Add interrupt and reset vectors here:
+; Add intERRupt and reset vectors here:
         ORG $FFFE ; reset vector address
         DC.W Entry
