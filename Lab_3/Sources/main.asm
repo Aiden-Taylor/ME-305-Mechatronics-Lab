@@ -59,7 +59,15 @@
 
 DEFAULT_RAM:  SECTION
 
+;params for t1 
 
+COUNT DS.B 1
+F1_FLG  DS.B 1
+F2_FLG  DS.B 1
+SPEED1  DS.B 1 
+SPEED2  DS.B 1
+ON1     DS.B 1 
+ON2     DS.B 1 
 
 ;params for t2 
 KEY_FLG DS.B 1
@@ -78,10 +86,15 @@ t6state DS.B 1
 t7state DS.B 1
 t8state DS.B 1
 
-;subroutines
-RESULT DS.W 1
-COUNT DS.B 1 
-BUFFER DS.B 5 
+;subroutines ---------
+
+;convert
+RESULT DS.W 1 
+BUFFER DS.B 5
+TMP DS.B 1
+ERR DS.B 1 
+
+;input
 INPUT DS.B 1
 DPTR DS.W 1
 FIRSTCH DS.B 1
@@ -105,7 +118,193 @@ main:
        
        
 spin: bra spin
+
+;-------------TASK_1 MASTERMIND ---------------------------------------------------------
+
+TASK_1: ldaa t1state ; get current t1state and branch accordingly
+        beq t1s0
+        deca
+        beq t1s1
+        deca
+        beq t1s2
+        deca
+        beq t1s3
+        deca
+        beq t1s4
+        deca
+        beq t1s5
+        deca
+        beq t1s6
+        rts ; undefined state - do nothing but return
+;__________________________________________________________________________________
+t1s0: ; init TASK_1
+
+;clear all of the flags 
+
+  clr COUNT 
+
+
+        movb #$01, t1state ; set next state
+        rts
+;__________________________________________________________________________________
+t1s1: ;
+
+;check if its F1
+
+        tst KEY_FLG                                 ;first test if there is a key to be checked
+        beq exit1                                   ;if there is no 
+        ldaa KEY_BUFF                               ;load accumulator A with the current char
+        cmpa $F1                                    ;compare whats in A to F1 
+        bne skipF1                                  ;if its not F1, skip settting the state
+        movb #$05 , t1state                         ;set the state to the appropriate number  
+        rts
+
+skipF1:  
+
+;check if its F2
+                          
+        cmpa $F2                                    ;compare whats in A to F2
+        bne skipF2                                  ;if its not F2, skip settting the state
+        movb #$06 , t1state                         ;set the state to the appropriate number 
+        rts
+
+skipF2:
+
+;check if its a BS 
+       
+        cmpa $08                                    ;compare whats in A to BS 
+        bne skipBS                                  ;if its not BS, skip settting the state 
+        movb #$04 , t1state                         ;set the state to the appropriate number 
+        rts
+
+skipBS: 
+
+;check if its a ENT  
+
+        cmpa $0A                                    ;compare whats in A to ENT 
+        bne skipENT                                 ;if its not BS, skip settting the state 
+        movb #$03 , t1state                         ;set the state to the appropriate number 
+        rts
+
+;check if its a digit 
+
+        cmpa #$39                                   ;check if what in A is a number 
+        bne skipDIGIT                               ;if its not a number, disregard the input 
+        movb #$02 , t1state                         ;set the state to digit handler 
+        rts
+
+skipDIGIT: 
+
+        rts
+
+;___________________________________________________________________________________
+
+t1s2: ;Digit Handler 
+
+;checks if we should proceed with the digit handler state 
+
+        tst F1_FLG                                  ;test F1 flag 
+        bne skip_e                                  ;if not equal to 0, skip exiting 
+        tst F2_FLG                                  ;test the F2 flag 
+        bne skip_e                                  ;if not equal to 0, skip exiting 
+        bra exit1                                   ;exit if equal to 0 
+
+skip_e:
+
+;now proceed with the digit handler
+   
+        ldy #BUFFER                                 ;load index register y with buffer 
+        ldaa COUNT                                  ;load A with the current value of COUNT 
+        ldab KEY_BUFF                               ;load b with KEY_BUFF 
+        stab a,y                                    ;store the contents of b at the position of COUNT in BUFFER
+       
+        inc COUNT                                   ;increment count 
+        movb #$00, KEY_FLG                          ;set key flag to 0 to acknowledge KEYPAD
+        movb #$01 , t1state                         ;set the state back to 1 
+        bra exit1                                   ;exit 
+;________________________________________________________________________________________
+t1s3: ;ENT 
  
+       jsr conversion                              ;convert the contents of buffer to binary 
+       clr COUNT                                   ;set count back to zero 
+       clr BUFFER                                  ;clear the contents of the BUFFER
+       
+;check which flag to set 
+ 
+       tst F1_FLG                                  ;test the F1 flag
+       beq skip_F1_a                               ;if the flag is zero, skip the next steps 
+       movb #01, ON1                               ;if the flag is 1, set ON1 to be true 
+       clr F1_FLG                                  ;clear the F1 flag
+       stx SPEED1                                  ;store the 
+         
+
+skip_F1_a:  
+ 
+       tst F2_FLG                                  ;test the F2 flag
+       beq skip_F2                               ;if the flag is zero, skip the next steps 
+       movb #$01, ON2                              ;if the flag is 1, set ON2 to be true 
+       clr F2_FLG                                  ;clear the F2 flag 
+
+skip_F2: 
+
+       movb #$01, tstate1                          ;set the state back to 1 
+       
+;check for error and set variables accordingly so that user has to start over 
+
+       cmpa #$00                                   ;check whats in A 
+       beq skipERROR                               ;check if an error was generated from conversion
+       movb #$07, tstate1                         ;if there is an error code set the state to the 
+                                                   ;error state  
+;check which ON variable needs to be cleared 
+      
+      
+      tst F1_FLG                                   ;test the F1 flag
+      beq skip_F1_b                                ;if the flag is zero, skip the next steps 
+      clr ON1
+      
+skip_F1_b: 
+ 
+      tst F2_FLG                                   ;test the F2 flag
+      beq skipERROR                                ;if the flag is zero, skip the next steps
+      clr ON2 
+                  
+skipERROR: 
+       
+      clr F1_FLG                                   ;clear F1_FLG 
+      clr F2_FLG                                   ;clear F2_FLG 
+      bra exit1                                    ;exit
+ ;________________________________________________________________________________________
+t1s4: ;BS
+ 
+       movb #$03 , t3state                         ;set the state in task 3 to the BS state   
+       movb #$01 , t1state                         ;set the state back to 1
+       bra exit1                                   ;exit
+ ;________________________________________________________________________________________
+t1s5: ;F1 state 
+ 
+ 
+       movb #$01, F1_FLG                           ;set the F1_FLG to be true
+       movb #$01 , t1state                         ;set the state back to 1 
+       bra exit1                                   ;exit
+       
+ ;________________________________________________________________________________________
+t1s6: ;F2 state 
+ 
+ 
+       movb #$01, F2_FLG                           ;set the F2_FLG to be true
+       movb #$01 , t1state                         ;set the state back to 1
+       bra exit1                                   ;exit
+
+;________________________________________________________________________________________
+t1s7: ;Error state 
+
+
+  ;setting the error number 
+
+
+
+exit1:
+        rts
 ;----------------------TASK 2-------------------------------------------; 
  
 TASK_2:
@@ -123,8 +322,8 @@ TASK_2:
 t2s0:
 
         ;init
-        jsr INITKEY       ;initialize keypad
         
+        jsr INITKEY       ;initialize keypad
         movb #$01, t2state
         rts
         
@@ -136,7 +335,7 @@ t2s1:
         stab #KEY_BUFF     ;stores the input char into key buffer
         set KEY_FLG        ;notifies MM of key input
         movb #$02, t2state
-        rts
+        bra exit2                                   ;exit
         
 t2s2:
 
@@ -150,7 +349,7 @@ exit2: rts
         
 ;---------------------TASK 3------------------------------------------------;
 
-TASK_3
+TASK_3:
 
         ldaa t3state
         beq t3s0
@@ -160,42 +359,138 @@ TASK_3
         beq t3s2
         deca
         beq t3s3
+        deca
+        beq t3s4
+        deca
+        beq t3s5
+        deca
+        beq t3s6
+        deca
+        beq t3s7
+        deca
+        beq t3s8
+        deca
+        beq t3s9
+        deca
+        beq t3s10
+        deca
+        beq t3s11
         rts
         
-t3s0:         
+t3s0:     ;init    
         
        jsr INITLCD       ;initialize LCD
+       set FIRSTCH
        ldaa #$00         ;set LCD position to 0
-       ldx #MESSAGE      ;load message into x
-       jsr OUTSTRING     ;display message
+       jsr SETADDR
        jsr CURSOR_ON     ;turn on cursor
-       movb #$01, t3state
+       movb #$0B, t3state ; go to init state 
        rts
         
 t3s1:
 
        ;hub
        set FIRSTCH
-       ldab MSG_NUM
-       stab t3state
+       ldab MSG_NUM            
+       stab t3state            
        rts
 
 
-t3s2:
-
-
+t3s2:   ;backspace
         jsr backspace
+        rts
+
+        
+t3s3:   ;full time1 message     
+        ldaa #$00
+        ldx #TIME1
+        tst FIRSTCH
+        bne char1
+        jsr PUTCHAR
+        rts
+        
+        
+t3s4:   ;full time2 message
+        ldaa #$40
+        ldx #TIME2
+        tst FIRSTCH
+        bne char1
+        jsr PUTCHAR
+        rts
+
+
+t3s5:   ;no digit 1 message
+        ldaa #$00
+        ldx #NODIG1
+        tst FIRSTCH
+        bne char1
+        jsr PUTCHAR
+        rts
+
+
+t3s6:   ;no digit 2 message
+        ldaa #$40
+        ldx #NODIG2
+        tst FIRSTCH
+        bne char1
+        jsr PUTCHAR
         rts
         
 
+t3s7:   ;zero magnitude 1 message
+        ldaa #$00
+        ldx #ZMAG1
+        tst FIRSTCH
+        bne char1
+        jsr PUTCHAR
+        rts
 
-t3s3:        
+t3s8:   ;zero magnitude 2 message
+        ldaa #$40
+        ldx #ZMAG2
+        tst FIRSTCH
+        bne char1
+        jsr PUTCHAR
+        rts
+
+t3s9:   ;magnitude too large 1 message
+        ldaa #$00
+        ldx #MAGTL1
+        tst FIRSTCH
+        bne char1
+        jsr PUTCHAR
+        rts
+
+
+t3s10:  ;magnitude too large 2 message
+        ldaa #$40
+        ldx #MAGTL2
+        tst FIRSTCH
+        bne char1
+        jsr PUTCHAR
+        rts
+
+t3s11:  ;display full screen (init message)
+
+       ldx #INITMSG
+       tst FIRSTCHAR
+       bne initmsg
+       jsr ICHAR
+       rts
+       
+initmsg: ;first char of init message
+       
+       jsr ICHAR1
+       rts
+       
+char1:    ;first char of any message
+
+       jsr PUTCHAR1
+       rts 
         
-        ;make one state per msg
-        ;set dptr to #msg then jsr putchar1 if firstch and putchar if not firstch
-        
-        
-        
+exit3:
+
+       rts
         
   
 ;/------------------------------------------------------------------------------------\
@@ -205,37 +500,7 @@ t3s3:
 
   
  ;---------------------------------------------------------------------------------------     
-
-input:
-       
-;create loop to load buffer with inputted variables
-     
-       clr COUNT
-       ldy #BUFFER
-       
-  input_loop:
- 
-       ldaa COUNT              ;load accumulator a with the value of COUNT
-       cmpa #$05               ;accumulator a - $5    check if COUNT is 5
-       beq input_exit          ;if count is 5 then we are done and exit the loop
-       
-       
-       jsr GETCHAR             ;load accumulator b with the keypad input
-       cmpb #$08               ;accumulator b - $08    check if input is a backspace
-       beq backspace           ;if it was a backspace, branch to the backspace routine
-       
-       
-       
-       cmpb #$39               ;accumulator b - $39    check if input is a number
-       bgt input_loop         ;if input is not a number, go to the top of the loop
-       
-       stab a, y               ;load the contents of accumulator b into buffer
-       jsr OUTCHAR             ;display the input charater on the LCD
-       
-       inc COUNT               ;increment count
-       bra input_loop         ;branch back to the top of the loop
-       
-       
+         
   backspace:
  
        jsr GETADDR                   ;get current position of LCR
@@ -258,52 +523,73 @@ input:
        jsr OUTSTRING_AT     ;display message
        rts    ;return to main 
   
-  ;-------------------------------------------------------------------------------------
+  ;------CONVERSIONS---------------------------------------------------------------------------;
 
-convert:
+conversion:
+		
+		;init here
+		clrw RESULT
+		clr TMP
+		clr ERR
+		ldx #BUFFER
+		pshy			;pushes registers to stack so that they remain unchanged by the subroutine
+		pshb
+		pshc
+		
+		
+convloop:
 
-        clrw RESULT              ;sets RESULT to zero
-        clr TMP  
-                       ;sets TMP to zero
-                      
- ldx #BUFFER            ;load index register x with the contents of BUFFER                       
-                       
-                       
-convert_loop:
-       
-;check status of loop
-       
-        ldaa COUNT             ;load accumulator a with the value of COUNT
-        beq convert_exit       ;if count is 0 then we are done and exit the loop
-       
-;multiply current result value by 10
+		;loop goes here
+		ldaa COUNT		;check if COUNT has finished for loop
+		beq loopfin		;branch to exit if COUNT is done
+		
+		
+		ldy RESULT		;load current value of RESULT into register y for use
+		ldd #$000A		;load hex 10 into accumulator for use
+		emul			    ;multiply register y and acc d
+		tsty          ;sets flag for y
+		bne ERR1      ;checks if the multiplication overflowed to y
+		std RESULT		;keep the bottom 2 bytes of the emul since we are never dealing with 4 bit nums
+		
+		
+		
+		ldaa TMP		;TMP is used for index addressing
+		ldab a,x		;reference the correct digit in the BUFFER using TMP
+		subb #$30		;subtract $30 to get the decimal value of the ascii code
+		
+		
+		clra
+		addd RESULT		;add RESULT and acc d 
+		bcs ERR1      ;branch if the addition triggers an overflow, causing error 1
+		std RESULT		;store addition in RESULT
+		inc TMP		  	;inc TMP so that BUFFER digits are correctly referenced
+		dec COUNT		  ;dec COUNT to track how long the loop has operated for
+		bra convloop
+			
 
-        ldy RESULT             ;load index register y with the contents of RESULT
-        ldd #$000A             ;load accumulator d with the hex value for 10
-        emul                   ;multiply the contents of d with the contents of y
-        std RESULT             ;store the contents of accumulator d in result
-       
-;get the next number to be added
+ERR1:		
 
-  
-        ldaa TMP               ;load index register A with the position value TMP
-        ldab a,x               ;load accumulator b with the contents of buffer at position a
-        subb #$30              ;subtract #$30 to get the digital value of the numnber
-               
-;add the number to the multiplied result value and store the result
- 
-        clra                   ;clear the contents of accumulator a
-        addd RESULT            ;add the contents of accumulator d to result
-        std RESULT             ;store the contents of accumulator d in result
-        inc TMP                ;increment so the next position can be reached
-        dec COUNT              ;decrement count to keep tack of the loop
-        bra convert_loop       ;loop back to the top  
- 
- convert_exit:
-     
-        rts ; return to main
+		movb #$01, ERR ;set ERR for MAGNITUDE TOO LARGE
+		bra cnvexit
+	
+loopfin:
+		
+		ldx RESULT     ;happens at the end of the loop to check for error 2
+		bne cnvexit	
+		
+ERR2:
 
+		movb #$02, ERR  ;set ERR for ZERO MAGNITUDE INAPPROPRIATE
+
+cnvexit:
+
+		ldaa ERR		;load ERRor into accumulator a
+		pulc        ;pulls registers from stack to restore them to pre-subroutine states
+		pulb
+		puly
+		rts         ;return
         
+
 ;-------------------Cooperative Fixed Messaging-------------------------------------------;        
 
 PUTCHAR1:    
@@ -323,7 +609,33 @@ PUTCHAR:
 mess_exit:
 
             movb #$01, t3state
+            movb #$01, MSG_NUM
             rts
+
+;-------------------Cooperative Fixed init message-----------------------
+
+ICHAR1: 
+          stx DPTR
+          jsr SETADDR
+          clr FIRSTCH
+          
+ICHAR:        
+          ldx DPTR
+          ldab 0,x
+          beq mess_exit
+          incw DPTR
+          jsr OUTCHAR
+          jsr GETADDR
+          cmpa #$28
+          beq changeline
+          rts
+
+changeline: 
+
+          ldaa #$40
+          jsr SETADDR
+          rts
+
 
 
 
@@ -332,9 +644,17 @@ mess_exit:
 ;\------------------------------------------------------------------------------------/
 ; Any constants can be defined here
 
- MESSAGE: DC.B  'please enter a number: ', $00
- RESPONSE: DC.B 'that was a great choice' , $00
+ INITMSG: DC.B 'TIME1 =     <F1> to update LED1 periodTIME2 =     <F2> to update LED1 period', $00
+ TIME1:  DC.B 'TIME1 =     <F1> to update LED1 period', $00
+ TIME2:  DC.B 'TIME2 =     <F2> to update LED1 period', $00
+ NODIG1: DC.B 'TIME1 = NO DIGITS ENTERED             ', $00
+ NODIG2: DC.B 'TIME2 = NO DIGITS ENTERED             ', $00
+ ZMAG1:  DC.B 'TIME1 = ZERO MAGNITUDE INAPPROPRIATE  ', $00
+ ZMAG2:  DC.B 'TIME2 = ZERO MAGNITUDE INAPPROPRIATE  ', $00
+ MAGTL1: DC.B 'TIME1 = MAGNITUDE TOO LARGE           ', $00
+ MAGTL2: DC.B 'TIME2 = MAGNITUDE TOO LARGE           ', $00
  BACKSPACE: DC.B ' ' , $00 
+ 
  
 ;/------------------------------------------------------------------------------------\
 ;| Vectors                                                                            |
