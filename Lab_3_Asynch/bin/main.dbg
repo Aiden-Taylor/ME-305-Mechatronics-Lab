@@ -1,0 +1,155 @@
+;**************************************************************************************
+;* Blank Project Main [includes LibV2.2]                                              *
+;**************************************************************************************
+;* Summary:                                                                           *
+;*   -                                                                                *
+;*                                                                                    *
+;* Author: YOUR NAME                                                                  *
+;*   Cal Poly University                                                              *
+;*   Spring 2022                                                                      *
+;*                                                                                    *
+;* Revision History:                                                                  *
+;*   -                                                                                *
+;*                                                                                    *
+;* ToDo:                                                                              *
+;*   -                                                                                *
+;**************************************************************************************
+
+;/------------------------------------------------------------------------------------\
+;| Include all associated files                                                       |
+;\------------------------------------------------------------------------------------/
+; The following are external files to be included during assembly
+
+
+;/------------------------------------------------------------------------------------\
+;| External Definitions                                                               |
+;\------------------------------------------------------------------------------------/
+; All labels that are referenced by the linker need an external definition
+
+              XDEF  main
+
+;/------------------------------------------------------------------------------------\
+;| External References                                                                |
+;\------------------------------------------------------------------------------------/
+; All labels from other files must have an external reference
+
+              XREF  ENABLE_MOTOR, DISABLE_MOTOR
+              XREF  STARTUP_MOTOR, UPDATE_MOTOR, CURRENT_MOTOR
+              XREF  STARTUP_PWM, STARTUP_ATD0, STARTUP_ATD1
+              XREF  OUTDACA, OUTDACB
+              XREF  STARTUP_ENCODER, READ_ENCODER
+              XREF  INITLCD, SETADDR, GETADDR, CURSOR_ON, CURSOR_OFF, DISP_OFF
+              XREF  OUTCHAR, OUTCHAR_AT, OUTSTRING, OUTSTRING_AT
+              XREF  INITKEY, LKEY_FLG, GETCHAR
+              XREF  LCDTEMPLATE, UPDATELCD_L1, UPDATELCD_L2
+              XREF  LVREF_BUF, LVACT_BUF, LERR_BUF,LEFF_BUF, LKP_BUF, LKI_BUF
+              XREF  Entry, ISR_KEYPAD
+            
+;/------------------------------------------------------------------------------------\
+;| Assembler Equates                                                                  |
+;\------------------------------------------------------------------------------------/
+; Constant values can be equated here
+
+
+
+;/------------------------------------------------------------------------------------\
+;| Variables in RAM                                                                   |
+;\------------------------------------------------------------------------------------/
+; The following variables are located in unpaged ram
+
+DEFAULT_RAM:  SECTION
+
+COUNT DS.B 1 
+BUFFER DS.B 5 
+INPUT DS.B 1 
+
+;/------------------------------------------------------------------------------------\
+;|  Main Program Code                                                                 |
+;\------------------------------------------------------------------------------------/
+; Your code goes here
+
+MyCode:       SECTION
+main:   
+       
+        
+       jsr INITLCD       ;initialize LCD 
+       ldaa #$00         ;set LCD position to 0
+       ldx #MESSAGE      ;load message into x 
+       jsr OUTSTRING     ;display message 
+       jsr INITKEY       ;initialize keypad 
+       jsr CURSOR_ON     ;turn on cursor 
+       
+       
+      ;create loop to load buffer with inputted variables 
+      
+       clr COUNT 
+       ldy #BUFFER
+       
+ buffer_loop: 
+ 
+       ldaa COUNT 
+       cmpa #$05         ;accumulator a - $5    check if input is a number 
+       beq spin          ;if count is 5 then we are done and exit the loop 
+       
+       
+       jsr GETCHAR       ;load accumulator b with the keypad input 
+       cmpb #$08         ;accumulator b - $08    check if input is a backspace
+       beq backspace 
+       
+       
+       
+       cmpb #$39         ;accumulator b - $39    check if input is a number 
+       bgt buffer_loop   ;if input is not a number, go to the top of the loop 
+       
+       stab a, y         ;load the contents of accumulator b into buffer 
+       jsr OUTCHAR       ;display the input charater on the LCD 
+       
+       inc COUNT         ;increment count 
+                      ;increment x 
+       
+       bra buffer_loop    
+       
+       
+ backspace: 
+       jsr GETADDR                   ;get current position of LCR 
+       deca                          ;decrement one 
+       jsr SETADDR                   ;set address to new position 
+       ldx #BACKSPACE               ;
+       jsr OUTSTRING                 ;output a black character 
+       jsr GETADDR                   ;get current position of LCR 
+       deca                          ;decrement one 
+       jsr SETADDR
+       dec COUNT 
+      
+      
+            
+      bra buffer_loop 
+ 
+       
+      
+ spin: bra spin; 
+ 
+
+;/------------------------------------------------------------------------------------\
+;| Subroutines                                                                        |
+;\------------------------------------------------------------------------------------/
+; General purpose subroutines go here
+
+
+;/------------------------------------------------------------------------------------\
+;| ASCII Messages and Constant Data                                                   |
+;\------------------------------------------------------------------------------------/
+; Any constants can be defined here
+
+ MESSAGE: DC.B  'please enter a number: ', $00
+ RESPONSE: DC.B 'that was a great choice' , $00
+ BACKSPACE: DC.B ' ' , $00 
+ 
+;/------------------------------------------------------------------------------------\
+;| Vectors                                                                            |
+;\------------------------------------------------------------------------------------/
+; Add interrupt and reset vectors here
+
+        ORG   $FFFE                    ; reset vector address
+        DC.W  Entry
+
