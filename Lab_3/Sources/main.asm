@@ -50,6 +50,14 @@
 ;\------------------------------------------------------------------------------------/
 ; Constant values can be equated here
 
+PORTP EQU $0258 ; output port for LEDs
+DDRP EQU $025A
+G_LED_1 EQU %00010000 ; green LED output pin for LED pair_1
+R_LED_1 EQU %00100000 ; red LED output pin for LED pair_1
+LED_MSK_1 EQU %00110000 ; LED pair_1
+G_LED_2 EQU %01000000 ; green LED output pin for LED pair_2
+R_LED_2 EQU %10000000 ; red LED output pin for LED pair_2
+LED_MSK_2 EQU %11000000 ; LED pair_2
 
 
 ;/------------------------------------------------------------------------------------\
@@ -64,10 +72,9 @@ DEFAULT_RAM:  SECTION
 COUNT DS.B 1
 F1_FLG  DS.B 1
 F2_FLG  DS.B 1
-SPEED1  DS.B 1 
-SPEED2  DS.B 1
 ON1     DS.B 1 
 ON2     DS.B 1 
+MM_ERR  DS.B 1 
 
 ;params for t2 
 KEY_FLG DS.B 1
@@ -92,8 +99,8 @@ DONE_2 DS.B 1
 
 ;params for t7
 
-TICKS_1 DS.B 1
-COUNT_1 DS.B 1
+TICKS_2 DS.B 1
+COUNT_2 DS.B 1
 
 ;params for t8
 
@@ -139,7 +146,16 @@ main:
        clr t7state
        clr t8state
        
-       
+Top:
+        jsr TASK_1 ; execute tasks endlessly
+        jsr TASK_2
+        jsr TASK_3
+        jsr TASK_4
+        jsr TASK_5
+        jsr TASK_6
+        jsr TASK_7
+        jsr TASK_8
+        bra Top       
        
 spin: bra spin
 
@@ -152,13 +168,13 @@ TASK_1: ldaa t1state ; get current t1state and branch accordingly
         deca
         beq t1s2
         deca
-        beq t1s3
+        lbeq t1s3
         deca
-        beq t1s4
+        lbeq t1s4
         deca
-        beq t1s5
+        lbeq t1s5
         deca
-        beq t1s6
+        lbeq t1s6
         rts ; undefined state - do nothing but return
 ;__________________________________________________________________________________
 t1s0: ; init TASK_1
@@ -176,7 +192,7 @@ t1s1: ;
 ;check if its F1
 
         tst KEY_FLG                                 ;first test if there is a key to be checked
-        beq exit1                                   ;if there is no 
+        lbeq exit1                                   ;if there is no 
         ldaa KEY_BUFF                               ;load accumulator A with the current char
         cmpa $F1                                    ;compare whats in A to F1 
         bne skipF1                                  ;if its not F1, skip settting the state
@@ -209,6 +225,8 @@ skipBS:
         bne skipENT                                 ;if its not BS, skip settting the state 
         movb #$03 , t1state                         ;set the state to the appropriate number 
         rts
+        
+skipENT: 
 
 ;check if its a digit 
 
@@ -231,7 +249,7 @@ t1s2: ;Digit Handler
         bne skip_e                                  ;if not equal to 0, skip exiting 
         tst F2_FLG                                  ;test the F2 flag 
         bne skip_e                                  ;if not equal to 0, skip exiting 
-        bra exit1                                   ;exit if equal to 0 
+        lbra exit1                                   ;exit if equal to 0 
 
 skip_e:
 
@@ -245,57 +263,78 @@ skip_e:
         inc COUNT                                   ;increment count 
         movb #$00, KEY_FLG                          ;set key flag to 0 to acknowledge KEYPAD
         movb #$01 , t1state                         ;set the state back to 1 
-        bra exit1                                   ;exit 
+        lbra exit1                                   ;exit 
 ;________________________________________________________________________________________
 t1s3: ;ENT 
  
+
+;before jsr to conversion, check if any digits have been entered into buffer      
+      
+       tst COUNT                                   ;test the current value of count 
+       bne skip_NO_DIGITS                          ;if the count is not zero, branch 
+       ldaa #$03                                   ;if the count is zero, put an error code into A 
+       bra skip_F2                                 ;branch to the set error state below 
+       
+
+skip_NO_DIGITS: 
+
+;send to conversion to get a BCD form of the input 
+    
        jsr conversion                              ;convert the contents of buffer to binary 
        clr COUNT                                   ;set count back to zero 
        clr BUFFER                                  ;clear the contents of the BUFFER
        
-;check which flag to set 
+;check which ON flag to set 
  
        tst F1_FLG                                  ;test the F1 flag
        beq skip_F1_a                               ;if the flag is zero, skip the next steps 
        movb #01, ON1                               ;if the flag is 1, set ON1 to be true 
-       clr F1_FLG                                  ;clear the F1 flag
-       stx SPEED1                                  ;store the 
+       stx TICKS_1                                 ;store the results of the conversion 
          
-
 skip_F1_a:  
  
        tst F2_FLG                                  ;test the F2 flag
-       beq skip_F2                               ;if the flag is zero, skip the next steps 
+       beq skip_F2                                 ;if the flag is zero, skip the next steps 
        movb #$01, ON2                              ;if the flag is 1, set ON2 to be true 
-       clr F2_FLG                                  ;clear the F2 flag 
+       stx TICKS_2                                 ;store the results of the conversion
 
-skip_F2: 
+skip_F2:
 
-       movb #$01, tstate1                          ;set the state back to 1 
+;automatically set the state back to 1 for all cases  
+
+       movb #$01, t1state                          ;set the state back to 1 
        
 ;check for error and set variables accordingly so that user has to start over 
 
        cmpa #$00                                   ;check whats in A 
        beq skipERROR                               ;check if an error was generated from conversion
-       movb #$07, tstate1                         ;if there is an error code set the state to the 
-                                                   ;error state  
-;check which ON variable needs to be cleared 
-      
+       movb #$07, t1state                          ;if there is an error code set the state to the 
+                                                   ;error state
+       staa MM_ERR                                 ;store the error code of accumulator A into a variable 
+                                                   ;so it is not affected by other code before it gets to 
+                                                   ;the error state                                              
+                                                     
+;check which ON variable needs to be cleared if there is an error 
       
       tst F1_FLG                                   ;test the F1 flag
       beq skip_F1_b                                ;if the flag is zero, skip the next steps 
-      clr ON1
+      clr ON1                                      ;clear ON1
+      clr TICKS_1                                  ;clear TICKS_1
       
 skip_F1_b: 
  
       tst F2_FLG                                   ;test the F2 flag
       beq skipERROR                                ;if the flag is zero, skip the next steps
-      clr ON2 
+      clr ON2                                      ;clear ON2 
+      clr TICKS_2                                  ;clear TICKS_2
+      bra exit1                                    ;exit without clearing F1 and F2 flags 
                   
-skipERROR: 
-       
-      clr F1_FLG                                   ;clear F1_FLG 
-      clr F2_FLG                                   ;clear F2_FLG 
+skipERROR:
+
+;if there are no errors, clear the F1 and F2 flags and exit   
+      
+      clr F1_FLG 
+      clr F2_FLG  
       bra exit1                                    ;exit
  ;________________________________________________________________________________________
 t1s4: ;BS
@@ -323,13 +362,71 @@ t1s6: ;F2 state
 t1s7: ;Error state 
 
 
-  ;setting the error number 
+;checks the error code in accumulator A and which F flag is set to set the appropiate fixed 
+;message state to be displayed through task 3 
 
+;split the code into two sections. the F1 and F2 sections 
+  
+;fist test the F1 flag 
 
+       tst F1_FLG                                   ;test the F1 flag
+       beq skip_F1_e                                ;if the flag is zero, skip the next steps    
+ 
+;now check the error number and set the message number for task 3 
+ 
+       ldaa MM_ERR                                  ;put the error number back into accumulator a 
+       cmpa #01                                     ;check if the error code is mag to large 
+       bne skip_F1_toolarge                         ;skip setting the message num
+       movb #$07, MSG_NUM                           ;set the appropiate message num 
+
+skip_F1_toolarge: 
+
+       cmpa #02                                     ;check if the error code is zero magnitude 
+       bne skip_F1_zeromag                          ;skip setting the message num
+       movb #$05, MSG_NUM                           ;set the appropiate message num 
+
+skip_F1_zeromag: 
+
+       cmpa #03                                     ;check if the error code is zero digits
+       bne skip_F1_e                                ;skip setting the message num
+       movb #$03, MSG_NUM                           ;set the appropiate message num 
+   
+   
+skip_F1_e: 
+ 
+;now test the F2 flag 
+ 
+       tst F2_FLG                                   ;test the F1 flag
+       beq skip_F2_e                                ;if the flag is zero, skip the next steps    
+ 
+;now check the error number and set the message number for task 3 
+ 
+       cmpa #01                                     ;check if the error code is mag to large 
+       bne skip_F2_toolarge                         ;skip setting the message num
+       movb #$08, MSG_NUM                           ;set the appropiate message num 
+
+skip_F2_toolarge: 
+
+       cmpa #02                                     ;check if the error code is zero magnitude 
+       bne skip_F2_zeromag                          ;skip setting the message num
+       movb #$06, MSG_NUM                           ;set the appropiate message num 
+
+skip_F2_zeromag: 
+
+       cmpa #03                                     ;check if the error code is zero digits
+       bne skip_F2_e                                ;skip setting the message num
+       movb #$04, MSG_NUM                           ;set the appropiate message num 
+ 
+skip_F2_e: 
+
+ ;clear the F1 and F2 flags and fall through to the exit 
+
+        clr F1_FLG 
+        clr F2_FLG
 
 exit1:
         rts
-;----------------------TASK 2-------------------------------------------; 
+;----------------------TASK 2 - KEYPAD -------------------------------------------; 
  
 TASK_2:
  
@@ -341,7 +438,6 @@ TASK_2:
         deca
         beq t2s2
         rts
-
 
 t2s0:
 
@@ -356,8 +452,8 @@ t2s1:
         tst LKEY_FLG
         beq exit2
         jsr GETCHAR
-        stab #KEY_BUFF     ;stores the input char into key buffer
-        set KEY_FLG        ;notifies MM of key input
+        stab KEY_BUFF     ;stores the input char into key buffer
+        movb #$01, KEY_FLG        ;notifies MM of key input
         movb #$02, t2state
         bra exit2                                   ;exit
         
@@ -371,7 +467,7 @@ t2s2:
 exit2: rts        
         
         
-;---------------------TASK 3------------------------------------------------;
+;---------------------TASK 3 - DISPLAY ---------------------------------------------;
 
 TASK_3:
 
@@ -394,17 +490,17 @@ TASK_3:
         deca
         beq t3s8
         deca
-        beq t3s9
+        lbeq t3s9
         deca
-        beq t3s10
+        lbeq t3s10
         deca
-        beq t3s11
+        lbeq t3s11
         rts
         
 t3s0:     ;init    
         
        jsr INITLCD       ;initialize LCD
-       set FIRSTCH
+       movb #$01, FIRSTCH
        ldaa #$00         ;set LCD position to 0
        jsr SETADDR
        jsr CURSOR_ON     ;turn on cursor
@@ -414,7 +510,7 @@ t3s0:     ;init
 t3s1:
 
        ;hub
-       set FIRSTCH
+       movb #$01, FIRSTCH
        ldab MSG_NUM            
        stab t3state            
        rts
@@ -497,7 +593,7 @@ t3s10:  ;magnitude too large 2 message
 t3s11:  ;display full screen (init message)
 
        ldx #INITMSG
-       tst FIRSTCHAR
+       tst FIRSTCH
        bne initmsg
        jsr ICHAR
        rts
@@ -519,7 +615,11 @@ exit3:
 ;------------------TASK 4--------------------------------------------------
 ;pattern 1
 
-TASK_4: ldaa t4state ; get current t4state and branch accordingly
+TASK_4: 
+        tst ON1
+        beq turnofft4
+        
+        ldaa t4state ; get current t4state and branch accordingly
         beq t4state0
         deca
         beq t4state1
@@ -534,6 +634,13 @@ TASK_4: ldaa t4state ; get current t4state and branch accordingly
         deca
         beq t4state6
         rts ; undefined state - do nothing but return
+        
+turnofft4:
+        ;changes lights to off
+        bclr PORTP, LED_MSK_1
+        movb #$01, t4state
+        rts
+        
         
 t4state0: ; init TASK_1 (not G, not R)
         bclr PORTP, LED_MSK_1 ; ensure that LEDs are off when initialized
@@ -588,6 +695,7 @@ t4state6: ; not G, not R
         movb #$01, t4state ; otherwise if done, set next state
 exit_t4s6:
         rts ; exit TASK_4
+ 
 
 
 ;------------------TASK 5--------------------------------------------------
@@ -633,7 +741,11 @@ exit_t5s2:
 ;------------------TASK 6--------------------------------------------------
 ;pattern 2
 
-TASK_6: ldaa t6state ; get current t1state and branch accordingly
+TASK_6: 
+        tst ON2
+        beq turnofft6
+
+        ldaa t6state ; get current t1state and branch accordingly
         beq t6state0
         deca
         beq t6state1
@@ -648,52 +760,67 @@ TASK_6: ldaa t6state ; get current t1state and branch accordingly
         deca
         beq t6state6
         rts ; undefined state - do nothing but return
+        
+turnofft6:
+        ;changes lights to off
+        bclr PORTP, LED_MSK_2
+        movb #$01, t6state
+        rts
+                
+        
+        
 t6state0: ; init TASK_1 (not G, not R)
         bclr PORTP, LED_MSK_2 ; ensure that LEDs are off when initialized
         bset DDRP, LED_MSK_2 ; set LED_MSK_1 pins as PORTS outputs
-        movb #$01, t4state ; set next state
+        movb #$01, t6state ; set next state
         rts
+        
 t6state1: ; G, not R
         bset PORTP, G_LED_2 ; set state1 pattern on LEDs
         tst DONE_2 ; check TASK_4 done flag
-        beq exit_t4s1 ; if not done, return
-        movb #$02, t4state ; otherwise if done, set next state
-        exit_t4s1:
+        beq exit_t6s1 ; if not done, return
+        movb #$02, t6state ; otherwise if done, set next state
+exit_t6s1:
         rts
+        
 t6state2: ; not G, not R
         bclr PORTP, G_LED_2 ; set state2 pattern on LEDs
         tst DONE_2 ; check TASK_1 done flag
-        beq exit_t4s2 ; if not done, return
-        movb #$03, t4state ; otherwise if done, set next state
-        exit_t4s2:
+        beq exit_t6s2 ; if not done, return
+        movb #$03, t6state ; otherwise if done, set next state
+exit_t6s2:
         rts
+        
 t6state3: ; not G, R
         bset PORTP, R_LED_2 ; set state3 pattern on LEDs
         tst DONE_2 ; check TASK_2 done flag
-        beq exit_t4s3 ; if not done, return
-        movb #$04, t4state ; otherwise if done, set next state
-        exit_t4s3:
+        beq exit_t6s3 ; if not done, return
+        movb #$04, t6state ; otherwise if done, set next state
+exit_t6s3:
         rts
+        
 t6state4 ; not G, not R
         bclr PORTP, R_LED_2 ; set state4 pattern on LEDs
         tst DONE_2 ; check TASK_2 done flag
-        beq exit_t4s4 ; if not done, return
-        movb #$05, t4state ; otherwise if done, set next state
-        exit_t4s4:
+        beq exit_t6s4 ; if not done, return
+        movb #$05, t6state ; otherwise if done, set next state
+exit_t6s4:
         rts
+        
 t6state5: ; G, R
         bset PORTP, LED_MSK_2 ; set state5 pattern on LEDs
         tst DONE_2 ; check TASK_2 done flag
-        beq exit_t4s5 ; if not done, return
-        movb #$06, t4state ; otherwise if done, set next state
-        exit_t4s5:
+        beq exit_t6s5 ; if not done, return
+        movb #$06, t6state ; otherwise if done, set next state
+exit_t6s5:
         rts
+        
 t6state6: ; not G, not R
         bclr PORTP, LED_MSK_2 ; set state6 pattern on LEDs
         tst DONE_2 ; check TASK_2 done flag
-        beq exit_t4s6 ; if not done, return
-        movb #$01, t4state ; otherwise if done, set next state
-        exit_t4s6:
+        beq exit_t6s6 ; if not done, return
+        movb #$01, t6state ; otherwise if done, set next state
+exit_t6s6:
         rts ; exit TASK_4
         
 
@@ -703,7 +830,39 @@ t6state6: ; not G, not R
 
 
 ;------------------TASK 7--------------------------------------------------
+;timing 2
 
+TASK_7: ldaa t7state ; get current t2state and branch accordingly
+        beq t7state0
+        deca
+        beq t7state1
+        rts ; undefined state - do nothing but return
+        
+t7state0: ; initialization for TASK_7
+        movw TICKS_2, COUNT_2 ; init COUNT_2
+        clr DONE_2 ; init DONE_2 to FALSE
+        movb #$01, t7state ; set next state
+        rts
+        
+t7state1: ; Countdown_1
+        ldaa DONE_2   ;load accumulator A with DONE_2 
+        cmpa #$01     ;check if DONE_2 - 1 = 0 
+        bne t7s1a ; skip reinitialization if DONE_2 is not = 1
+        
+        ;reinitialize if DONE_2 = 1 
+        
+        movw TICKS_2, COUNT_2 ; init COUNT_2
+        clr DONE_2 ; init DONE_2 to FALSE
+        
+       ;after reinitialization, you still decrement
+        
+t7s1a:  decw COUNT_2    ;decrement COUNT_2
+        bne exit_t7s2   ;if COUNT_2 is not equal to zero, exit 
+        movb #$01, DONE_2     ;if COUNT_1 is zero, set DONE_2 to 1
+     
+        
+exit_t7s2:
+        rts ; exit TASK_7
 
 
 
@@ -749,16 +908,8 @@ t8state1:
        deca                          ;decrement one
        jsr SETADDR                   ;set address to new position
        dec COUNT                     ;reset the value of count
-     
-       bra input_loop               ;branch back to the top of the loop
- 
        
-   input_exit:
- 
-       ldaa #$00
-       ldx #RESPONSE      ;load message into x
-       jsr OUTSTRING_AT     ;display message
-       rts    ;return to main 
+   
   
   ;------CONVERSIONS---------------------------------------------------------------------------;
 
@@ -874,7 +1025,17 @@ changeline:
           rts
 
 
+;----------------------DElay----------------------------
 
+DELAY_1ms:
+        ldy #$0584
+        INNER: ; inside loop
+        cpy #0
+        beq EXIT
+        dey
+        bra INNER
+        EXIT:
+        rts ; exit DELAY_1ms
 
 ;/------------------------------------------------------------------------------------\
 ;| ASCII Messages and Constant Data                                                   |
