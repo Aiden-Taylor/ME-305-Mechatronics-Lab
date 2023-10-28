@@ -1,12 +1,12 @@
 ;**************************************************************************************
-;* Lab 3 Main [includes LibV2.2]                                              *
+;* Lab 3 Main [includes LibV2.2]                                                      *
 ;**************************************************************************************
 ;* Summary:                                                                           *
 ;*   -                                                                                *
 ;*                                                                                    *
 ;* Author: Aiden Taylor & Julia Fay                                                   *
 ;*   Cal Poly University                                                              *
-;*   Fall 2023                                                                      *
+;*   Fall 2023                                                                        *
 ;*                                                                                    *
 ;* Revision History:                                                                  *
 ;*   -                                                                                *
@@ -75,6 +75,30 @@ KEY_BUFF DS.W 1
 
 ;params for t3
 MSG_NUM DS.B 1
+
+
+;params for t4
+
+DONE_1 DS.B 1
+
+;params for t5
+
+TICKS_1 DS.B 1
+COUNT_1 DS.B 1
+
+;params for t6
+
+DONE_2 DS.B 1
+
+;params for t7
+
+TICKS_1 DS.B 1
+COUNT_1 DS.B 1
+
+;params for t8
+
+    ;delay
+
 
 ;state vars
 t1state DS.B 1
@@ -491,6 +515,219 @@ char1:    ;first char of any message
 exit3:
 
        rts
+       
+;------------------TASK 4--------------------------------------------------
+;pattern 1
+
+TASK_4: ldaa t4state ; get current t4state and branch accordingly
+        beq t4state0
+        deca
+        beq t4state1
+        deca
+        beq t4state2
+        deca
+        beq t4state3
+        deca
+        beq t4state4
+        deca
+        beq t4state5
+        deca
+        beq t4state6
+        rts ; undefined state - do nothing but return
+        
+t4state0: ; init TASK_1 (not G, not R)
+        bclr PORTP, LED_MSK_1 ; ensure that LEDs are off when initialized
+        bset DDRP, LED_MSK_1 ; set LED_MSK_1 pins as PORTS outputs
+        movb #$01, t4state ; set next state
+        rts
+        
+t4state1: ; G, not R
+        bset PORTP, G_LED_1 ; set state1 pattern on LEDs
+        tst DONE_1 ; check TASK_4 done flag
+        beq exit_t4s1 ; if not done, return
+        movb #$02, t4state ; otherwise if done, set next state
+exit_t4s1:
+        rts
+        
+t4state2: ; not G, not R
+        bclr PORTP, G_LED_1 ; set state2 pattern on LEDs
+        tst DONE_1 ; check TASK_4 done flag
+        beq exit_t4s2 ; if not done, return
+        movb #$03, t4state ; otherwise if done, set next state
+exit_t4s2:
+        rts
+        
+t4state3: ; not G, R
+        bset PORTP, R_LED_1 ; set state3 pattern on LEDs
+        tst DONE_1 ; check TASK_4 done flag
+        beq exit_t4s3 ; if not done, return
+        movb #$04, t4state ; otherwise if done, set next state
+exit_t4s3:
+        rts
+        
+t4state4 ; not G, not R
+        bclr PORTP, R_LED_1 ; set state4 pattern on LEDs
+        tst DONE_1 ; check TASK_4 done flag
+        beq exit_t4s4 ; if not done, return
+        movb #$05, t4state ; otherwise if done, set next state
+exit_t4s4:
+        rts
+        
+t4state5: ; G, R
+        bset PORTP, LED_MSK_1 ; set state5 pattern on LEDs
+        tst DONE_1 ; check TASK_4 done flag
+        beq exit_t4s5 ; if not done, return
+        movb #$06, t4state ; otherwise if done, set next state
+exit_t4s5:
+        rts
+        
+t4state6: ; not G, not R
+        bclr PORTP, LED_MSK_1 ; set state6 pattern on LEDs
+        tst DONE_1 ; check TASK_4 done flag
+        beq exit_t4s6 ; if not done, return
+        movb #$01, t4state ; otherwise if done, set next state
+exit_t4s6:
+        rts ; exit TASK_4
+
+
+;------------------TASK 5--------------------------------------------------
+;timing 1
+
+TASK_5: ldaa t5state ; get current t5state and branch accordingly
+        beq t5state0
+        deca
+        beq t5state1
+        rts ; undefined state - do nothing but return
+        
+t5state0: ; initialization for TASK_5
+        movw TICKS_1, COUNT_1 ; init COUNT_1
+        clr DONE_1 ; init DONE_1 to FALSE
+        movb #$01, t5state ; set next state
+        rts
+        
+t5state1: ; Countdown_1
+        ldaa DONE_1   ;load accumulator A with DONE_1 
+        cmpa #$01     ;check if DONE_1 - 1 = 0 
+        bne t5s1a ; skip reinitialization if DONE_1 is not = 1
+        
+        ;reinitialize if DONE_1 = 1 
+        
+        movw TICKS_1, COUNT_1 ; init COUNT_1
+        clr DONE_1 ; init DONE_1 to FALSE
+        
+       ;after reinitialization, you still decrement
+        
+t5s1a:  decw COUNT_1    ;decrement COUNT_1
+        bne exit_t5s2   ;if COUNT_1 is not equal to zero, exit 
+        movb #$01, DONE_1     ;if COUNT_1 is zero, set DONE_1 to 1
+     
+        
+exit_t5s2:
+        rts ; exit TASK_5
+
+
+
+
+
+
+;------------------TASK 6--------------------------------------------------
+;pattern 2
+
+TASK_6: ldaa t6state ; get current t1state and branch accordingly
+        beq t6state0
+        deca
+        beq t6state1
+        deca
+        beq t6state2
+        deca
+        beq t6state3
+        deca
+        beq t6state4
+        deca
+        beq t6state5
+        deca
+        beq t6state6
+        rts ; undefined state - do nothing but return
+t6state0: ; init TASK_1 (not G, not R)
+        bclr PORTP, LED_MSK_2 ; ensure that LEDs are off when initialized
+        bset DDRP, LED_MSK_2 ; set LED_MSK_1 pins as PORTS outputs
+        movb #$01, t4state ; set next state
+        rts
+t6state1: ; G, not R
+        bset PORTP, G_LED_2 ; set state1 pattern on LEDs
+        tst DONE_2 ; check TASK_4 done flag
+        beq exit_t4s1 ; if not done, return
+        movb #$02, t4state ; otherwise if done, set next state
+        exit_t4s1:
+        rts
+t6state2: ; not G, not R
+        bclr PORTP, G_LED_2 ; set state2 pattern on LEDs
+        tst DONE_2 ; check TASK_1 done flag
+        beq exit_t4s2 ; if not done, return
+        movb #$03, t4state ; otherwise if done, set next state
+        exit_t4s2:
+        rts
+t6state3: ; not G, R
+        bset PORTP, R_LED_2 ; set state3 pattern on LEDs
+        tst DONE_2 ; check TASK_2 done flag
+        beq exit_t4s3 ; if not done, return
+        movb #$04, t4state ; otherwise if done, set next state
+        exit_t4s3:
+        rts
+t6state4 ; not G, not R
+        bclr PORTP, R_LED_2 ; set state4 pattern on LEDs
+        tst DONE_2 ; check TASK_2 done flag
+        beq exit_t4s4 ; if not done, return
+        movb #$05, t4state ; otherwise if done, set next state
+        exit_t4s4:
+        rts
+t6state5: ; G, R
+        bset PORTP, LED_MSK_2 ; set state5 pattern on LEDs
+        tst DONE_2 ; check TASK_2 done flag
+        beq exit_t4s5 ; if not done, return
+        movb #$06, t4state ; otherwise if done, set next state
+        exit_t4s5:
+        rts
+t6state6: ; not G, not R
+        bclr PORTP, LED_MSK_2 ; set state6 pattern on LEDs
+        tst DONE_2 ; check TASK_2 done flag
+        beq exit_t4s6 ; if not done, return
+        movb #$01, t4state ; otherwise if done, set next state
+        exit_t4s6:
+        rts ; exit TASK_4
+        
+
+
+
+
+
+
+;------------------TASK 7--------------------------------------------------
+
+
+
+
+
+
+
+;------------------TASK 8--------------------------------------------------
+          ;delay
+          
+TASK_8: ldaa t8state ; get current t3state and branch accordingly
+        beq t8state0
+        deca
+        beq t8state1
+        rts ; undefined state - do nothing but return
+
+t8state0: ; initialization for TASK_8
+        ; no initialization required
+        movb #$01, t8state ; set next state
+        rts
+
+t8state1:
+        jsr DELAY_1ms
+        rts ; exit TASK_8
+        
         
   
 ;/------------------------------------------------------------------------------------\
