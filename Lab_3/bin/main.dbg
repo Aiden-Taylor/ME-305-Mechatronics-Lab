@@ -78,7 +78,7 @@ MM_ERR  DS.B 1
 
 ;params for t2 
 KEY_FLG DS.B 1
-KEY_BUFF DS.W 1
+KEY_BUFF DS.B 1
 
 ;params for t3
 MSG_NUM DS.B 1
@@ -90,8 +90,8 @@ DONE_1 DS.B 1
 
 ;params for t5
 
-TICKS_1 DS.B 1
-COUNT_1 DS.B 1
+TICKS_1 DS.W 1
+COUNT_1 DS.W 1
 
 ;params for t6
 
@@ -99,8 +99,8 @@ DONE_2 DS.B 1
 
 ;params for t7
 
-TICKS_2 DS.B 1
-COUNT_2 DS.B 1
+TICKS_2 DS.W 1
+COUNT_2 DS.W 1
 
 ;params for t8
 
@@ -147,6 +147,7 @@ main:
        clr t8state
        
 Top:
+        ;bgnd
         jsr TASK_1 ; execute tasks endlessly
         jsr TASK_2
         jsr TASK_3
@@ -161,7 +162,9 @@ spin: bra spin
 
 ;-------------TASK_1 MASTERMIND ---------------------------------------------------------
 
-TASK_1: ldaa t1state ; get current t1state and branch accordingly
+TASK_1: 
+        ;bgnd
+        ldaa t1state ; get current t1state and branch accordingly
         beq t1s0
         deca
         beq t1s1
@@ -175,26 +178,30 @@ TASK_1: ldaa t1state ; get current t1state and branch accordingly
         lbeq t1s5
         deca
         lbeq t1s6
+        deca
+        lbeq t1s7
         rts ; undefined state - do nothing but return
 ;__________________________________________________________________________________
 t1s0: ; init TASK_1
 
 ;clear all of the flags 
-
-  clr COUNT 
-
-
+        clr TICKS_1
+        clr TICKS_2
+        clr F1_FLG 
+        clr F2_FLG 
+        clr KEY_FLG 
+        clr COUNT 
         movb #$01, t1state ; set next state
         rts
 ;__________________________________________________________________________________
 t1s1: ;
 
 ;check if its F1
-
+ 
         tst KEY_FLG                                 ;first test if there is a key to be checked
-        lbeq exit1                                   ;if there is no 
-        ldaa KEY_BUFF                               ;load accumulator A with the current char
-        cmpa $F1                                    ;compare whats in A to F1 
+        lbeq exit1                                  ;if there is no 
+        ldaa KEY_BUFF                                ;load accumulator A with the current char
+        cmpa #$F1                                     ;compare whats in A to F1 
         bne skipF1                                  ;if its not F1, skip settting the state
         movb #$05 , t1state                         ;set the state to the appropriate number  
         rts
@@ -203,7 +210,7 @@ skipF1:
 
 ;check if its F2
                           
-        cmpa $F2                                    ;compare whats in A to F2
+        cmpa #$F2                                    ;compare whats in A to F2
         bne skipF2                                  ;if its not F2, skip settting the state
         movb #$06 , t1state                         ;set the state to the appropriate number 
         rts
@@ -212,7 +219,7 @@ skipF2:
 
 ;check if its a BS 
        
-        cmpa $08                                    ;compare whats in A to BS 
+        cmpa #$08                                    ;compare whats in A to BS 
         bne skipBS                                  ;if its not BS, skip settting the state 
         movb #$04 , t1state                         ;set the state to the appropriate number 
         rts
@@ -221,7 +228,7 @@ skipBS:
 
 ;check if its a ENT  
 
-        cmpa $0A                                    ;compare whats in A to ENT 
+        cmpa #$0A                                    ;compare whats in A to ENT 
         bne skipENT                                 ;if its not BS, skip settting the state 
         movb #$03 , t1state                         ;set the state to the appropriate number 
         rts
@@ -229,9 +236,9 @@ skipBS:
 skipENT: 
 
 ;check if its a digit 
-
+       
         cmpa #$39                                   ;check if what in A is a number 
-        bne skipDIGIT                               ;if its not a number, disregard the input 
+        bgt skipDIGIT                               ;if its not a number, disregard the input 
         movb #$02 , t1state                         ;set the state to digit handler 
         rts
 
@@ -249,6 +256,7 @@ t1s2: ;Digit Handler
         bne skip_e                                  ;if not equal to 0, skip exiting 
         tst F2_FLG                                  ;test the F2 flag 
         bne skip_e                                  ;if not equal to 0, skip exiting 
+        clr KEY_FLG
         lbra exit1                                   ;exit if equal to 0 
 
 skip_e:
@@ -262,7 +270,9 @@ skip_e:
        
         inc COUNT                                   ;increment count 
         movb #$00, KEY_FLG                          ;set key flag to 0 to acknowledge KEYPAD
-        movb #$01 , t1state                         ;set the state back to 1 
+        movb #$01 , t1state                         ;set the state back to 1
+        clr KEY_FLG                                 ;clear key flag 
+        jsr OUTCHAR
         lbra exit1                                   ;exit 
 ;________________________________________________________________________________________
 t1s3: ;ENT 
@@ -327,35 +337,53 @@ skip_F1_b:
       beq skipERROR                                ;if the flag is zero, skip the next steps
       clr ON2                                      ;clear ON2 
       clr TICKS_2                                  ;clear TICKS_2
-      bra exit1                                    ;exit without clearing F1 and F2 flags 
+      clr KEY_FLG                                  ;clear key flag
+      jsr clearbuffer
+      jsr CURSOR_OFF   
+      lbra exit1                                   ;exit without clearing F1 and F2 flags 
                   
 skipERROR:
 
 ;if there are no errors, clear the F1 and F2 flags and exit   
       
+      
+      
+      jsr clearbuffer
+      jsr CURSOR_OFF 
+      clr KEY_FLG 
       clr F1_FLG 
       clr F2_FLG  
-      bra exit1                                    ;exit
+      lbra exit1                                    ;exit
  ;________________________________________________________________________________________
 t1s4: ;BS
  
        movb #$03 , t3state                         ;set the state in task 3 to the BS state   
        movb #$01 , t1state                         ;set the state back to 1
-       bra exit1                                   ;exit
+       clr KEY_FLG 
+       lbra exit1                                   ;exit
  ;________________________________________________________________________________________
 t1s5: ;F1 state 
  
- 
+       
        movb #$01, F1_FLG                           ;set the F1_FLG to be true
-       movb #$01 , t1state                         ;set the state back to 1 
+       movb #$01 , t1state                         ;set the state back to 1
+       clr ON1 
+       clr KEY_FLG
+       ldaa #$08
+       jsr SETADDR
+       jsr CURSOR_ON 
        bra exit1                                   ;exit
        
  ;________________________________________________________________________________________
 t1s6: ;F2 state 
  
- 
        movb #$01, F2_FLG                           ;set the F2_FLG to be true
        movb #$01 , t1state                         ;set the state back to 1
+       clr ON2
+       clr KEY_FLG
+       ldaa #$48
+       jsr SETADDR
+       jsr CURSOR_ON  
        bra exit1                                   ;exit
 
 ;________________________________________________________________________________________
@@ -389,8 +417,7 @@ skip_F1_zeromag:
 
        cmpa #03                                     ;check if the error code is zero digits
        bne skip_F1_e                                ;skip setting the message num
-       movb #$03, MSG_NUM                           ;set the appropiate message num 
-   
+       movb #$03, MSG_NUM                           ;set the appropiate message num    
    
 skip_F1_e: 
  
@@ -423,6 +450,7 @@ skip_F2_e:
 
         clr F1_FLG 
         clr F2_FLG
+        movb #$01 , t1state                         ;set the state back to 1
 
 exit1:
         rts
@@ -430,7 +458,7 @@ exit1:
  
 TASK_2:
  
-       
+        ;bgnd
         ldaa t2state ;get state
         beq t2s0
         deca
@@ -503,7 +531,7 @@ t3s0:     ;init
        movb #$01, FIRSTCH
        ldaa #$00         ;set LCD position to 0
        jsr SETADDR
-       jsr CURSOR_ON     ;turn on cursor
+       ;jsr CURSOR_ON     ;turn on cursor
        movb #$0B, t3state ; go to init state 
        rts
         
@@ -616,6 +644,7 @@ exit3:
 ;pattern 1
 
 TASK_4: 
+        ;bgnd
         tst ON1
         beq turnofft4
         
@@ -643,6 +672,7 @@ turnofft4:
         
         
 t4state0: ; init TASK_1 (not G, not R)
+        clr ON1
         bclr PORTP, LED_MSK_1 ; ensure that LEDs are off when initialized
         bset DDRP, LED_MSK_1 ; set LED_MSK_1 pins as PORTS outputs
         movb #$01, t4state ; set next state
@@ -770,6 +800,7 @@ turnofft6:
         
         
 t6state0: ; init TASK_1 (not G, not R)
+        clr ON2
         bclr PORTP, LED_MSK_2 ; ensure that LEDs are off when initialized
         bset DDRP, LED_MSK_2 ; set LED_MSK_1 pins as PORTS outputs
         movb #$01, t6state ; set next state
@@ -1036,13 +1067,33 @@ DELAY_1ms:
         bra INNER
         EXIT:
         rts ; exit DELAY_1ms
+        
+        
+        
+;-----------------clearbuffer----------------------   
+
+clearbuffer:
+
+      ldx #BUFFER
+      ldaa #$00
+      clr a, x
+      inca
+      clr a, x
+      inca
+      clr a, x
+      inca
+      clr a, x
+      inca
+      clr a, x
+      rts
+
 
 ;/------------------------------------------------------------------------------------\
 ;| ASCII Messages and Constant Data                                                   |
 ;\------------------------------------------------------------------------------------/
 ; Any constants can be defined here
 
- INITMSG: DC.B 'TIME1 =     <F1> to update LED1 periodTIME2 =     <F2> to update LED1 period', $00
+ INITMSG: DC.B 'TIME1 =       <F1> to update LED1 periodTIME2 =       <F2> to update LED1 period', $00
  TIME1:  DC.B 'TIME1 =     <F1> to update LED1 period', $00
  TIME2:  DC.B 'TIME2 =     <F2> to update LED1 period', $00
  NODIG1: DC.B 'TIME1 = NO DIGITS ENTERED             ', $00

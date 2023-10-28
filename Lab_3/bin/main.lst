@@ -90,29 +90,29 @@ Freescale HC12-Assembler
    78   78                      
    79   79                      ;params for t2 
    80   80   000006             KEY_FLG DS.B 1
-   81   81   000007             KEY_BUFF DS.W 1
+   81   81   000007             KEY_BUFF DS.B 1
    82   82                      
    83   83                      ;params for t3
-   84   84   000009             MSG_NUM DS.B 1
+   84   84   000008             MSG_NUM DS.B 1
    85   85                      
    86   86                      
    87   87                      ;params for t4
    88   88                      
-   89   89   00000A             DONE_1 DS.B 1
+   89   89   000009             DONE_1 DS.B 1
    90   90                      
    91   91                      ;params for t5
    92   92                      
-   93   93   00000B             TICKS_1 DS.B 1
-   94   94   00000C             COUNT_1 DS.B 1
+   93   93   00000A             TICKS_1 DS.W 1
+   94   94   00000C             COUNT_1 DS.W 1
    95   95                      
    96   96                      ;params for t6
    97   97                      
-   98   98   00000D             DONE_2 DS.B 1
+   98   98   00000E             DONE_2 DS.B 1
    99   99                      
   100  100                      ;params for t7
   101  101                      
-  102  102   00000E             TICKS_2 DS.B 1
-  103  103   00000F             COUNT_2 DS.B 1
+  102  102   00000F             TICKS_2 DS.W 1
+  103  103   000011             COUNT_2 DS.W 1
   104  104                      
   105  105                      ;params for t8
   106  106                      
@@ -120,22 +120,22 @@ Freescale HC12-Assembler
   108  108                      
   109  109                      
   110  110                      ;state vars
-  111  111   000010             t1state DS.B 1
-  112  112   000011             t2state DS.B 1
-  113  113   000012             t3state DS.B 1
-  114  114   000013             t4state DS.B 1
-  115  115   000014             t5state DS.B 1
-  116  116   000015             t6state DS.B 1
-  117  117   000016             t7state DS.B 1
-  118  118   000017             t8state DS.B 1
+  111  111   000013             t1state DS.B 1
+  112  112   000014             t2state DS.B 1
+  113  113   000015             t3state DS.B 1
+  114  114   000016             t4state DS.B 1
+  115  115   000017             t5state DS.B 1
+  116  116   000018             t6state DS.B 1
+  117  117   000019             t7state DS.B 1
+  118  118   00001A             t8state DS.B 1
   119  119                      
   120  120                      ;subroutines ---------
   121  121                      
   122  122                      ;convert
-  123  123   000018             RESULT DS.W 1 
-  124  124   00001A             BUFFER DS.B 5
-  125  125   00001F             TMP DS.B 1
-  126  126   000020             ERR DS.B 1 
+  123  123   00001B             RESULT DS.W 1 
+  124  124   00001D             BUFFER DS.B 5
+  125  125   000022             TMP DS.B 1
+  126  126   000023             ERR DS.B 1 
   127  127                      
   128  128                      ;input
 
@@ -144,9 +144,9 @@ Freescale HC12-Assembler
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  129  129   000021             INPUT DS.B 1
-  130  130   000022             DPTR DS.W 1
-  131  131   000024             FIRSTCH DS.B 1
+  129  129   000024             INPUT DS.B 1
+  130  130   000025             DPTR DS.W 1
+  131  131   000027             FIRSTCH DS.B 1
   132  132                      
   133  133                      ;/------------------------------------------------------------------------------------\
   134  134                      ;|  Main Program Code                                                                 |
@@ -165,1165 +165,1224 @@ Freescale HC12-Assembler
   147  147   000015 79xx xx            clr t8state
   148  148                             
   149  149                      Top:
-  150  150   000018 16xx xx             jsr TASK_1 ; execute tasks endlessly
-  151  151   00001B 16xx xx             jsr TASK_2
-  152  152   00001E 16xx xx             jsr TASK_3
-  153  153   000021 16xx xx             jsr TASK_4
-  154  154   000024 16xx xx             jsr TASK_5
-  155  155   000027 16xx xx             jsr TASK_6
-  156  156   00002A 16xx xx             jsr TASK_7
-  157  157   00002D 16xx xx             jsr TASK_8
-  158  158   000030 20E6                bra Top       
-  159  159                             
-  160  160   000032 20FE        spin: bra spin
-  161  161                      
-  162  162                      ;-------------TASK_1 MASTERMIND ---------------------------------------------------------
-  163  163                      
-  164  164   000034 B6xx xx     TASK_1: ldaa t1state ; get current t1state and branch accordingly
-  165  165   000037 271B                beq t1s0
-  166  166   000039 43                  deca
-  167  167   00003A 2721                beq t1s1
-  168  168   00003C 43                  deca
-  169  169   00003D 275B                beq t1s2
-  170  170   00003F 43                  deca
-  171  171   000040 1827 0080           lbeq t1s3
-  172  172   000044 43                  deca
-  173  173   000045 1827 00D8           lbeq t1s4
-  174  174   000049 43                  deca
-  175  175   00004A 1827 00DF           lbeq t1s5
-  176  176   00004E 43                  deca
-  177  177   00004F 1827 00E6           lbeq t1s6
-  178  178   000053 3D                  rts ; undefined state - do nothing but return
-  179  179                      ;__________________________________________________________________________________
-  180  180                      t1s0: ; init TASK_1
-  181  181                      
-  182  182                      ;clear all of the flags 
-  183  183                      
-  184  184   000054 79xx xx       clr COUNT 
-  185  185                      
+  150  150                              ;bgnd
+  151  151   000018 16xx xx             jsr TASK_1 ; execute tasks endlessly
+  152  152   00001B 16xx xx             jsr TASK_2
+  153  153   00001E 16xx xx             jsr TASK_3
+  154  154   000021 16xx xx             jsr TASK_4
+  155  155   000024 16xx xx             jsr TASK_5
+  156  156   000027 16xx xx             jsr TASK_6
+  157  157   00002A 16xx xx             jsr TASK_7
+  158  158   00002D 16xx xx             jsr TASK_8
+  159  159   000030 20E6                bra Top       
+  160  160                             
+  161  161   000032 20FE        spin: bra spin
+  162  162                      
+  163  163                      ;-------------TASK_1 MASTERMIND ---------------------------------------------------------
+  164  164                      
+  165  165                      TASK_1: 
+  166  166                              ;bgnd
+  167  167   000034 B6xx xx             ldaa t1state ; get current t1state and branch accordingly
+  168  168   000037 2720                beq t1s0
+  169  169   000039 43                  deca
+  170  170   00003A 2735                beq t1s1
+  171  171   00003C 43                  deca
+  172  172   00003D 276F                beq t1s2
+  173  173   00003F 43                  deca
+  174  174   000040 1827 009D           lbeq t1s3
+  175  175   000044 43                  deca
+  176  176   000045 1827 010B           lbeq t1s4
+  177  177   000049 43                  deca
+  178  178   00004A 1827 0117           lbeq t1s5
+  179  179   00004E 43                  deca
+  180  180   00004F 1827 012C           lbeq t1s6
+  181  181   000053 43                  deca
+  182  182   000054 1827 0141           lbeq t1s7
+  183  183   000058 3D                  rts ; undefined state - do nothing but return
+  184  184                      ;__________________________________________________________________________________
+  185  185                      t1s0: ; init TASK_1
   186  186                      
-  187  187   000057 180B 01xx           movb #$01, t1state ; set next state
-             00005B xx         
-  188  188   00005C 3D                  rts
-  189  189                      ;__________________________________________________________________________________
-  190  190                      t1s1: ;
-  191  191                      
+  187  187                      ;clear all of the flags 
+  188  188   000059 79xx xx             clr TICKS_1
+  189  189   00005C 79xx xx             clr TICKS_2
+  190  190   00005F 79xx xx             clr F1_FLG 
+  191  191   000062 79xx xx             clr F2_FLG 
+  192  192   000065 79xx xx             clr KEY_FLG 
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  192  192                      ;check if its F1
-  193  193                      
-  194  194   00005D F7xx xx             tst KEY_FLG                                 ;first test if there is a key to be checked
-  195  195   000060 1827 012A           lbeq exit1                                   ;if there is no 
-  196  196   000064 B6xx xx             ldaa KEY_BUFF                               ;load accumulator A with the current char
-  197  197   000067 91F1                cmpa $F1                                    ;compare whats in A to F1 
-  198  198   000069 2606                bne skipF1                                  ;if its not F1, skip settting the state
-  199  199   00006B 180B 05xx           movb #$05 , t1state                         ;set the state to the appropriate number  
+  193  193   000068 79xx xx             clr COUNT 
+  194  194   00006B 180B 01xx           movb #$01, t1state ; set next state
              00006F xx         
-  200  200   000070 3D                  rts
-  201  201                      
-  202  202                      skipF1:  
-  203  203                      
-  204  204                      ;check if its F2
-  205  205                                                
-  206  206   000071 91F2                cmpa $F2                                    ;compare whats in A to F2
-  207  207   000073 2606                bne skipF2                                  ;if its not F2, skip settting the state
-  208  208   000075 180B 06xx           movb #$06 , t1state                         ;set the state to the appropriate number 
-             000079 xx         
-  209  209   00007A 3D                  rts
-  210  210                      
-  211  211                      skipF2:
-  212  212                      
-  213  213                      ;check if its a BS 
-  214  214                             
-  215  215   00007B 9108                cmpa $08                                    ;compare whats in A to BS 
-  216  216   00007D 2606                bne skipBS                                  ;if its not BS, skip settting the state 
-  217  217   00007F 180B 04xx           movb #$04 , t1state                         ;set the state to the appropriate number 
+  195  195   000070 3D                  rts
+  196  196                      ;__________________________________________________________________________________
+  197  197                      t1s1: ;
+  198  198                      
+  199  199                      ;check if its F1
+  200  200                       
+  201  201   000071 F7xx xx             tst KEY_FLG                                 ;first test if there is a key to be checked
+  202  202   000074 1827 016F           lbeq exit1                                  ;if there is no 
+  203  203   000078 B6xx xx             ldaa KEY_BUFF                                ;load accumulator A with the current char
+  204  204   00007B 81F1                cmpa #$F1                                     ;compare whats in A to F1 
+  205  205   00007D 2606                bne skipF1                                  ;if its not F1, skip settting the state
+  206  206   00007F 180B 05xx           movb #$05 , t1state                         ;set the state to the appropriate number  
              000083 xx         
-  218  218   000084 3D                  rts
-  219  219                      
-  220  220                      skipBS: 
-  221  221                      
-  222  222                      ;check if its a ENT  
-  223  223                      
-  224  224   000085 910A                cmpa $0A                                    ;compare whats in A to ENT 
-  225  225   000087 2606                bne skipENT                                 ;if its not BS, skip settting the state 
-  226  226   000089 180B 03xx           movb #$03 , t1state                         ;set the state to the appropriate number 
+  207  207   000084 3D                  rts
+  208  208                      
+  209  209                      skipF1:  
+  210  210                      
+  211  211                      ;check if its F2
+  212  212                                                
+  213  213   000085 81F2                cmpa #$F2                                    ;compare whats in A to F2
+  214  214   000087 2606                bne skipF2                                  ;if its not F2, skip settting the state
+  215  215   000089 180B 06xx           movb #$06 , t1state                         ;set the state to the appropriate number 
              00008D xx         
-  227  227   00008E 3D                  rts
-  228  228                              
-  229  229                      skipENT: 
-  230  230                      
-  231  231                      ;check if its a digit 
-  232  232                      
-  233  233   00008F 8139                cmpa #$39                                   ;check if what in A is a number 
-  234  234   000091 2606                bne skipDIGIT                               ;if its not a number, disregard the input 
-  235  235   000093 180B 02xx           movb #$02 , t1state                         ;set the state to digit handler 
+  216  216   00008E 3D                  rts
+  217  217                      
+  218  218                      skipF2:
+  219  219                      
+  220  220                      ;check if its a BS 
+  221  221                             
+  222  222   00008F 8108                cmpa #$08                                    ;compare whats in A to BS 
+  223  223   000091 2606                bne skipBS                                  ;if its not BS, skip settting the state 
+  224  224   000093 180B 04xx           movb #$04 , t1state                         ;set the state to the appropriate number 
              000097 xx         
-  236  236   000098 3D                  rts
+  225  225   000098 3D                  rts
+  226  226                      
+  227  227                      skipBS: 
+  228  228                      
+  229  229                      ;check if its a ENT  
+  230  230                      
+  231  231   000099 810A                cmpa #$0A                                    ;compare whats in A to ENT 
+  232  232   00009B 2606                bne skipENT                                 ;if its not BS, skip settting the state 
+  233  233   00009D 180B 03xx           movb #$03 , t1state                         ;set the state to the appropriate number 
+             0000A1 xx         
+  234  234   0000A2 3D                  rts
+  235  235                              
+  236  236                      skipENT: 
   237  237                      
-  238  238                      skipDIGIT: 
-  239  239                      
-  240  240   000099 3D                  rts
-  241  241                      
-  242  242                      ;___________________________________________________________________________________
-  243  243                      
-  244  244                      t1s2: ;Digit Handler 
-  245  245                      
-  246  246                      ;checks if we should proceed with the digit handler state 
-  247  247                      
-  248  248   00009A F7xx xx             tst F1_FLG                                  ;test F1 flag 
-  249  249   00009D 2609                bne skip_e                                  ;if not equal to 0, skip exiting 
-  250  250   00009F F7xx xx             tst F2_FLG                                  ;test the F2 flag 
+  238  238                      ;check if its a digit 
+  239  239                             
+  240  240   0000A3 8139                cmpa #$39                                   ;check if what in A is a number 
+  241  241   0000A5 2E06                bgt skipDIGIT                               ;if its not a number, disregard the input 
+  242  242   0000A7 180B 02xx           movb #$02 , t1state                         ;set the state to digit handler 
+             0000AB xx         
+  243  243   0000AC 3D                  rts
+  244  244                      
+  245  245                      skipDIGIT: 
+  246  246                      
+  247  247   0000AD 3D                  rts
+  248  248                      
+  249  249                      ;___________________________________________________________________________________
+  250  250                      
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  251  251   0000A2 2604                bne skip_e                                  ;if not equal to 0, skip exiting 
-  252  252   0000A4 1820 00E6           lbra exit1                                   ;exit if equal to 0 
-  253  253                      
-  254  254                      skip_e:
-  255  255                      
-  256  256                      ;now proceed with the digit handler
-  257  257                         
-  258  258   0000A8 CDxx xx             ldy #BUFFER                                 ;load index register y with buffer 
-  259  259   0000AB B6xx xx             ldaa COUNT                                  ;load A with the current value of COUNT 
-  260  260   0000AE F6xx xx             ldab KEY_BUFF                               ;load b with KEY_BUFF 
-  261  261   0000B1 6BEC                stab a,y                                    ;store the contents of b at the position of COUNT in BUFFER
-  262  262                             
-  263  263   0000B3 72xx xx             inc COUNT                                   ;increment count 
-  264  264   0000B6 180B 00xx           movb #$00, KEY_FLG                          ;set key flag to 0 to acknowledge KEYPAD
-             0000BA xx         
-  265  265   0000BB 180B 01xx           movb #$01 , t1state                         ;set the state back to 1 
-             0000BF xx         
-  266  266   0000C0 1820 00CA           lbra exit1                                   ;exit 
-  267  267                      ;________________________________________________________________________________________
-  268  268                      t1s3: ;ENT 
-  269  269                       
-  270  270                      
-  271  271                      ;before jsr to conversion, check if any digits have been entered into buffer      
-  272  272                            
-  273  273   0000C4 F7xx xx            tst COUNT                                   ;test the current value of count 
-  274  274   0000C7 2604               bne skip_NO_DIGITS                          ;if the count is not zero, branch 
-  275  275   0000C9 8603               ldaa #$03                                   ;if the count is zero, put an error code into A 
-  276  276   0000CB 2023               bra skip_F2                                 ;branch to the set error state below 
-  277  277                             
-  278  278                      
-  279  279                      skip_NO_DIGITS: 
+  251  251                      t1s2: ;Digit Handler 
+  252  252                      
+  253  253                      ;checks if we should proceed with the digit handler state 
+  254  254                      
+  255  255   0000AE F7xx xx             tst F1_FLG                                  ;test F1 flag 
+  256  256   0000B1 260C                bne skip_e                                  ;if not equal to 0, skip exiting 
+  257  257   0000B3 F7xx xx             tst F2_FLG                                  ;test the F2 flag 
+  258  258   0000B6 2607                bne skip_e                                  ;if not equal to 0, skip exiting 
+  259  259   0000B8 79xx xx             clr KEY_FLG
+  260  260   0000BB 1820 0128           lbra exit1                                   ;exit if equal to 0 
+  261  261                      
+  262  262                      skip_e:
+  263  263                      
+  264  264                      ;now proceed with the digit handler
+  265  265                         
+  266  266   0000BF CDxx xx             ldy #BUFFER                                 ;load index register y with buffer 
+  267  267   0000C2 B6xx xx             ldaa COUNT                                  ;load A with the current value of COUNT 
+  268  268   0000C5 F6xx xx             ldab KEY_BUFF                               ;load b with KEY_BUFF 
+  269  269   0000C8 6BEC                stab a,y                                    ;store the contents of b at the position of COUNT in BUFFER
+  270  270                             
+  271  271   0000CA 72xx xx             inc COUNT                                   ;increment count 
+  272  272   0000CD 180B 00xx           movb #$00, KEY_FLG                          ;set key flag to 0 to acknowledge KEYPAD
+             0000D1 xx         
+  273  273   0000D2 180B 01xx           movb #$01 , t1state                         ;set the state back to 1
+             0000D6 xx         
+  274  274   0000D7 79xx xx             clr KEY_FLG                                 ;clear key flag 
+  275  275   0000DA 16xx xx             jsr OUTCHAR
+  276  276   0000DD 1820 0106           lbra exit1                                   ;exit 
+  277  277                      ;________________________________________________________________________________________
+  278  278                      t1s3: ;ENT 
+  279  279                       
   280  280                      
-  281  281                      ;send to conversion to get a BCD form of the input 
-  282  282                          
-  283  283   0000CD 16xx xx            jsr conversion                              ;convert the contents of buffer to binary 
-  284  284   0000D0 79xx xx            clr COUNT                                   ;set count back to zero 
-  285  285   0000D3 79xx xx            clr BUFFER                                  ;clear the contents of the BUFFER
-  286  286                             
-  287  287                      ;check which ON flag to set 
-  288  288                       
-  289  289   0000D6 F7xx xx            tst F1_FLG                                  ;test the F1 flag
-  290  290   0000D9 2708               beq skip_F1_a                               ;if the flag is zero, skip the next steps 
-  291  291   0000DB 180B 01xx          movb #01, ON1                               ;if the flag is 1, set ON1 to be true 
-             0000DF xx         
-  292  292   0000E0 7Exx xx            stx TICKS_1                                 ;store the results of the conversion 
-  293  293                               
-  294  294                      skip_F1_a:  
-  295  295                       
-  296  296   0000E3 F7xx xx            tst F2_FLG                                  ;test the F2 flag
-  297  297   0000E6 2708               beq skip_F2                                 ;if the flag is zero, skip the next steps 
-  298  298   0000E8 180B 01xx          movb #$01, ON2                              ;if the flag is 1, set ON2 to be true 
-             0000EC xx         
-  299  299   0000ED 7Exx xx            stx TICKS_2                                 ;store the results of the conversion
-  300  300                      
-  301  301                      skip_F2:
-  302  302                      
-  303  303                      ;automatically set the state back to 1 for all cases  
-  304  304                      
-  305  305   0000F0 180B 01xx          movb #$01, t1state                          ;set the state back to 1 
-             0000F4 xx         
-  306  306                             
-  307  307                      ;check for error and set variables accordingly so that user has to start over 
-  308  308                      
-  309  309   0000F5 8100               cmpa #$00                                   ;check whats in A 
+  281  281                      ;before jsr to conversion, check if any digits have been entered into buffer      
+  282  282                            
+  283  283   0000E1 F7xx xx            tst COUNT                                   ;test the current value of count 
+  284  284   0000E4 2604               bne skip_NO_DIGITS                          ;if the count is not zero, branch 
+  285  285   0000E6 8603               ldaa #$03                                   ;if the count is zero, put an error code into A 
+  286  286   0000E8 2023               bra skip_F2                                 ;branch to the set error state below 
+  287  287                             
+  288  288                      
+  289  289                      skip_NO_DIGITS: 
+  290  290                      
+  291  291                      ;send to conversion to get a BCD form of the input 
+  292  292                          
+  293  293   0000EA 16xx xx            jsr conversion                              ;convert the contents of buffer to binary 
+  294  294   0000ED 79xx xx            clr COUNT                                   ;set count back to zero 
+  295  295   0000F0 79xx xx            clr BUFFER                                  ;clear the contents of the BUFFER
+  296  296                             
+  297  297                      ;check which ON flag to set 
+  298  298                       
+  299  299   0000F3 F7xx xx            tst F1_FLG                                  ;test the F1 flag
+  300  300   0000F6 2708               beq skip_F1_a                               ;if the flag is zero, skip the next steps 
+  301  301   0000F8 180B 01xx          movb #01, ON1                               ;if the flag is 1, set ON1 to be true 
+             0000FC xx         
+  302  302   0000FD 7Exx xx            stx TICKS_1                                 ;store the results of the conversion 
+  303  303                               
+  304  304                      skip_F1_a:  
+  305  305                       
+  306  306   000100 F7xx xx            tst F2_FLG                                  ;test the F2 flag
+  307  307   000103 2708               beq skip_F2                                 ;if the flag is zero, skip the next steps 
+  308  308   000105 180B 01xx          movb #$01, ON2                              ;if the flag is 1, set ON2 to be true 
+             000109 xx         
+  309  309   00010A 7Exx xx            stx TICKS_2                                 ;store the results of the conversion
+  310  310                      
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  310  310   0000F7 2720               beq skipERROR                               ;check if an error was generated from conversion
-  311  311   0000F9 180B 07xx          movb #$07, t1state                          ;if there is an error code set the state to the 
-             0000FD xx         
-  312  312                                                                         ;error state
-  313  313   0000FE 7Axx xx            staa MM_ERR                                 ;store the error code of accumulator A into a variable 
-  314  314                                                                         ;so it is not affected by other code before it gets to 
-  315  315                                                                         ;the error state                                              
-  316  316                                                                           
-  317  317                      ;check which ON variable needs to be cleared if there is an error 
-  318  318                            
-  319  319   000101 F7xx xx           tst F1_FLG                                   ;test the F1 flag
-  320  320   000104 2706              beq skip_F1_b                                ;if the flag is zero, skip the next steps 
-  321  321   000106 79xx xx           clr ON1                                      ;clear ON1
-  322  322   000109 79xx xx           clr TICKS_1                                  ;clear TICKS_1
-  323  323                            
-  324  324                      skip_F1_b: 
-  325  325                       
-  326  326   00010C F7xx xx           tst F2_FLG                                   ;test the F2 flag
-  327  327   00010F 2708              beq skipERROR                                ;if the flag is zero, skip the next steps
-  328  328   000111 79xx xx           clr ON2                                      ;clear ON2 
-  329  329   000114 79xx xx           clr TICKS_2                                  ;clear TICKS_2
-  330  330   000117 2075              bra exit1                                    ;exit without clearing F1 and F2 flags 
-  331  331                                        
-  332  332                      skipERROR:
-  333  333                      
-  334  334                      ;if there are no errors, clear the F1 and F2 flags and exit   
-  335  335                            
-  336  336   000119 79xx xx           clr F1_FLG 
-  337  337   00011C 79xx xx           clr F2_FLG  
-  338  338   00011F 206D              bra exit1                                    ;exit
-  339  339                       ;________________________________________________________________________________________
-  340  340                      t1s4: ;BS
-  341  341                       
-  342  342   000121 180B 03xx          movb #$03 , t3state                         ;set the state in task 3 to the BS state   
-             000125 xx         
-  343  343   000126 180B 01xx          movb #$01 , t1state                         ;set the state back to 1
-             00012A xx         
-  344  344   00012B 2061               bra exit1                                   ;exit
-  345  345                       ;________________________________________________________________________________________
-  346  346                      t1s5: ;F1 state 
-  347  347                       
-  348  348                       
-  349  349   00012D 180B 01xx          movb #$01, F1_FLG                           ;set the F1_FLG to be true
-             000131 xx         
-  350  350   000132 180B 01xx          movb #$01 , t1state                         ;set the state back to 1 
-             000136 xx         
-  351  351   000137 2055               bra exit1                                   ;exit
-  352  352                             
-  353  353                       ;________________________________________________________________________________________
-  354  354                      t1s6: ;F2 state 
-  355  355                       
-  356  356                       
-  357  357   000139 180B 01xx          movb #$01, F2_FLG                           ;set the F2_FLG to be true
-             00013D xx         
-  358  358   00013E 180B 01xx          movb #$01 , t1state                         ;set the state back to 1
-             000142 xx         
-  359  359   000143 2049               bra exit1                                   ;exit
-  360  360                      
-  361  361                      ;________________________________________________________________________________________
-  362  362                      t1s7: ;Error state 
-  363  363                      
-  364  364                      
-  365  365                      ;checks the error code in accumulator A and which F flag is set to set the appropiate fixed 
-  366  366                      ;message state to be displayed through task 3 
+  311  311                      skip_F2:
+  312  312                      
+  313  313                      ;automatically set the state back to 1 for all cases  
+  314  314                      
+  315  315   00010D 180B 01xx          movb #$01, t1state                          ;set the state back to 1 
+             000111 xx         
+  316  316                             
+  317  317                      ;check for error and set variables accordingly so that user has to start over 
+  318  318                      
+  319  319   000112 8100               cmpa #$00                                   ;check whats in A 
+  320  320   000114 272B               beq skipERROR                               ;check if an error was generated from conversion
+  321  321   000116 180B 07xx          movb #$07, t1state                          ;if there is an error code set the state to the 
+             00011A xx         
+  322  322                                                                         ;error state
+  323  323   00011B 7Axx xx            staa MM_ERR                                 ;store the error code of accumulator A into a variable 
+  324  324                                                                         ;so it is not affected by other code before it gets to 
+  325  325                                                                         ;the error state                                              
+  326  326                                                                           
+  327  327                      ;check which ON variable needs to be cleared if there is an error 
+  328  328                            
+  329  329   00011E F7xx xx           tst F1_FLG                                   ;test the F1 flag
+  330  330   000121 2706              beq skip_F1_b                                ;if the flag is zero, skip the next steps 
+  331  331   000123 79xx xx           clr ON1                                      ;clear ON1
+  332  332   000126 79xx xx           clr TICKS_1                                  ;clear TICKS_1
+  333  333                            
+  334  334                      skip_F1_b: 
+  335  335                       
+  336  336   000129 F7xx xx           tst F2_FLG                                   ;test the F2 flag
+  337  337   00012C 2713              beq skipERROR                                ;if the flag is zero, skip the next steps
+  338  338   00012E 79xx xx           clr ON2                                      ;clear ON2 
+  339  339   000131 79xx xx           clr TICKS_2                                  ;clear TICKS_2
+  340  340   000134 79xx xx           clr KEY_FLG                                  ;clear key flag
+  341  341   000137 16xx xx           jsr clearbuffer
+  342  342   00013A 16xx xx           jsr CURSOR_OFF   
+  343  343   00013D 1820 00A6         lbra exit1                                   ;exit without clearing F1 and F2 flags 
+  344  344                                        
+  345  345                      skipERROR:
+  346  346                      
+  347  347                      ;if there are no errors, clear the F1 and F2 flags and exit   
+  348  348                            
+  349  349                            
+  350  350                            
+  351  351   000141 16xx xx           jsr clearbuffer
+  352  352   000144 16xx xx           jsr CURSOR_OFF 
+  353  353   000147 79xx xx           clr KEY_FLG 
+  354  354   00014A 79xx xx           clr F1_FLG 
+  355  355   00014D 79xx xx           clr F2_FLG  
+  356  356   000150 1820 0093         lbra exit1                                    ;exit
+  357  357                       ;________________________________________________________________________________________
+  358  358                      t1s4: ;BS
+  359  359                       
+  360  360   000154 180B 03xx          movb #$03 , t3state                         ;set the state in task 3 to the BS state   
+             000158 xx         
+  361  361   000159 180B 01xx          movb #$01 , t1state                         ;set the state back to 1
+             00015D xx         
+  362  362   00015E 79xx xx            clr KEY_FLG 
+  363  363   000161 1820 0082          lbra exit1                                   ;exit
+  364  364                       ;________________________________________________________________________________________
+  365  365                      t1s5: ;F1 state 
+  366  366                       
+  367  367                             
+  368  368   000165 180B 01xx          movb #$01, F1_FLG                           ;set the F1_FLG to be true
+             000169 xx         
+  369  369   00016A 180B 01xx          movb #$01 , t1state                         ;set the state back to 1
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  367  367                      
-  368  368                      ;split the code into two sections. the F1 and F2 sections 
-  369  369                        
-  370  370                      ;fist test the F1 flag 
-  371  371                      
-  372  372   000145 F7xx xx            tst F1_FLG                                   ;test the F1 flag
-  373  373   000148 271E               beq skip_F1_e                                ;if the flag is zero, skip the next steps    
-  374  374                       
-  375  375                      ;now check the error number and set the message number for task 3 
-  376  376                       
-  377  377   00014A B6xx xx            ldaa MM_ERR                                  ;put the error number back into accumulator a 
-  378  378   00014D 8101               cmpa #01                                     ;check if the error code is mag to large 
-  379  379   00014F 2605               bne skip_F1_toolarge                         ;skip setting the message num
-  380  380   000151 180B 07xx          movb #$07, MSG_NUM                           ;set the appropiate message num 
-             000155 xx         
-  381  381                      
-  382  382                      skip_F1_toolarge: 
-  383  383                      
-  384  384   000156 8102               cmpa #02                                     ;check if the error code is zero magnitude 
-  385  385   000158 2605               bne skip_F1_zeromag                          ;skip setting the message num
-  386  386   00015A 180B 05xx          movb #$05, MSG_NUM                           ;set the appropiate message num 
-             00015E xx         
-  387  387                      
-  388  388                      skip_F1_zeromag: 
-  389  389                      
-  390  390   00015F 8103               cmpa #03                                     ;check if the error code is zero digits
-  391  391   000161 2605               bne skip_F1_e                                ;skip setting the message num
-  392  392   000163 180B 03xx          movb #$03, MSG_NUM                           ;set the appropiate message num 
-             000167 xx         
-  393  393                         
-  394  394                         
-  395  395                      skip_F1_e: 
-  396  396                       
-  397  397                      ;now test the F2 flag 
-  398  398                       
-  399  399   000168 F7xx xx            tst F2_FLG                                   ;test the F1 flag
-  400  400   00016B 271B               beq skip_F2_e                                ;if the flag is zero, skip the next steps    
-  401  401                       
-  402  402                      ;now check the error number and set the message number for task 3 
-  403  403                       
-  404  404   00016D 8101               cmpa #01                                     ;check if the error code is mag to large 
-  405  405   00016F 2605               bne skip_F2_toolarge                         ;skip setting the message num
-  406  406   000171 180B 08xx          movb #$08, MSG_NUM                           ;set the appropiate message num 
-             000175 xx         
-  407  407                      
-  408  408                      skip_F2_toolarge: 
+             00016E xx         
+  370  370   00016F 79xx xx            clr ON1 
+  371  371   000172 79xx xx            clr KEY_FLG
+  372  372   000175 8608               ldaa #$08
+  373  373   000177 16xx xx            jsr SETADDR
+  374  374   00017A 16xx xx            jsr CURSOR_ON 
+  375  375   00017D 2068               bra exit1                                   ;exit
+  376  376                             
+  377  377                       ;________________________________________________________________________________________
+  378  378                      t1s6: ;F2 state 
+  379  379                       
+  380  380   00017F 180B 01xx          movb #$01, F2_FLG                           ;set the F2_FLG to be true
+             000183 xx         
+  381  381   000184 180B 01xx          movb #$01 , t1state                         ;set the state back to 1
+             000188 xx         
+  382  382   000189 79xx xx            clr ON2
+  383  383   00018C 79xx xx            clr KEY_FLG
+  384  384   00018F 8648               ldaa #$48
+  385  385   000191 16xx xx            jsr SETADDR
+  386  386   000194 16xx xx            jsr CURSOR_ON  
+  387  387   000197 204E               bra exit1                                   ;exit
+  388  388                      
+  389  389                      ;________________________________________________________________________________________
+  390  390                      t1s7: ;Error state 
+  391  391                      
+  392  392                      
+  393  393                      ;checks the error code in accumulator A and which F flag is set to set the appropiate fixed 
+  394  394                      ;message state to be displayed through task 3 
+  395  395                      
+  396  396                      ;split the code into two sections. the F1 and F2 sections 
+  397  397                        
+  398  398                      ;fist test the F1 flag 
+  399  399                      
+  400  400   000199 F7xx xx            tst F1_FLG                                   ;test the F1 flag
+  401  401   00019C 271E               beq skip_F1_e                                ;if the flag is zero, skip the next steps    
+  402  402                       
+  403  403                      ;now check the error number and set the message number for task 3 
+  404  404                       
+  405  405   00019E B6xx xx            ldaa MM_ERR                                  ;put the error number back into accumulator a 
+  406  406   0001A1 8101               cmpa #01                                     ;check if the error code is mag to large 
+  407  407   0001A3 2605               bne skip_F1_toolarge                         ;skip setting the message num
+  408  408   0001A5 180B 07xx          movb #$07, MSG_NUM                           ;set the appropiate message num 
+             0001A9 xx         
   409  409                      
-  410  410   000176 8102               cmpa #02                                     ;check if the error code is zero magnitude 
-  411  411   000178 2605               bne skip_F2_zeromag                          ;skip setting the message num
-  412  412   00017A 180B 06xx          movb #$06, MSG_NUM                           ;set the appropiate message num 
-             00017E xx         
-  413  413                      
-  414  414                      skip_F2_zeromag: 
+  410  410                      skip_F1_toolarge: 
+  411  411                      
+  412  412   0001AA 8102               cmpa #02                                     ;check if the error code is zero magnitude 
+  413  413   0001AC 2605               bne skip_F1_zeromag                          ;skip setting the message num
+  414  414   0001AE 180B 05xx          movb #$05, MSG_NUM                           ;set the appropiate message num 
+             0001B2 xx         
   415  415                      
-  416  416   00017F 8103               cmpa #03                                     ;check if the error code is zero digits
-  417  417   000181 2605               bne skip_F2_e                                ;skip setting the message num
-  418  418   000183 180B 04xx          movb #$04, MSG_NUM                           ;set the appropiate message num 
-             000187 xx         
-  419  419                       
-  420  420                      skip_F2_e: 
-  421  421                      
-  422  422                       ;clear the F1 and F2 flags and fall through to the exit 
-  423  423                      
-  424  424   000188 79xx xx             clr F1_FLG 
+  416  416                      skip_F1_zeromag: 
+  417  417                      
+  418  418   0001B3 8103               cmpa #03                                     ;check if the error code is zero digits
+  419  419   0001B5 2605               bne skip_F1_e                                ;skip setting the message num
+  420  420   0001B7 180B 03xx          movb #$03, MSG_NUM                           ;set the appropiate message num    
+             0001BB xx         
+  421  421                         
+  422  422                      skip_F1_e: 
+  423  423                       
+  424  424                      ;now test the F2 flag 
+  425  425                       
+  426  426   0001BC F7xx xx            tst F2_FLG                                   ;test the F1 flag
+  427  427   0001BF 271B               beq skip_F2_e                                ;if the flag is zero, skip the next steps    
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  425  425   00018B 79xx xx             clr F2_FLG
-  426  426                      
-  427  427                      exit1:
-  428  428   00018E 3D                  rts
-  429  429                      ;----------------------TASK 2 - KEYPAD -------------------------------------------; 
+  428  428                       
+  429  429                      ;now check the error number and set the message number for task 3 
   430  430                       
-  431  431                      TASK_2:
-  432  432                       
-  433  433                             
-  434  434   00018F B6xx xx             ldaa t2state ;get state
-  435  435   000192 2707                beq t2s0
-  436  436   000194 43                  deca
-  437  437   000195 270D                beq t2s1
-  438  438   000197 43                  deca
-  439  439   000198 2721                beq t2s2
-  440  440   00019A 3D                  rts
-  441  441                      
-  442  442                      t2s0:
-  443  443                      
-  444  444                              ;init
-  445  445                              
-  446  446   00019B 16xx xx             jsr INITKEY       ;initialize keypad
-  447  447   00019E 180B 01xx           movb #$01, t2state
-             0001A2 xx         
-  448  448   0001A3 3D                  rts
-  449  449                              
-  450  450                      t2s1:     
-  451  451                         
-  452  452   0001A4 F7xx xx             tst LKEY_FLG
-  453  453   0001A7 271C                beq exit2
-  454  454   0001A9 16xx xx             jsr GETCHAR
-  455  455   0001AC 7Bxx xx             stab KEY_BUFF     ;stores the input char into key buffer
-  456  456   0001AF 180B 01xx           movb #$01, KEY_FLG        ;notifies MM of key input
-             0001B3 xx         
-  457  457   0001B4 180B 02xx           movb #$02, t2state
-             0001B8 xx         
-  458  458   0001B9 200A                bra exit2                                   ;exit
-  459  459                              
-  460  460                      t2s2:
-  461  461                      
-  462  462   0001BB F7xx xx             tst KEY_FLG
-  463  463   0001BE 2605                bne exit2
-  464  464   0001C0 180B 01xx           movb #$01, t2state
-             0001C4 xx         
-  465  465                              
-  466  466                      
-  467  467   0001C5 3D          exit2: rts        
-  468  468                              
-  469  469                              
-  470  470                      ;---------------------TASK 3 - DISPLAY ---------------------------------------------;
+  431  431   0001C1 8101               cmpa #01                                     ;check if the error code is mag to large 
+  432  432   0001C3 2605               bne skip_F2_toolarge                         ;skip setting the message num
+  433  433   0001C5 180B 08xx          movb #$08, MSG_NUM                           ;set the appropiate message num 
+             0001C9 xx         
+  434  434                      
+  435  435                      skip_F2_toolarge: 
+  436  436                      
+  437  437   0001CA 8102               cmpa #02                                     ;check if the error code is zero magnitude 
+  438  438   0001CC 2605               bne skip_F2_zeromag                          ;skip setting the message num
+  439  439   0001CE 180B 06xx          movb #$06, MSG_NUM                           ;set the appropiate message num 
+             0001D2 xx         
+  440  440                      
+  441  441                      skip_F2_zeromag: 
+  442  442                      
+  443  443   0001D3 8103               cmpa #03                                     ;check if the error code is zero digits
+  444  444   0001D5 2605               bne skip_F2_e                                ;skip setting the message num
+  445  445   0001D7 180B 04xx          movb #$04, MSG_NUM                           ;set the appropiate message num 
+             0001DB xx         
+  446  446                       
+  447  447                      skip_F2_e: 
+  448  448                      
+  449  449                       ;clear the F1 and F2 flags and fall through to the exit 
+  450  450                      
+  451  451   0001DC 79xx xx             clr F1_FLG 
+  452  452   0001DF 79xx xx             clr F2_FLG
+  453  453   0001E2 180B 01xx           movb #$01 , t1state                         ;set the state back to 1
+             0001E6 xx         
+  454  454                      
+  455  455                      exit1:
+  456  456   0001E7 3D                  rts
+  457  457                      ;----------------------TASK 2 - KEYPAD -------------------------------------------; 
+  458  458                       
+  459  459                      TASK_2:
+  460  460                       
+  461  461                              ;bgnd
+  462  462   0001E8 B6xx xx             ldaa t2state ;get state
+  463  463   0001EB 2707                beq t2s0
+  464  464   0001ED 43                  deca
+  465  465   0001EE 270D                beq t2s1
+  466  466   0001F0 43                  deca
+  467  467   0001F1 2721                beq t2s2
+  468  468   0001F3 3D                  rts
+  469  469                      
+  470  470                      t2s0:
   471  471                      
-  472  472                      TASK_3:
-  473  473                      
-  474  474   0001C6 B6xx xx             ldaa t3state
-  475  475   0001C9 2728                beq t3s0
-  476  476   0001CB 43                  deca
-  477  477   0001CC 273B                beq t3s1
-  478  478   0001CE 43                  deca
-  479  479   0001CF 2744                beq t3s2
-  480  480   0001D1 43                  deca
-  481  481   0001D2 2745                beq t3s3
-  482  482   0001D4 43                  deca
-  483  483   0001D5 2750                beq t3s4
-  484  484   0001D7 43                  deca
+  472  472                              ;init
+  473  473                              
+  474  474   0001F4 16xx xx             jsr INITKEY       ;initialize keypad
+  475  475   0001F7 180B 01xx           movb #$01, t2state
+             0001FB xx         
+  476  476   0001FC 3D                  rts
+  477  477                              
+  478  478                      t2s1:     
+  479  479                         
+  480  480   0001FD F7xx xx             tst LKEY_FLG
+  481  481   000200 271C                beq exit2
+  482  482   000202 16xx xx             jsr GETCHAR
+  483  483   000205 7Bxx xx             stab KEY_BUFF     ;stores the input char into key buffer
+  484  484   000208 180B 01xx           movb #$01, KEY_FLG        ;notifies MM of key input
+             00020C xx         
+  485  485   00020D 180B 02xx           movb #$02, t2state
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  485  485   0001D8 275B                beq t3s5
-  486  486   0001DA 43                  deca
-  487  487   0001DB 2766                beq t3s6
-  488  488   0001DD 43                  deca
-  489  489   0001DE 2771                beq t3s7
-  490  490   0001E0 43                  deca
-  491  491   0001E1 277C                beq t3s8
-  492  492   0001E3 43                  deca
-  493  493   0001E4 1827 0085           lbeq t3s9
-  494  494   0001E8 43                  deca
-  495  495   0001E9 1827 008E           lbeq t3s10
-  496  496   0001ED 43                  deca
-  497  497   0001EE 1827 0097           lbeq t3s11
-  498  498   0001F2 3D                  rts
-  499  499                              
-  500  500                      t3s0:     ;init    
-  501  501                              
-  502  502   0001F3 16xx xx            jsr INITLCD       ;initialize LCD
-  503  503   0001F6 180B 01xx          movb #$01, FIRSTCH
-             0001FA xx         
-  504  504   0001FB 8600               ldaa #$00         ;set LCD position to 0
-  505  505   0001FD 16xx xx            jsr SETADDR
-  506  506   000200 16xx xx            jsr CURSOR_ON     ;turn on cursor
-  507  507   000203 180B 0Bxx          movb #$0B, t3state ; go to init state 
-             000207 xx         
-  508  508   000208 3D                 rts
-  509  509                              
-  510  510                      t3s1:
-  511  511                      
-  512  512                             ;hub
-  513  513   000209 180B 01xx          movb #$01, FIRSTCH
-             00020D xx         
-  514  514   00020E F6xx xx            ldab MSG_NUM            
-  515  515   000211 7Bxx xx            stab t3state            
-  516  516   000214 3D                 rts
-  517  517                      
-  518  518                      
-  519  519                      t3s2:   ;backspace
-  520  520   000215 16xx xx             jsr backspace
-  521  521   000218 3D                  rts
-  522  522                      
-  523  523                              
-  524  524                      t3s3:   ;full time1 message     
-  525  525   000219 8600                ldaa #$00
-  526  526   00021B CExx xx             ldx #TIME1
-  527  527   00021E F7xx xx             tst FIRSTCH
-  528  528   000221 2676                bne char1
-  529  529   000223 16xx xx             jsr PUTCHAR
-  530  530   000226 3D                  rts
-  531  531                              
-  532  532                              
-  533  533                      t3s4:   ;full time2 message
-  534  534   000227 8640                ldaa #$40
-  535  535   000229 CExx xx             ldx #TIME2
-  536  536   00022C F7xx xx             tst FIRSTCH
-  537  537   00022F 2668                bne char1
-  538  538   000231 16xx xx             jsr PUTCHAR
-  539  539   000234 3D                  rts
-  540  540                      
-  541  541                      
-  542  542                      t3s5:   ;no digit 1 message
-  543  543   000235 8600                ldaa #$00
-  544  544   000237 CExx xx             ldx #NODIG1
-  545  545   00023A F7xx xx             tst FIRSTCH
+             000211 xx         
+  486  486   000212 200A                bra exit2                                   ;exit
+  487  487                              
+  488  488                      t2s2:
+  489  489                      
+  490  490   000214 F7xx xx             tst KEY_FLG
+  491  491   000217 2605                bne exit2
+  492  492   000219 180B 01xx           movb #$01, t2state
+             00021D xx         
+  493  493                              
+  494  494                      
+  495  495   00021E 3D          exit2: rts        
+  496  496                              
+  497  497                              
+  498  498                      ;---------------------TASK 3 - DISPLAY ---------------------------------------------;
+  499  499                      
+  500  500                      TASK_3:
+  501  501                      
+  502  502   00021F B6xx xx             ldaa t3state
+  503  503   000222 2728                beq t3s0
+  504  504   000224 43                  deca
+  505  505   000225 2738                beq t3s1
+  506  506   000227 43                  deca
+  507  507   000228 2741                beq t3s2
+  508  508   00022A 43                  deca
+  509  509   00022B 2742                beq t3s3
+  510  510   00022D 43                  deca
+  511  511   00022E 274D                beq t3s4
+  512  512   000230 43                  deca
+  513  513   000231 2758                beq t3s5
+  514  514   000233 43                  deca
+  515  515   000234 2763                beq t3s6
+  516  516   000236 43                  deca
+  517  517   000237 276E                beq t3s7
+  518  518   000239 43                  deca
+  519  519   00023A 2779                beq t3s8
+  520  520   00023C 43                  deca
+  521  521   00023D 1827 0082           lbeq t3s9
+  522  522   000241 43                  deca
+  523  523   000242 1827 008B           lbeq t3s10
+  524  524   000246 43                  deca
+  525  525   000247 1827 0094           lbeq t3s11
+  526  526   00024B 3D                  rts
+  527  527                              
+  528  528                      t3s0:     ;init    
+  529  529                              
+  530  530   00024C 16xx xx            jsr INITLCD       ;initialize LCD
+  531  531   00024F 180B 01xx          movb #$01, FIRSTCH
+             000253 xx         
+  532  532   000254 8600               ldaa #$00         ;set LCD position to 0
+  533  533   000256 16xx xx            jsr SETADDR
+  534  534                             ;jsr CURSOR_ON     ;turn on cursor
+  535  535   000259 180B 0Bxx          movb #$0B, t3state ; go to init state 
+             00025D xx         
+  536  536   00025E 3D                 rts
+  537  537                              
+  538  538                      t3s1:
+  539  539                      
+  540  540                             ;hub
+  541  541   00025F 180B 01xx          movb #$01, FIRSTCH
+             000263 xx         
+  542  542   000264 F6xx xx            ldab MSG_NUM            
+  543  543   000267 7Bxx xx            stab t3state            
+  544  544   00026A 3D                 rts
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  546  546   00023D 265A                bne char1
-  547  547   00023F 16xx xx             jsr PUTCHAR
-  548  548   000242 3D                  rts
-  549  549                      
+  545  545                      
+  546  546                      
+  547  547                      t3s2:   ;backspace
+  548  548   00026B 16xx xx             jsr backspace
+  549  549   00026E 3D                  rts
   550  550                      
-  551  551                      t3s6:   ;no digit 2 message
-  552  552   000243 8640                ldaa #$40
-  553  553   000245 CExx xx             ldx #NODIG2
-  554  554   000248 F7xx xx             tst FIRSTCH
-  555  555   00024B 264C                bne char1
-  556  556   00024D 16xx xx             jsr PUTCHAR
-  557  557   000250 3D                  rts
-  558  558                              
-  559  559                      
-  560  560                      t3s7:   ;zero magnitude 1 message
-  561  561   000251 8600                ldaa #$00
-  562  562   000253 CExx xx             ldx #ZMAG1
-  563  563   000256 F7xx xx             tst FIRSTCH
-  564  564   000259 263E                bne char1
-  565  565   00025B 16xx xx             jsr PUTCHAR
-  566  566   00025E 3D                  rts
-  567  567                      
-  568  568                      t3s8:   ;zero magnitude 2 message
-  569  569   00025F 8640                ldaa #$40
-  570  570   000261 CExx xx             ldx #ZMAG2
-  571  571   000264 F7xx xx             tst FIRSTCH
-  572  572   000267 2630                bne char1
-  573  573   000269 16xx xx             jsr PUTCHAR
-  574  574   00026C 3D                  rts
-  575  575                      
-  576  576                      t3s9:   ;magnitude too large 1 message
-  577  577   00026D 8600                ldaa #$00
-  578  578   00026F CExx xx             ldx #MAGTL1
-  579  579   000272 F7xx xx             tst FIRSTCH
-  580  580   000275 2622                bne char1
-  581  581   000277 16xx xx             jsr PUTCHAR
-  582  582   00027A 3D                  rts
-  583  583                      
-  584  584                      
-  585  585                      t3s10:  ;magnitude too large 2 message
-  586  586   00027B 8640                ldaa #$40
-  587  587   00027D CExx xx             ldx #MAGTL2
-  588  588   000280 F7xx xx             tst FIRSTCH
-  589  589   000283 2614                bne char1
-  590  590   000285 16xx xx             jsr PUTCHAR
-  591  591   000288 3D                  rts
-  592  592                      
-  593  593                      t3s11:  ;display full screen (init message)
-  594  594                      
-  595  595   000289 CExx xx            ldx #INITMSG
-  596  596   00028C F7xx xx            tst FIRSTCH
-  597  597   00028F 2604               bne initmsg
-  598  598   000291 16xx xx            jsr ICHAR
-  599  599   000294 3D                 rts
-  600  600                             
-  601  601                      initmsg: ;first char of init message
-  602  602                             
-  603  603   000295 16xx xx            jsr ICHAR1
-  604  604   000298 3D                 rts
-  605  605                             
-  606  606                      char1:    ;first char of any message
-  607  607                      
-  608  608   000299 16xx xx            jsr PUTCHAR1
-  609  609   00029C 3D                 rts 
+  551  551                              
+  552  552                      t3s3:   ;full time1 message     
+  553  553   00026F 8600                ldaa #$00
+  554  554   000271 CExx xx             ldx #TIME1
+  555  555   000274 F7xx xx             tst FIRSTCH
+  556  556   000277 2676                bne char1
+  557  557   000279 16xx xx             jsr PUTCHAR
+  558  558   00027C 3D                  rts
+  559  559                              
+  560  560                              
+  561  561                      t3s4:   ;full time2 message
+  562  562   00027D 8640                ldaa #$40
+  563  563   00027F CExx xx             ldx #TIME2
+  564  564   000282 F7xx xx             tst FIRSTCH
+  565  565   000285 2668                bne char1
+  566  566   000287 16xx xx             jsr PUTCHAR
+  567  567   00028A 3D                  rts
+  568  568                      
+  569  569                      
+  570  570                      t3s5:   ;no digit 1 message
+  571  571   00028B 8600                ldaa #$00
+  572  572   00028D CExx xx             ldx #NODIG1
+  573  573   000290 F7xx xx             tst FIRSTCH
+  574  574   000293 265A                bne char1
+  575  575   000295 16xx xx             jsr PUTCHAR
+  576  576   000298 3D                  rts
+  577  577                      
+  578  578                      
+  579  579                      t3s6:   ;no digit 2 message
+  580  580   000299 8640                ldaa #$40
+  581  581   00029B CExx xx             ldx #NODIG2
+  582  582   00029E F7xx xx             tst FIRSTCH
+  583  583   0002A1 264C                bne char1
+  584  584   0002A3 16xx xx             jsr PUTCHAR
+  585  585   0002A6 3D                  rts
+  586  586                              
+  587  587                      
+  588  588                      t3s7:   ;zero magnitude 1 message
+  589  589   0002A7 8600                ldaa #$00
+  590  590   0002A9 CExx xx             ldx #ZMAG1
+  591  591   0002AC F7xx xx             tst FIRSTCH
+  592  592   0002AF 263E                bne char1
+  593  593   0002B1 16xx xx             jsr PUTCHAR
+  594  594   0002B4 3D                  rts
+  595  595                      
+  596  596                      t3s8:   ;zero magnitude 2 message
+  597  597   0002B5 8640                ldaa #$40
+  598  598   0002B7 CExx xx             ldx #ZMAG2
+  599  599   0002BA F7xx xx             tst FIRSTCH
+  600  600   0002BD 2630                bne char1
+  601  601   0002BF 16xx xx             jsr PUTCHAR
+  602  602   0002C2 3D                  rts
+  603  603                      
+  604  604                      t3s9:   ;magnitude too large 1 message
+  605  605   0002C3 8600                ldaa #$00
+  606  606   0002C5 CExx xx             ldx #MAGTL1
+  607  607   0002C8 F7xx xx             tst FIRSTCH
+  608  608   0002CB 2622                bne char1
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  610  610                              
-  611  611                      exit3:
+  609  609   0002CD 16xx xx             jsr PUTCHAR
+  610  610   0002D0 3D                  rts
+  611  611                      
   612  612                      
-  613  613   00029D 3D                 rts
-  614  614                             
-  615  615                      ;------------------TASK 4--------------------------------------------------
-  616  616                      ;pattern 1
-  617  617                      
-  618  618                      TASK_4: 
-  619  619   00029E F7xx xx             tst ON1
-  620  620   0002A1 2718                beq turnofft4
-  621  621                              
-  622  622   0002A3 B6xx xx             ldaa t4state ; get current t4state and branch accordingly
-  623  623   0002A6 271D                beq t4state0
-  624  624   0002A8 43                  deca
-  625  625   0002A9 2728                beq t4state1
-  626  626   0002AB 43                  deca
-  627  627   0002AC 2734                beq t4state2
-  628  628   0002AE 43                  deca
-  629  629   0002AF 2740                beq t4state3
-  630  630   0002B1 43                  deca
-  631  631   0002B2 274C                beq t4state4
-  632  632   0002B4 43                  deca
-  633  633   0002B5 2758                beq t4state5
-  634  634   0002B7 43                  deca
-  635  635   0002B8 2764                beq t4state6
-  636  636   0002BA 3D                  rts ; undefined state - do nothing but return
-  637  637                              
-  638  638                      turnofft4:
-  639  639                              ;changes lights to off
-  640  640   0002BB 1D02 5830           bclr PORTP, LED_MSK_1
-  641  641   0002BF 180B 01xx           movb #$01, t4state
-             0002C3 xx         
-  642  642   0002C4 3D                  rts
-  643  643                              
-  644  644                              
-  645  645                      t4state0: ; init TASK_1 (not G, not R)
-  646  646   0002C5 1D02 5830           bclr PORTP, LED_MSK_1 ; ensure that LEDs are off when initialized
-  647  647   0002C9 1C02 5A30           bset DDRP, LED_MSK_1 ; set LED_MSK_1 pins as PORTS outputs
-  648  648   0002CD 180B 01xx           movb #$01, t4state ; set next state
-             0002D1 xx         
-  649  649   0002D2 3D                  rts
+  613  613                      t3s10:  ;magnitude too large 2 message
+  614  614   0002D1 8640                ldaa #$40
+  615  615   0002D3 CExx xx             ldx #MAGTL2
+  616  616   0002D6 F7xx xx             tst FIRSTCH
+  617  617   0002D9 2614                bne char1
+  618  618   0002DB 16xx xx             jsr PUTCHAR
+  619  619   0002DE 3D                  rts
+  620  620                      
+  621  621                      t3s11:  ;display full screen (init message)
+  622  622                      
+  623  623   0002DF CExx xx            ldx #INITMSG
+  624  624   0002E2 F7xx xx            tst FIRSTCH
+  625  625   0002E5 2604               bne initmsg
+  626  626   0002E7 16xx xx            jsr ICHAR
+  627  627   0002EA 3D                 rts
+  628  628                             
+  629  629                      initmsg: ;first char of init message
+  630  630                             
+  631  631   0002EB 16xx xx            jsr ICHAR1
+  632  632   0002EE 3D                 rts
+  633  633                             
+  634  634                      char1:    ;first char of any message
+  635  635                      
+  636  636   0002EF 16xx xx            jsr PUTCHAR1
+  637  637   0002F2 3D                 rts 
+  638  638                              
+  639  639                      exit3:
+  640  640                      
+  641  641   0002F3 3D                 rts
+  642  642                             
+  643  643                      ;------------------TASK 4--------------------------------------------------
+  644  644                      ;pattern 1
+  645  645                      
+  646  646                      TASK_4: 
+  647  647                              ;bgnd
+  648  648   0002F4 F7xx xx             tst ON1
+  649  649   0002F7 2718                beq turnofft4
   650  650                              
-  651  651                      t4state1: ; G, not R
-  652  652   0002D3 1C02 5810           bset PORTP, G_LED_1 ; set state1 pattern on LEDs
-  653  653   0002D7 F7xx xx             tst DONE_1 ; check TASK_4 done flag
-  654  654   0002DA 2705                beq exit_t4s1 ; if not done, return
-  655  655   0002DC 180B 02xx           movb #$02, t4state ; otherwise if done, set next state
-             0002E0 xx         
-  656  656                      exit_t4s1:
-  657  657   0002E1 3D                  rts
-  658  658                              
-  659  659                      t4state2: ; not G, not R
-  660  660   0002E2 1D02 5810           bclr PORTP, G_LED_1 ; set state2 pattern on LEDs
-  661  661   0002E6 F7xx xx             tst DONE_1 ; check TASK_4 done flag
-  662  662   0002E9 2705                beq exit_t4s2 ; if not done, return
-  663  663   0002EB 180B 03xx           movb #$03, t4state ; otherwise if done, set next state
-             0002EF xx         
-  664  664                      exit_t4s2:
-  665  665   0002F0 3D                  rts
+  651  651   0002F9 B6xx xx             ldaa t4state ; get current t4state and branch accordingly
+  652  652   0002FC 271D                beq t4state0
+  653  653   0002FE 43                  deca
+  654  654   0002FF 272B                beq t4state1
+  655  655   000301 43                  deca
+  656  656   000302 2737                beq t4state2
+  657  657   000304 43                  deca
+  658  658   000305 2743                beq t4state3
+  659  659   000307 43                  deca
+  660  660   000308 274F                beq t4state4
+  661  661   00030A 43                  deca
+  662  662   00030B 275B                beq t4state5
+  663  663   00030D 43                  deca
+  664  664   00030E 2767                beq t4state6
+  665  665   000310 3D                  rts ; undefined state - do nothing but return
   666  666                              
-  667  667                      t4state3: ; not G, R
-  668  668   0002F1 1C02 5820           bset PORTP, R_LED_1 ; set state3 pattern on LEDs
-  669  669   0002F5 F7xx xx             tst DONE_1 ; check TASK_4 done flag
+  667  667                      turnofft4:
+  668  668                              ;changes lights to off
+  669  669   000311 1D02 5830           bclr PORTP, LED_MSK_1
+  670  670   000315 180B 01xx           movb #$01, t4state
+             000319 xx         
+  671  671   00031A 3D                  rts
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  670  670   0002F8 2705                beq exit_t4s3 ; if not done, return
-  671  671   0002FA 180B 04xx           movb #$04, t4state ; otherwise if done, set next state
-             0002FE xx         
-  672  672                      exit_t4s3:
-  673  673   0002FF 3D                  rts
-  674  674                              
-  675  675                      t4state4 ; not G, not R
-  676  676   000300 1D02 5820           bclr PORTP, R_LED_1 ; set state4 pattern on LEDs
-  677  677   000304 F7xx xx             tst DONE_1 ; check TASK_4 done flag
-  678  678   000307 2705                beq exit_t4s4 ; if not done, return
-  679  679   000309 180B 05xx           movb #$05, t4state ; otherwise if done, set next state
-             00030D xx         
-  680  680                      exit_t4s4:
-  681  681   00030E 3D                  rts
-  682  682                              
-  683  683                      t4state5: ; G, R
-  684  684   00030F 1C02 5830           bset PORTP, LED_MSK_1 ; set state5 pattern on LEDs
-  685  685   000313 F7xx xx             tst DONE_1 ; check TASK_4 done flag
-  686  686   000316 2705                beq exit_t4s5 ; if not done, return
-  687  687   000318 180B 06xx           movb #$06, t4state ; otherwise if done, set next state
-             00031C xx         
-  688  688                      exit_t4s5:
-  689  689   00031D 3D                  rts
-  690  690                              
-  691  691                      t4state6: ; not G, not R
-  692  692   00031E 1D02 5830           bclr PORTP, LED_MSK_1 ; set state6 pattern on LEDs
-  693  693   000322 F7xx xx             tst DONE_1 ; check TASK_4 done flag
-  694  694   000325 2705                beq exit_t4s6 ; if not done, return
-  695  695   000327 180B 01xx           movb #$01, t4state ; otherwise if done, set next state
-             00032B xx         
-  696  696                      exit_t4s6:
-  697  697   00032C 3D                  rts ; exit TASK_4
-  698  698                       
-  699  699                      
-  700  700                      
-  701  701                      ;------------------TASK 5--------------------------------------------------
-  702  702                      ;timing 1
-  703  703                      
-  704  704   00032D B6xx xx     TASK_5: ldaa t5state ; get current t5state and branch accordingly
-  705  705   000330 2704                beq t5state0
-  706  706   000332 43                  deca
-  707  707   000333 2710                beq t5state1
-  708  708   000335 3D                  rts ; undefined state - do nothing but return
-  709  709                              
-  710  710                      t5state0: ; initialization for TASK_5
-  711  711   000336 1804 xxxx           movw TICKS_1, COUNT_1 ; init COUNT_1
-             00033A xxxx       
-  712  712   00033C 79xx xx             clr DONE_1 ; init DONE_1 to FALSE
-  713  713   00033F 180B 01xx           movb #$01, t5state ; set next state
-             000343 xx         
-  714  714   000344 3D                  rts
-  715  715                              
-  716  716                      t5state1: ; Countdown_1
-  717  717   000345 B6xx xx             ldaa DONE_1   ;load accumulator A with DONE_1 
-  718  718   000348 8101                cmpa #$01     ;check if DONE_1 - 1 = 0 
-  719  719   00034A 2609                bne t5s1a ; skip reinitialization if DONE_1 is not = 1
+  672  672                              
+  673  673                              
+  674  674                      t4state0: ; init TASK_1 (not G, not R)
+  675  675   00031B 79xx xx             clr ON1
+  676  676   00031E 1D02 5830           bclr PORTP, LED_MSK_1 ; ensure that LEDs are off when initialized
+  677  677   000322 1C02 5A30           bset DDRP, LED_MSK_1 ; set LED_MSK_1 pins as PORTS outputs
+  678  678   000326 180B 01xx           movb #$01, t4state ; set next state
+             00032A xx         
+  679  679   00032B 3D                  rts
+  680  680                              
+  681  681                      t4state1: ; G, not R
+  682  682   00032C 1C02 5810           bset PORTP, G_LED_1 ; set state1 pattern on LEDs
+  683  683   000330 F7xx xx             tst DONE_1 ; check TASK_4 done flag
+  684  684   000333 2705                beq exit_t4s1 ; if not done, return
+  685  685   000335 180B 02xx           movb #$02, t4state ; otherwise if done, set next state
+             000339 xx         
+  686  686                      exit_t4s1:
+  687  687   00033A 3D                  rts
+  688  688                              
+  689  689                      t4state2: ; not G, not R
+  690  690   00033B 1D02 5810           bclr PORTP, G_LED_1 ; set state2 pattern on LEDs
+  691  691   00033F F7xx xx             tst DONE_1 ; check TASK_4 done flag
+  692  692   000342 2705                beq exit_t4s2 ; if not done, return
+  693  693   000344 180B 03xx           movb #$03, t4state ; otherwise if done, set next state
+             000348 xx         
+  694  694                      exit_t4s2:
+  695  695   000349 3D                  rts
+  696  696                              
+  697  697                      t4state3: ; not G, R
+  698  698   00034A 1C02 5820           bset PORTP, R_LED_1 ; set state3 pattern on LEDs
+  699  699   00034E F7xx xx             tst DONE_1 ; check TASK_4 done flag
+  700  700   000351 2705                beq exit_t4s3 ; if not done, return
+  701  701   000353 180B 04xx           movb #$04, t4state ; otherwise if done, set next state
+             000357 xx         
+  702  702                      exit_t4s3:
+  703  703   000358 3D                  rts
+  704  704                              
+  705  705                      t4state4 ; not G, not R
+  706  706   000359 1D02 5820           bclr PORTP, R_LED_1 ; set state4 pattern on LEDs
+  707  707   00035D F7xx xx             tst DONE_1 ; check TASK_4 done flag
+  708  708   000360 2705                beq exit_t4s4 ; if not done, return
+  709  709   000362 180B 05xx           movb #$05, t4state ; otherwise if done, set next state
+             000366 xx         
+  710  710                      exit_t4s4:
+  711  711   000367 3D                  rts
+  712  712                              
+  713  713                      t4state5: ; G, R
+  714  714   000368 1C02 5830           bset PORTP, LED_MSK_1 ; set state5 pattern on LEDs
+  715  715   00036C F7xx xx             tst DONE_1 ; check TASK_4 done flag
+  716  716   00036F 2705                beq exit_t4s5 ; if not done, return
+  717  717   000371 180B 06xx           movb #$06, t4state ; otherwise if done, set next state
+             000375 xx         
+  718  718                      exit_t4s5:
+  719  719   000376 3D                  rts
   720  720                              
-  721  721                              ;reinitialize if DONE_1 = 1 
-  722  722                              
-  723  723   00034C 1804 xxxx           movw TICKS_1, COUNT_1 ; init COUNT_1
-             000350 xxxx       
-  724  724   000352 79xx xx             clr DONE_1 ; init DONE_1 to FALSE
-  725  725                              
-  726  726                             ;after reinitialization, you still decrement
+  721  721                      t4state6: ; not G, not R
+  722  722   000377 1D02 5830           bclr PORTP, LED_MSK_1 ; set state6 pattern on LEDs
+  723  723   00037B F7xx xx             tst DONE_1 ; check TASK_4 done flag
+  724  724   00037E 2705                beq exit_t4s6 ; if not done, return
+  725  725   000380 180B 01xx           movb #$01, t4state ; otherwise if done, set next state
+             000384 xx         
+  726  726                      exit_t4s6:
+  727  727   000385 3D                  rts ; exit TASK_4
+  728  728                       
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  727  727                              
-  728  728   000355 1873 xxxx   t5s1a:  decw COUNT_1    ;decrement COUNT_1
-  729  729   000359 2605                bne exit_t5s2   ;if COUNT_1 is not equal to zero, exit 
-  730  730   00035B 180B 01xx           movb #$01, DONE_1     ;if COUNT_1 is zero, set DONE_1 to 1
-             00035F xx         
-  731  731                           
-  732  732                              
-  733  733                      exit_t5s2:
-  734  734   000360 3D                  rts ; exit TASK_5
-  735  735                      
-  736  736                      
-  737  737                      
-  738  738                      
-  739  739                      
-  740  740                      
-  741  741                      ;------------------TASK 6--------------------------------------------------
-  742  742                      ;pattern 2
-  743  743                      
-  744  744                      TASK_6: 
-  745  745   000361 F7xx xx             tst ON2
-  746  746   000364 2718                beq turnofft6
-  747  747                      
-  748  748   000366 B6xx xx             ldaa t6state ; get current t1state and branch accordingly
-  749  749   000369 271D                beq t6state0
-  750  750   00036B 43                  deca
-  751  751   00036C 2728                beq t6state1
-  752  752   00036E 43                  deca
-  753  753   00036F 2734                beq t6state2
-  754  754   000371 43                  deca
-  755  755   000372 2740                beq t6state3
-  756  756   000374 43                  deca
-  757  757   000375 274C                beq t6state4
-  758  758   000377 43                  deca
-  759  759   000378 2758                beq t6state5
-  760  760   00037A 43                  deca
-  761  761   00037B 2764                beq t6state6
-  762  762   00037D 3D                  rts ; undefined state - do nothing but return
-  763  763                              
-  764  764                      turnofft6:
-  765  765                              ;changes lights to off
-  766  766   00037E 1D02 58C0           bclr PORTP, LED_MSK_2
-  767  767   000382 180B 01xx           movb #$01, t6state
-             000386 xx         
-  768  768   000387 3D                  rts
-  769  769                                      
-  770  770                              
-  771  771                              
-  772  772                      t6state0: ; init TASK_1 (not G, not R)
-  773  773   000388 1D02 58C0           bclr PORTP, LED_MSK_2 ; ensure that LEDs are off when initialized
-  774  774   00038C 1C02 5AC0           bset DDRP, LED_MSK_2 ; set LED_MSK_1 pins as PORTS outputs
-  775  775   000390 180B 01xx           movb #$01, t6state ; set next state
-             000394 xx         
-  776  776   000395 3D                  rts
-  777  777                              
-  778  778                      t6state1: ; G, not R
-  779  779   000396 1C02 5840           bset PORTP, G_LED_2 ; set state1 pattern on LEDs
-  780  780   00039A F7xx xx             tst DONE_2 ; check TASK_4 done flag
-  781  781   00039D 2705                beq exit_t6s1 ; if not done, return
-  782  782   00039F 180B 02xx           movb #$02, t6state ; otherwise if done, set next state
-             0003A3 xx         
-  783  783                      exit_t6s1:
-  784  784   0003A4 3D                  rts
-  785  785                              
-  786  786                      t6state2: ; not G, not R
+  729  729                      
+  730  730                      
+  731  731                      ;------------------TASK 5--------------------------------------------------
+  732  732                      ;timing 1
+  733  733                      
+  734  734   000386 B6xx xx     TASK_5: ldaa t5state ; get current t5state and branch accordingly
+  735  735   000389 2704                beq t5state0
+  736  736   00038B 43                  deca
+  737  737   00038C 2710                beq t5state1
+  738  738   00038E 3D                  rts ; undefined state - do nothing but return
+  739  739                              
+  740  740                      t5state0: ; initialization for TASK_5
+  741  741   00038F 1804 xxxx           movw TICKS_1, COUNT_1 ; init COUNT_1
+             000393 xxxx       
+  742  742   000395 79xx xx             clr DONE_1 ; init DONE_1 to FALSE
+  743  743   000398 180B 01xx           movb #$01, t5state ; set next state
+             00039C xx         
+  744  744   00039D 3D                  rts
+  745  745                              
+  746  746                      t5state1: ; Countdown_1
+  747  747   00039E B6xx xx             ldaa DONE_1   ;load accumulator A with DONE_1 
+  748  748   0003A1 8101                cmpa #$01     ;check if DONE_1 - 1 = 0 
+  749  749   0003A3 2609                bne t5s1a ; skip reinitialization if DONE_1 is not = 1
+  750  750                              
+  751  751                              ;reinitialize if DONE_1 = 1 
+  752  752                              
+  753  753   0003A5 1804 xxxx           movw TICKS_1, COUNT_1 ; init COUNT_1
+             0003A9 xxxx       
+  754  754   0003AB 79xx xx             clr DONE_1 ; init DONE_1 to FALSE
+  755  755                              
+  756  756                             ;after reinitialization, you still decrement
+  757  757                              
+  758  758   0003AE 1873 xxxx   t5s1a:  decw COUNT_1    ;decrement COUNT_1
+  759  759   0003B2 2605                bne exit_t5s2   ;if COUNT_1 is not equal to zero, exit 
+  760  760   0003B4 180B 01xx           movb #$01, DONE_1     ;if COUNT_1 is zero, set DONE_1 to 1
+             0003B8 xx         
+  761  761                           
+  762  762                              
+  763  763                      exit_t5s2:
+  764  764   0003B9 3D                  rts ; exit TASK_5
+  765  765                      
+  766  766                      
+  767  767                      
+  768  768                      
+  769  769                      
+  770  770                      
+  771  771                      ;------------------TASK 6--------------------------------------------------
+  772  772                      ;pattern 2
+  773  773                      
+  774  774                      TASK_6: 
+  775  775   0003BA F7xx xx             tst ON2
+  776  776   0003BD 2718                beq turnofft6
+  777  777                      
+  778  778   0003BF B6xx xx             ldaa t6state ; get current t1state and branch accordingly
+  779  779   0003C2 271D                beq t6state0
+  780  780   0003C4 43                  deca
+  781  781   0003C5 272B                beq t6state1
+  782  782   0003C7 43                  deca
+  783  783   0003C8 2737                beq t6state2
+  784  784   0003CA 43                  deca
+  785  785   0003CB 2743                beq t6state3
+  786  786   0003CD 43                  deca
+  787  787   0003CE 274F                beq t6state4
+  788  788   0003D0 43                  deca
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  787  787   0003A5 1D02 5840           bclr PORTP, G_LED_2 ; set state2 pattern on LEDs
-  788  788   0003A9 F7xx xx             tst DONE_2 ; check TASK_1 done flag
-  789  789   0003AC 2705                beq exit_t6s2 ; if not done, return
-  790  790   0003AE 180B 03xx           movb #$03, t6state ; otherwise if done, set next state
-             0003B2 xx         
-  791  791                      exit_t6s2:
-  792  792   0003B3 3D                  rts
+  789  789   0003D1 275B                beq t6state5
+  790  790   0003D3 43                  deca
+  791  791   0003D4 2767                beq t6state6
+  792  792   0003D6 3D                  rts ; undefined state - do nothing but return
   793  793                              
-  794  794                      t6state3: ; not G, R
-  795  795   0003B4 1C02 5880           bset PORTP, R_LED_2 ; set state3 pattern on LEDs
-  796  796   0003B8 F7xx xx             tst DONE_2 ; check TASK_2 done flag
-  797  797   0003BB 2705                beq exit_t6s3 ; if not done, return
-  798  798   0003BD 180B 04xx           movb #$04, t6state ; otherwise if done, set next state
-             0003C1 xx         
-  799  799                      exit_t6s3:
-  800  800   0003C2 3D                  rts
-  801  801                              
-  802  802                      t6state4 ; not G, not R
-  803  803   0003C3 1D02 5880           bclr PORTP, R_LED_2 ; set state4 pattern on LEDs
-  804  804   0003C7 F7xx xx             tst DONE_2 ; check TASK_2 done flag
-  805  805   0003CA 2705                beq exit_t6s4 ; if not done, return
-  806  806   0003CC 180B 05xx           movb #$05, t6state ; otherwise if done, set next state
-             0003D0 xx         
-  807  807                      exit_t6s4:
-  808  808   0003D1 3D                  rts
-  809  809                              
-  810  810                      t6state5: ; G, R
-  811  811   0003D2 1C02 58C0           bset PORTP, LED_MSK_2 ; set state5 pattern on LEDs
-  812  812   0003D6 F7xx xx             tst DONE_2 ; check TASK_2 done flag
-  813  813   0003D9 2705                beq exit_t6s5 ; if not done, return
-  814  814   0003DB 180B 06xx           movb #$06, t6state ; otherwise if done, set next state
+  794  794                      turnofft6:
+  795  795                              ;changes lights to off
+  796  796   0003D7 1D02 58C0           bclr PORTP, LED_MSK_2
+  797  797   0003DB 180B 01xx           movb #$01, t6state
              0003DF xx         
-  815  815                      exit_t6s5:
-  816  816   0003E0 3D                  rts
-  817  817                              
-  818  818                      t6state6: ; not G, not R
-  819  819   0003E1 1D02 58C0           bclr PORTP, LED_MSK_2 ; set state6 pattern on LEDs
-  820  820   0003E5 F7xx xx             tst DONE_2 ; check TASK_2 done flag
-  821  821   0003E8 2705                beq exit_t6s6 ; if not done, return
-  822  822   0003EA 180B 01xx           movb #$01, t6state ; otherwise if done, set next state
-             0003EE xx         
-  823  823                      exit_t6s6:
-  824  824   0003EF 3D                  rts ; exit TASK_4
-  825  825                              
-  826  826                      
-  827  827                      
-  828  828                      
-  829  829                      
-  830  830                      
-  831  831                      
-  832  832                      ;------------------TASK 7--------------------------------------------------
-  833  833                      ;timing 2
-  834  834                      
-  835  835   0003F0 B6xx xx     TASK_7: ldaa t7state ; get current t2state and branch accordingly
-  836  836   0003F3 2704                beq t7state0
-  837  837   0003F5 43                  deca
-  838  838   0003F6 2710                beq t7state1
-  839  839   0003F8 3D                  rts ; undefined state - do nothing but return
+  798  798   0003E0 3D                  rts
+  799  799                                      
+  800  800                              
+  801  801                              
+  802  802                      t6state0: ; init TASK_1 (not G, not R)
+  803  803   0003E1 79xx xx             clr ON2
+  804  804   0003E4 1D02 58C0           bclr PORTP, LED_MSK_2 ; ensure that LEDs are off when initialized
+  805  805   0003E8 1C02 5AC0           bset DDRP, LED_MSK_2 ; set LED_MSK_1 pins as PORTS outputs
+  806  806   0003EC 180B 01xx           movb #$01, t6state ; set next state
+             0003F0 xx         
+  807  807   0003F1 3D                  rts
+  808  808                              
+  809  809                      t6state1: ; G, not R
+  810  810   0003F2 1C02 5840           bset PORTP, G_LED_2 ; set state1 pattern on LEDs
+  811  811   0003F6 F7xx xx             tst DONE_2 ; check TASK_4 done flag
+  812  812   0003F9 2705                beq exit_t6s1 ; if not done, return
+  813  813   0003FB 180B 02xx           movb #$02, t6state ; otherwise if done, set next state
+             0003FF xx         
+  814  814                      exit_t6s1:
+  815  815   000400 3D                  rts
+  816  816                              
+  817  817                      t6state2: ; not G, not R
+  818  818   000401 1D02 5840           bclr PORTP, G_LED_2 ; set state2 pattern on LEDs
+  819  819   000405 F7xx xx             tst DONE_2 ; check TASK_1 done flag
+  820  820   000408 2705                beq exit_t6s2 ; if not done, return
+  821  821   00040A 180B 03xx           movb #$03, t6state ; otherwise if done, set next state
+             00040E xx         
+  822  822                      exit_t6s2:
+  823  823   00040F 3D                  rts
+  824  824                              
+  825  825                      t6state3: ; not G, R
+  826  826   000410 1C02 5880           bset PORTP, R_LED_2 ; set state3 pattern on LEDs
+  827  827   000414 F7xx xx             tst DONE_2 ; check TASK_2 done flag
+  828  828   000417 2705                beq exit_t6s3 ; if not done, return
+  829  829   000419 180B 04xx           movb #$04, t6state ; otherwise if done, set next state
+             00041D xx         
+  830  830                      exit_t6s3:
+  831  831   00041E 3D                  rts
+  832  832                              
+  833  833                      t6state4 ; not G, not R
+  834  834   00041F 1D02 5880           bclr PORTP, R_LED_2 ; set state4 pattern on LEDs
+  835  835   000423 F7xx xx             tst DONE_2 ; check TASK_2 done flag
+  836  836   000426 2705                beq exit_t6s4 ; if not done, return
+  837  837   000428 180B 05xx           movb #$05, t6state ; otherwise if done, set next state
+             00042C xx         
+  838  838                      exit_t6s4:
+  839  839   00042D 3D                  rts
   840  840                              
-  841  841                      t7state0: ; initialization for TASK_7
-  842  842   0003F9 1804 xxxx           movw TICKS_2, COUNT_2 ; init COUNT_2
-             0003FD xxxx       
-  843  843   0003FF 79xx xx             clr DONE_2 ; init DONE_2 to FALSE
-  844  844   000402 180B 01xx           movb #$01, t7state ; set next state
+  841  841                      t6state5: ; G, R
+  842  842   00042E 1C02 58C0           bset PORTP, LED_MSK_2 ; set state5 pattern on LEDs
+  843  843   000432 F7xx xx             tst DONE_2 ; check TASK_2 done flag
+  844  844   000435 2705                beq exit_t6s5 ; if not done, return
+  845  845   000437 180B 06xx           movb #$06, t6state ; otherwise if done, set next state
+             00043B xx         
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-             000406 xx         
-  845  845   000407 3D                  rts
-  846  846                              
-  847  847                      t7state1: ; Countdown_1
-  848  848   000408 B6xx xx             ldaa DONE_2   ;load accumulator A with DONE_2 
-  849  849   00040B 8101                cmpa #$01     ;check if DONE_2 - 1 = 0 
-  850  850   00040D 2609                bne t7s1a ; skip reinitialization if DONE_2 is not = 1
-  851  851                              
-  852  852                              ;reinitialize if DONE_2 = 1 
-  853  853                              
-  854  854   00040F 1804 xxxx           movw TICKS_2, COUNT_2 ; init COUNT_2
-             000413 xxxx       
-  855  855   000415 79xx xx             clr DONE_2 ; init DONE_2 to FALSE
+  846  846                      exit_t6s5:
+  847  847   00043C 3D                  rts
+  848  848                              
+  849  849                      t6state6: ; not G, not R
+  850  850   00043D 1D02 58C0           bclr PORTP, LED_MSK_2 ; set state6 pattern on LEDs
+  851  851   000441 F7xx xx             tst DONE_2 ; check TASK_2 done flag
+  852  852   000444 2705                beq exit_t6s6 ; if not done, return
+  853  853   000446 180B 01xx           movb #$01, t6state ; otherwise if done, set next state
+             00044A xx         
+  854  854                      exit_t6s6:
+  855  855   00044B 3D                  rts ; exit TASK_4
   856  856                              
-  857  857                             ;after reinitialization, you still decrement
-  858  858                              
-  859  859   000418 1873 xxxx   t7s1a:  decw COUNT_2    ;decrement COUNT_2
-  860  860   00041C 2605                bne exit_t7s2   ;if COUNT_2 is not equal to zero, exit 
-  861  861   00041E 180B 01xx           movb #$01, DONE_2     ;if COUNT_1 is zero, set DONE_2 to 1
-             000422 xx         
-  862  862                           
-  863  863                              
-  864  864                      exit_t7s2:
-  865  865   000423 3D                  rts ; exit TASK_7
-  866  866                      
-  867  867                      
-  868  868                      
-  869  869                      
-  870  870                      
-  871  871                      
-  872  872                      ;------------------TASK 8--------------------------------------------------
-  873  873                                ;delay
-  874  874                                
-  875  875   000424 B6xx xx     TASK_8: ldaa t8state ; get current t3state and branch accordingly
-  876  876   000427 2704                beq t8state0
-  877  877   000429 43                  deca
-  878  878   00042A 2707                beq t8state1
-  879  879   00042C 3D                  rts ; undefined state - do nothing but return
-  880  880                      
-  881  881                      t8state0: ; initialization for TASK_8
-  882  882                              ; no initialization required
-  883  883   00042D 180B 01xx           movb #$01, t8state ; set next state
-             000431 xx         
-  884  884   000432 3D                  rts
-  885  885                      
-  886  886                      t8state1:
-  887  887   000433 16xx xx             jsr DELAY_1ms
-  888  888   000436 3D                  rts ; exit TASK_8
+  857  857                      
+  858  858                      
+  859  859                      
+  860  860                      
+  861  861                      
+  862  862                      
+  863  863                      ;------------------TASK 7--------------------------------------------------
+  864  864                      ;timing 2
+  865  865                      
+  866  866   00044C B6xx xx     TASK_7: ldaa t7state ; get current t2state and branch accordingly
+  867  867   00044F 2704                beq t7state0
+  868  868   000451 43                  deca
+  869  869   000452 2710                beq t7state1
+  870  870   000454 3D                  rts ; undefined state - do nothing but return
+  871  871                              
+  872  872                      t7state0: ; initialization for TASK_7
+  873  873   000455 1804 xxxx           movw TICKS_2, COUNT_2 ; init COUNT_2
+             000459 xxxx       
+  874  874   00045B 79xx xx             clr DONE_2 ; init DONE_2 to FALSE
+  875  875   00045E 180B 01xx           movb #$01, t7state ; set next state
+             000462 xx         
+  876  876   000463 3D                  rts
+  877  877                              
+  878  878                      t7state1: ; Countdown_1
+  879  879   000464 B6xx xx             ldaa DONE_2   ;load accumulator A with DONE_2 
+  880  880   000467 8101                cmpa #$01     ;check if DONE_2 - 1 = 0 
+  881  881   000469 2609                bne t7s1a ; skip reinitialization if DONE_2 is not = 1
+  882  882                              
+  883  883                              ;reinitialize if DONE_2 = 1 
+  884  884                              
+  885  885   00046B 1804 xxxx           movw TICKS_2, COUNT_2 ; init COUNT_2
+             00046F xxxx       
+  886  886   000471 79xx xx             clr DONE_2 ; init DONE_2 to FALSE
+  887  887                              
+  888  888                             ;after reinitialization, you still decrement
   889  889                              
-  890  890                              
-  891  891                        
-  892  892                      ;/------------------------------------------------------------------------------------\
-  893  893                      ;| Subroutines                                                                        |
-  894  894                      ;\------------------------------------------------------------------------------------/
-  895  895                      ; General purpose subroutines go here
-  896  896                      
-  897  897                        
-  898  898                       ;---------------------------------------------------------------------------------------     
-  899  899                               
-  900  900                        backspace:
-  901  901                       
-  902  902   000437 16xx xx            jsr GETADDR                   ;get current position of LCR
-  903  903   00043A 43                 deca                          ;decrement one
-  904  904   00043B 16xx xx            jsr SETADDR                   ;set address to new position
+  890  890   000474 1873 xxxx   t7s1a:  decw COUNT_2    ;decrement COUNT_2
+  891  891   000478 2605                bne exit_t7s2   ;if COUNT_2 is not equal to zero, exit 
+  892  892   00047A 180B 01xx           movb #$01, DONE_2     ;if COUNT_1 is zero, set DONE_2 to 1
+             00047E xx         
+  893  893                           
+  894  894                              
+  895  895                      exit_t7s2:
+  896  896   00047F 3D                  rts ; exit TASK_7
+  897  897                      
+  898  898                      
+  899  899                      
+  900  900                      
+  901  901                      
+  902  902                      
+  903  903                      ;------------------TASK 8--------------------------------------------------
+  904  904                                ;delay
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  905  905   00043E CExx xx            ldx #BACKSPACE                ;
-  906  906   000441 16xx xx            jsr OUTSTRING                 ;output a blank character
-  907  907   000444 16xx xx            jsr GETADDR                   ;get current position of LCR
-  908  908   000447 43                 deca                          ;decrement one
-  909  909   000448 16xx xx            jsr SETADDR                   ;set address to new position
-  910  910   00044B 73xx xx            dec COUNT                     ;reset the value of count
-  911  911                             
-  912  912                         
-  913  913                        
-  914  914                        ;------CONVERSIONS---------------------------------------------------------------------------;
-  915  915                      
-  916  916                      conversion:
-  917  917                      		
-  918  918                      		;init here
-  919  919   00044E 1879 xxxx   		clrw RESULT
-  920  920   000452 79xx xx     		clr TMP
-  921  921   000455 79xx xx     		clr ERR
-  922  922   000458 CExx xx     		ldx #BUFFER
-  923  923   00045B 35          		pshy			;pushes registers to stack so that they remain unchanged by the subroutine
-  924  924   00045C 37          		pshb
-  925  925   00045D 39          		pshc
-  926  926                      		
-  927  927                      		
-  928  928                      convloop:
-  929  929                      
-  930  930                      		;loop goes here
-  931  931   00045E B6xx xx     		ldaa COUNT		;check if COUNT has finished for loop
-  932  932   000461 272D        		beq loopfin		;branch to exit if COUNT is done
-  933  933                      		
-  934  934                      		
-  935  935   000463 FDxx xx     		ldy RESULT		;load current value of RESULT into register y for use
-  936  936   000466 CC00 0A     		ldd #$000A		;load hex 10 into accumulator for use
-  937  937   000469 13          		emul			    ;multiply register y and acc d
-  938  938   00046A 18D7        		tsty          ;sets flag for y
-  939  939   00046C 261B        		bne ERR1      ;checks if the multiplication overflowed to y
-  940  940   00046E 7Cxx xx     		std RESULT		;keep the bottom 2 bytes of the emul since we are never dealing with 4 bit nums
-  941  941                      		
-  942  942                      		
-  943  943                      		
-  944  944   000471 B6xx xx     		ldaa TMP		;TMP is used for index addressing
-  945  945   000474 E6E4        		ldab a,x		;reference the correct digit in the BUFFER using TMP
-  946  946   000476 C030        		subb #$30		;subtract $30 to get the decimal value of the ascii code
-  947  947                      		
-  948  948                      		
-  949  949   000478 87          		clra
-  950  950   000479 F3xx xx     		addd RESULT		;add RESULT and acc d 
-  951  951   00047C 250B        		bcs ERR1      ;branch if the addition triggers an overflow, causing error 1
-  952  952   00047E 7Cxx xx     		std RESULT		;store addition in RESULT
-  953  953   000481 72xx xx     		inc TMP		  	;inc TMP so that BUFFER digits are correctly referenced
-  954  954   000484 73xx xx     		dec COUNT		  ;dec COUNT to track how long the loop has operated for
-  955  955   000487 20D5        		bra convloop
-  956  956                      			
-  957  957                      
-  958  958                      ERR1:		
-  959  959                      
-  960  960   000489 180B 01xx   		movb #$01, ERR ;set ERR for MAGNITUDE TOO LARGE
+  905  905                                
+  906  906   000480 B6xx xx     TASK_8: ldaa t8state ; get current t3state and branch accordingly
+  907  907   000483 2704                beq t8state0
+  908  908   000485 43                  deca
+  909  909   000486 2707                beq t8state1
+  910  910   000488 3D                  rts ; undefined state - do nothing but return
+  911  911                      
+  912  912                      t8state0: ; initialization for TASK_8
+  913  913                              ; no initialization required
+  914  914   000489 180B 01xx           movb #$01, t8state ; set next state
              00048D xx         
-  961  961   00048E 200A        		bra cnvexit
-  962  962                      	
-  963  963                      loopfin:
+  915  915   00048E 3D                  rts
+  916  916                      
+  917  917                      t8state1:
+  918  918   00048F 16xx xx             jsr DELAY_1ms
+  919  919   000492 3D                  rts ; exit TASK_8
+  920  920                              
+  921  921                              
+  922  922                        
+  923  923                      ;/------------------------------------------------------------------------------------\
+  924  924                      ;| Subroutines                                                                        |
+  925  925                      ;\------------------------------------------------------------------------------------/
+  926  926                      ; General purpose subroutines go here
+  927  927                      
+  928  928                        
+  929  929                       ;---------------------------------------------------------------------------------------     
+  930  930                               
+  931  931                        backspace:
+  932  932                       
+  933  933   000493 16xx xx            jsr GETADDR                   ;get current position of LCR
+  934  934   000496 43                 deca                          ;decrement one
+  935  935   000497 16xx xx            jsr SETADDR                   ;set address to new position
+  936  936   00049A CExx xx            ldx #BACKSPACE                ;
+  937  937   00049D 16xx xx            jsr OUTSTRING                 ;output a blank character
+  938  938   0004A0 16xx xx            jsr GETADDR                   ;get current position of LCR
+  939  939   0004A3 43                 deca                          ;decrement one
+  940  940   0004A4 16xx xx            jsr SETADDR                   ;set address to new position
+  941  941   0004A7 73xx xx            dec COUNT                     ;reset the value of count
+  942  942                             
+  943  943                         
+  944  944                        
+  945  945                        ;------CONVERSIONS---------------------------------------------------------------------------;
+  946  946                      
+  947  947                      conversion:
+  948  948                      		
+  949  949                      		;init here
+  950  950   0004AA 1879 xxxx   		clrw RESULT
+  951  951   0004AE 79xx xx     		clr TMP
+  952  952   0004B1 79xx xx     		clr ERR
+  953  953   0004B4 CExx xx     		ldx #BUFFER
+  954  954   0004B7 35          		pshy			;pushes registers to stack so that they remain unchanged by the subroutine
+  955  955   0004B8 37          		pshb
+  956  956   0004B9 39          		pshc
+  957  957                      		
+  958  958                      		
+  959  959                      convloop:
+  960  960                      
+  961  961                      		;loop goes here
+  962  962   0004BA B6xx xx     		ldaa COUNT		;check if COUNT has finished for loop
+  963  963   0004BD 272D        		beq loopfin		;branch to exit if COUNT is done
   964  964                      		
-  965  965   000490 FExx xx     		ldx RESULT     ;happens at the end of the loop to check for error 2
-  966  966   000493 2605        		bne cnvexit	
-  967  967                      		
+  965  965                      		
+  966  966   0004BF FDxx xx     		ldy RESULT		;load current value of RESULT into register y for use
+  967  967   0004C2 CC00 0A     		ldd #$000A		;load hex 10 into accumulator for use
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  968  968                      ERR2:
-  969  969                      
-  970  970   000495 180B 02xx   		movb #$02, ERR  ;set ERR for ZERO MAGNITUDE INAPPROPRIATE
-             000499 xx         
-  971  971                      
-  972  972                      cnvexit:
-  973  973                      
-  974  974   00049A B6xx xx     		ldaa ERR		;load ERRor into accumulator a
-  975  975   00049D 38          		pulc        ;pulls registers from stack to restore them to pre-subroutine states
-  976  976   00049E 33          		pulb
-  977  977   00049F 31          		puly
-  978  978   0004A0 3D          		rts         ;return
-  979  979                              
-  980  980                      
-  981  981                      ;-------------------Cooperative Fixed Messaging-------------------------------------------;        
-  982  982                      
-  983  983                      PUTCHAR1:    
-  984  984   0004A1 7Exx xx               stx DPTR
-  985  985   0004A4 16xx xx               jsr SETADDR
-  986  986   0004A7 79xx xx               clr FIRSTCH
-  987  987                                
-  988  988                      PUTCHAR:          
-  989  989   0004AA FExx xx               ldx DPTR
-  990  990   0004AD E600                  ldab 0,x
-  991  991   0004AF 2708                  beq mess_exit
-  992  992   0004B1 1872 xxxx             incw DPTR
-  993  993   0004B5 16xx xx               jsr OUTCHAR
-  994  994   0004B8 3D                    rts
-  995  995                      
-  996  996                      
-  997  997                      mess_exit:
-  998  998                      
-  999  999   0004B9 180B 01xx               movb #$01, t3state
-             0004BD xx         
- 1000 1000   0004BE 180B 01xx               movb #$01, MSG_NUM
-             0004C2 xx         
- 1001 1001   0004C3 3D                      rts
+  968  968   0004C5 13          		emul			    ;multiply register y and acc d
+  969  969   0004C6 18D7        		tsty          ;sets flag for y
+  970  970   0004C8 261B        		bne ERR1      ;checks if the multiplication overflowed to y
+  971  971   0004CA 7Cxx xx     		std RESULT		;keep the bottom 2 bytes of the emul since we are never dealing with 4 bit nums
+  972  972                      		
+  973  973                      		
+  974  974                      		
+  975  975   0004CD B6xx xx     		ldaa TMP		;TMP is used for index addressing
+  976  976   0004D0 E6E4        		ldab a,x		;reference the correct digit in the BUFFER using TMP
+  977  977   0004D2 C030        		subb #$30		;subtract $30 to get the decimal value of the ascii code
+  978  978                      		
+  979  979                      		
+  980  980   0004D4 87          		clra
+  981  981   0004D5 F3xx xx     		addd RESULT		;add RESULT and acc d 
+  982  982   0004D8 250B        		bcs ERR1      ;branch if the addition triggers an overflow, causing error 1
+  983  983   0004DA 7Cxx xx     		std RESULT		;store addition in RESULT
+  984  984   0004DD 72xx xx     		inc TMP		  	;inc TMP so that BUFFER digits are correctly referenced
+  985  985   0004E0 73xx xx     		dec COUNT		  ;dec COUNT to track how long the loop has operated for
+  986  986   0004E3 20D5        		bra convloop
+  987  987                      			
+  988  988                      
+  989  989                      ERR1:		
+  990  990                      
+  991  991   0004E5 180B 01xx   		movb #$01, ERR ;set ERR for MAGNITUDE TOO LARGE
+             0004E9 xx         
+  992  992   0004EA 200A        		bra cnvexit
+  993  993                      	
+  994  994                      loopfin:
+  995  995                      		
+  996  996   0004EC FExx xx     		ldx RESULT     ;happens at the end of the loop to check for error 2
+  997  997   0004EF 2605        		bne cnvexit	
+  998  998                      		
+  999  999                      ERR2:
+ 1000 1000                      
+ 1001 1001   0004F1 180B 02xx   		movb #$02, ERR  ;set ERR for ZERO MAGNITUDE INAPPROPRIATE
+             0004F5 xx         
  1002 1002                      
- 1003 1003                      ;-------------------Cooperative Fixed init message-----------------------
+ 1003 1003                      cnvexit:
  1004 1004                      
- 1005 1005                      ICHAR1: 
- 1006 1006   0004C4 7Exx xx               stx DPTR
- 1007 1007   0004C7 16xx xx               jsr SETADDR
- 1008 1008   0004CA 79xx xx               clr FIRSTCH
- 1009 1009                                
- 1010 1010                      ICHAR:        
- 1011 1011   0004CD FExx xx               ldx DPTR
- 1012 1012   0004D0 E600                  ldab 0,x
- 1013 1013   0004D2 27E5                  beq mess_exit
- 1014 1014   0004D4 1872 xxxx             incw DPTR
- 1015 1015   0004D8 16xx xx               jsr OUTCHAR
- 1016 1016   0004DB 16xx xx               jsr GETADDR
- 1017 1017   0004DE 8128                  cmpa #$28
- 1018 1018   0004E0 2701                  beq changeline
- 1019 1019   0004E2 3D                    rts
- 1020 1020                      
- 1021 1021                      changeline: 
- 1022 1022                      
- 1023 1023   0004E3 8640                  ldaa #$40
- 1024 1024   0004E5 16xx xx               jsr SETADDR
- 1025 1025   0004E8 3D                    rts
+ 1005 1005   0004F6 B6xx xx     		ldaa ERR		;load ERRor into accumulator a
+ 1006 1006   0004F9 38          		pulc        ;pulls registers from stack to restore them to pre-subroutine states
+ 1007 1007   0004FA 33          		pulb
+ 1008 1008   0004FB 31          		puly
+ 1009 1009   0004FC 3D          		rts         ;return
+ 1010 1010                              
+ 1011 1011                      
+ 1012 1012                      ;-------------------Cooperative Fixed Messaging-------------------------------------------;        
+ 1013 1013                      
+ 1014 1014                      PUTCHAR1:    
+ 1015 1015   0004FD 7Exx xx               stx DPTR
+ 1016 1016   000500 16xx xx               jsr SETADDR
+ 1017 1017   000503 79xx xx               clr FIRSTCH
+ 1018 1018                                
+ 1019 1019                      PUTCHAR:          
+ 1020 1020   000506 FExx xx               ldx DPTR
+ 1021 1021   000509 E600                  ldab 0,x
+ 1022 1022   00050B 2708                  beq mess_exit
+ 1023 1023   00050D 1872 xxxx             incw DPTR
+ 1024 1024   000511 16xx xx               jsr OUTCHAR
+ 1025 1025   000514 3D                    rts
  1026 1026                      
  1027 1027                      
- 1028 1028                      ;----------------------DElay----------------------------
-
-Freescale HC12-Assembler 
-(c) Copyright Freescale 1987-2010
-
- Abs. Rel.   Loc    Obj. code   Source line
- ---- ----   ------ ---------   -----------
+ 1028 1028                      mess_exit:
  1029 1029                      
- 1030 1030                      DELAY_1ms:
- 1031 1031   0004E9 CD05 84             ldy #$0584
- 1032 1032                              INNER: ; inside loop
- 1033 1033   0004EC 8D00 00             cpy #0
- 1034 1034   0004EF 2703                beq EXIT
- 1035 1035   0004F1 03                  dey
- 1036 1036   0004F2 20F8                bra INNER
- 1037 1037                              EXIT:
- 1038 1038   0004F4 3D                  rts ; exit DELAY_1ms
- 1039 1039                      
- 1040 1040                      ;/------------------------------------------------------------------------------------\
- 1041 1041                      ;| ASCII Messages and Constant Data                                                   |
- 1042 1042                      ;\------------------------------------------------------------------------------------/
- 1043 1043                      ; Any constants can be defined here
- 1044 1044                      
- 1045 1045   0004F5 5449 4D45    INITMSG: DC.B 'TIME1 =     <F1> to update LED1 periodTIME2 =     <F2> to update LED1 period', $00
-             0004F9 3120 3D20  
-             0004FD 2020 2020  
-             000501 3C46 313E  
-             000505 2074 6F20  
-             000509 7570 6461  
-             00050D 7465 204C  
-             000511 4544 3120  
-             000515 7065 7269  
-             000519 6F64 5449  
-             00051D 4D45 3220  
-             000521 3D20 2020  
-             000525 2020 3C46  
-             000529 323E 2074  
-             00052D 6F20 7570  
-             000531 6461 7465  
-             000535 204C 4544  
-             000539 3120 7065  
-             00053D 7269 6F64  
-             000541 00         
- 1046 1046   000542 5449 4D45    TIME1:  DC.B 'TIME1 =     <F1> to update LED1 period', $00
-             000546 3120 3D20  
-             00054A 2020 2020  
-             00054E 3C46 313E  
-             000552 2074 6F20  
-             000556 7570 6461  
-             00055A 7465 204C  
-             00055E 4544 3120  
-             000562 7065 7269  
-             000566 6F64 00    
- 1047 1047   000569 5449 4D45    TIME2:  DC.B 'TIME2 =     <F2> to update LED1 period', $00
-             00056D 3220 3D20  
-             000571 2020 2020  
-             000575 3C46 323E  
-             000579 2074 6F20  
-             00057D 7570 6461  
-             000581 7465 204C  
-             000585 4544 3120  
-             000589 7065 7269  
-             00058D 6F64 00    
- 1048 1048   000590 5449 4D45    NODIG1: DC.B 'TIME1 = NO DIGITS ENTERED             ', $00
-             000594 3120 3D20  
-             000598 4E4F 2044  
-             00059C 4947 4954  
-             0005A0 5320 454E  
-             0005A4 5445 5245  
-             0005A8 4420 2020  
-             0005AC 2020 2020  
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-             0005B0 2020 2020  
-             0005B4 2020 00    
- 1049 1049   0005B7 5449 4D45    NODIG2: DC.B 'TIME2 = NO DIGITS ENTERED             ', $00
-             0005BB 3220 3D20  
-             0005BF 4E4F 2044  
-             0005C3 4947 4954  
-             0005C7 5320 454E  
-             0005CB 5445 5245  
-             0005CF 4420 2020  
-             0005D3 2020 2020  
-             0005D7 2020 2020  
-             0005DB 2020 00    
- 1050 1050   0005DE 5449 4D45    ZMAG1:  DC.B 'TIME1 = ZERO MAGNITUDE INAPPROPRIATE  ', $00
-             0005E2 3120 3D20  
-             0005E6 5A45 524F  
-             0005EA 204D 4147  
-             0005EE 4E49 5455  
-             0005F2 4445 2049  
-             0005F6 4E41 5050  
-             0005FA 524F 5052  
-             0005FE 4941 5445  
-             000602 2020 00    
- 1051 1051   000605 5449 4D45    ZMAG2:  DC.B 'TIME2 = ZERO MAGNITUDE INAPPROPRIATE  ', $00
-             000609 3220 3D20  
-             00060D 5A45 524F  
-             000611 204D 4147  
-             000615 4E49 5455  
-             000619 4445 2049  
-             00061D 4E41 5050  
-             000621 524F 5052  
-             000625 4941 5445  
-             000629 2020 00    
- 1052 1052   00062C 5449 4D45    MAGTL1: DC.B 'TIME1 = MAGNITUDE TOO LARGE           ', $00
-             000630 3120 3D20  
-             000634 4D41 474E  
-             000638 4954 5544  
-             00063C 4520 544F  
-             000640 4F20 4C41  
-             000644 5247 4520  
-             000648 2020 2020  
-             00064C 2020 2020  
-             000650 2020 00    
- 1053 1053   000653 5449 4D45    MAGTL2: DC.B 'TIME2 = MAGNITUDE TOO LARGE           ', $00
-             000657 3220 3D20  
-             00065B 4D41 474E  
-             00065F 4954 5544  
-             000663 4520 544F  
-             000667 4F20 4C41  
-             00066B 5247 4520  
-             00066F 2020 2020  
-             000673 2020 2020  
-             000677 2020 00    
- 1054 1054   00067A 2000         BACKSPACE: DC.B ' ' , $00 
- 1055 1055                       
- 1056 1056                       
- 1057 1057                      ;/------------------------------------------------------------------------------------\
- 1058 1058                      ;| Vectors                                                                            |
- 1059 1059                      ;\------------------------------------------------------------------------------------/
- 1060 1060                      ; Add interrupt and reset vectors here
- 1061 1061                      
- 1062 1062                              ORG   $FFFE                    ; reset vector address
- 1063 1063  a00FFFE xxxx                DC.W  Entry
- 1064 1064                      
+ 1030 1030   000515 180B 01xx               movb #$01, t3state
+             000519 xx         
+ 1031 1031   00051A 180B 01xx               movb #$01, MSG_NUM
+             00051E xx         
+ 1032 1032   00051F 3D                      rts
+ 1033 1033                      
+ 1034 1034                      ;-------------------Cooperative Fixed init message-----------------------
+ 1035 1035                      
+ 1036 1036                      ICHAR1: 
+ 1037 1037   000520 7Exx xx               stx DPTR
+ 1038 1038   000523 16xx xx               jsr SETADDR
+ 1039 1039   000526 79xx xx               clr FIRSTCH
+ 1040 1040                                
+ 1041 1041                      ICHAR:        
+ 1042 1042   000529 FExx xx               ldx DPTR
+ 1043 1043   00052C E600                  ldab 0,x
+ 1044 1044   00052E 27E5                  beq mess_exit
+ 1045 1045   000530 1872 xxxx             incw DPTR
+ 1046 1046   000534 16xx xx               jsr OUTCHAR
+ 1047 1047   000537 16xx xx               jsr GETADDR
+ 1048 1048   00053A 8128                  cmpa #$28
+ 1049 1049   00053C 2701                  beq changeline
+ 1050 1050   00053E 3D                    rts
+ 1051 1051                      
+ 1052 1052                      changeline: 
+ 1053 1053                      
+ 1054 1054   00053F 8640                  ldaa #$40
+ 1055 1055   000541 16xx xx               jsr SETADDR
+ 1056 1056   000544 3D                    rts
+ 1057 1057                      
+ 1058 1058                      
+ 1059 1059                      ;----------------------DElay----------------------------
+ 1060 1060                      
+ 1061 1061                      DELAY_1ms:
+ 1062 1062   000545 CD05 84             ldy #$0584
+ 1063 1063                              INNER: ; inside loop
+ 1064 1064   000548 8D00 00             cpy #0
+ 1065 1065   00054B 2703                beq EXIT
+ 1066 1066   00054D 03                  dey
+ 1067 1067   00054E 20F8                bra INNER
+ 1068 1068                              EXIT:
+ 1069 1069   000550 3D                  rts ; exit DELAY_1ms
+ 1070 1070                              
+ 1071 1071                              
+ 1072 1072                              
+ 1073 1073                      ;-----------------clearbuffer----------------------   
+ 1074 1074                      
+ 1075 1075                      clearbuffer:
+ 1076 1076                      
+ 1077 1077   000551 CExx xx           ldx #BUFFER
+ 1078 1078   000554 8600              ldaa #$00
+ 1079 1079   000556 69E4              clr a, x
+ 1080 1080   000558 42                inca
+ 1081 1081   000559 69E4              clr a, x
+ 1082 1082   00055B 42                inca
+ 1083 1083   00055C 69E4              clr a, x
+ 1084 1084   00055E 42                inca
+ 1085 1085   00055F 69E4              clr a, x
+ 1086 1086   000561 42                inca
+ 1087 1087   000562 69E4              clr a, x
+ 1088 1088   000564 3D                rts
+ 1089 1089                      
+ 1090 1090                      
+ 1091 1091                      ;/------------------------------------------------------------------------------------\
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+ 1092 1092                      ;| ASCII Messages and Constant Data                                                   |
+ 1093 1093                      ;\------------------------------------------------------------------------------------/
+ 1094 1094                      ; Any constants can be defined here
+ 1095 1095                      
+ 1096 1096   000565 5449 4D45    INITMSG: DC.B 'TIME1 =       <F1> to update LED1 periodTIME2 =       <F2> to update LED1 period', $00
+             000569 3120 3D20  
+             00056D 2020 2020  
+             000571 2020 3C46  
+             000575 313E 2074  
+             000579 6F20 7570  
+             00057D 6461 7465  
+             000581 204C 4544  
+             000585 3120 7065  
+             000589 7269 6F64  
+             00058D 5449 4D45  
+             000591 3220 3D20  
+             000595 2020 2020  
+             000599 2020 3C46  
+             00059D 323E 2074  
+             0005A1 6F20 7570  
+             0005A5 6461 7465  
+             0005A9 204C 4544  
+             0005AD 3120 7065  
+             0005B1 7269 6F64  
+             0005B5 00         
+ 1097 1097   0005B6 5449 4D45    TIME1:  DC.B 'TIME1 =     <F1> to update LED1 period', $00
+             0005BA 3120 3D20  
+             0005BE 2020 2020  
+             0005C2 3C46 313E  
+             0005C6 2074 6F20  
+             0005CA 7570 6461  
+             0005CE 7465 204C  
+             0005D2 4544 3120  
+             0005D6 7065 7269  
+             0005DA 6F64 00    
+ 1098 1098   0005DD 5449 4D45    TIME2:  DC.B 'TIME2 =     <F2> to update LED1 period', $00
+             0005E1 3220 3D20  
+             0005E5 2020 2020  
+             0005E9 3C46 323E  
+             0005ED 2074 6F20  
+             0005F1 7570 6461  
+             0005F5 7465 204C  
+             0005F9 4544 3120  
+             0005FD 7065 7269  
+             000601 6F64 00    
+ 1099 1099   000604 5449 4D45    NODIG1: DC.B 'TIME1 = NO DIGITS ENTERED             ', $00
+             000608 3120 3D20  
+             00060C 4E4F 2044  
+             000610 4947 4954  
+             000614 5320 454E  
+             000618 5445 5245  
+             00061C 4420 2020  
+             000620 2020 2020  
+             000624 2020 2020  
+             000628 2020 00    
+ 1100 1100   00062B 5449 4D45    NODIG2: DC.B 'TIME2 = NO DIGITS ENTERED             ', $00
+             00062F 3220 3D20  
+             000633 4E4F 2044  
+             000637 4947 4954  
+             00063B 5320 454E  
+             00063F 5445 5245  
+             000643 4420 2020  
+             000647 2020 2020  
+             00064B 2020 2020  
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+             00064F 2020 00    
+ 1101 1101   000652 5449 4D45    ZMAG1:  DC.B 'TIME1 = ZERO MAGNITUDE INAPPROPRIATE  ', $00
+             000656 3120 3D20  
+             00065A 5A45 524F  
+             00065E 204D 4147  
+             000662 4E49 5455  
+             000666 4445 2049  
+             00066A 4E41 5050  
+             00066E 524F 5052  
+             000672 4941 5445  
+             000676 2020 00    
+ 1102 1102   000679 5449 4D45    ZMAG2:  DC.B 'TIME2 = ZERO MAGNITUDE INAPPROPRIATE  ', $00
+             00067D 3220 3D20  
+             000681 5A45 524F  
+             000685 204D 4147  
+             000689 4E49 5455  
+             00068D 4445 2049  
+             000691 4E41 5050  
+             000695 524F 5052  
+             000699 4941 5445  
+             00069D 2020 00    
+ 1103 1103   0006A0 5449 4D45    MAGTL1: DC.B 'TIME1 = MAGNITUDE TOO LARGE           ', $00
+             0006A4 3120 3D20  
+             0006A8 4D41 474E  
+             0006AC 4954 5544  
+             0006B0 4520 544F  
+             0006B4 4F20 4C41  
+             0006B8 5247 4520  
+             0006BC 2020 2020  
+             0006C0 2020 2020  
+             0006C4 2020 00    
+ 1104 1104   0006C7 5449 4D45    MAGTL2: DC.B 'TIME2 = MAGNITUDE TOO LARGE           ', $00
+             0006CB 3220 3D20  
+             0006CF 4D41 474E  
+             0006D3 4954 5544  
+             0006D7 4520 544F  
+             0006DB 4F20 4C41  
+             0006DF 5247 4520  
+             0006E3 2020 2020  
+             0006E7 2020 2020  
+             0006EB 2020 00    
+ 1105 1105   0006EE 2000         BACKSPACE: DC.B ' ' , $00 
+ 1106 1106                       
+ 1107 1107                       
+ 1108 1108                      ;/------------------------------------------------------------------------------------\
+ 1109 1109                      ;| Vectors                                                                            |
+ 1110 1110                      ;\------------------------------------------------------------------------------------/
+ 1111 1111                      ; Add interrupt and reset vectors here
+ 1112 1112                      
+ 1113 1113                              ORG   $FFFE                    ; reset vector address
+ 1114 1114  a00FFFE xxxx                DC.W  Entry
+ 1115 1115                      
