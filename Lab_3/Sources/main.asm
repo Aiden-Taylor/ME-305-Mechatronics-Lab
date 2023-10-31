@@ -12,14 +12,13 @@
 ;*   -                                                                                *
 ;*                                                                                    *
 ;* ToDo:                                                                              *
-;*   fix backspace
+;* 
     ;make cursor turn off
-    ;clear display when f1/f2 is pressed
     ;display error msgs
-    ;
-
-
-                                                                                *
+    ;if you randomly press F1 it breaks
+    ;figure out how to do unsigned binary subtraction (maybe use acc d instead??? 
+    ; 
+    
 ;**************************************************************************************
 
 ;/------------------------------------------------------------------------------------\
@@ -176,7 +175,7 @@ TASK_1:
         deca
         beq t1s1
         deca
-        beq t1s2
+        lbeq t1s2
         deca
         lbeq t1s3
         deca
@@ -197,18 +196,24 @@ t1s0: ; init TASK_1
         clr F1_FLG 
         clr F2_FLG 
         clr KEY_FLG 
-        clr COUNT 
+        clr COUNT
+        jsr clearbuffer   
         movb #$01, t1state ; set next state
         rts
 ;__________________________________________________________________________________
 t1s1: ;
 
+        tst KEY_FLG                                 ;first test if there is a key to be checked
+        lbeq exit1                                  ;if there is no key exit
+
+
 ;check if its F1
  
-        tst KEY_FLG                                 ;first test if there is a key to be checked
-        lbeq exit1                                  ;if there is no 
-        ldaa KEY_BUFF                                ;load accumulator A with the current char
-        cmpa #$F1                                     ;compare whats in A to F1 
+        bgnd
+        ldaa KEY_BUFF                               ;load accumulator A with the current char
+        tst F1_FLG 
+        bne skipF1                                  ;skip if F1 has already been pressed
+        cmpa #$F1                                   ;compare whats in A to F1 
         bne skipF1                                  ;if its not F1, skip settting the state
         movb #$05 , t1state                         ;set the state to the appropriate number  
         rts
@@ -217,8 +222,11 @@ skipF1:
 
 ;check if its F2
                           
+        tst F2_FLG 
+        bne skipF2                                  ;skip if F1 has already been pressed
         cmpa #$F2                                    ;compare whats in A to F2
         bne skipF2                                  ;if its not F2, skip settting the state
+        tst F2_FLG
         movb #$06 , t1state                         ;set the state to the appropriate number 
         rts
 
@@ -244,6 +252,7 @@ skipENT:
 
 ;check if its a digit 
        
+        
         cmpa #$39                                   ;check if what in A is a number 
         bgt skipDIGIT                               ;if its not a number, disregard the input 
         movb #$02 , t1state                         ;set the state to digit handler 
@@ -251,6 +260,7 @@ skipENT:
 
 skipDIGIT: 
 
+        clr KEY_FLG
         rts
 
 ;___________________________________________________________________________________
@@ -264,6 +274,7 @@ t1s2: ;Digit Handler
         tst F2_FLG                                  ;test the F2 flag 
         bne skip_e                                  ;if not equal to 0, skip exiting 
         clr KEY_FLG
+        movb #$01 , t1state                         ;set the state back to 1
         lbra exit1                                   ;exit if equal to 0 
 
 skip_e:
@@ -287,6 +298,7 @@ t1s3: ;ENT
 
 ;before jsr to conversion, check if any digits have been entered into buffer      
       
+       jsr CURSOR_OFF
        tst COUNT                                   ;test the current value of count 
        bne skip_NO_DIGITS                          ;if the count is not zero, branch 
        ldaa #$03                                   ;if the count is zero, put an error code into A 
@@ -364,7 +376,7 @@ skipERROR:
  ;________________________________________________________________________________________
 t1s4: ;BS
  
-       movb #$03 , t3state                         ;set the state in task 3 to the BS state   
+       movb #$02 , t3state                         ;set the state in task 3 to the BS state   
        movb #$01 , t1state                         ;set the state back to 1
        clr KEY_FLG 
        lbra exit1                                   ;exit
@@ -378,7 +390,8 @@ t1s5: ;F1 state
        clr KEY_FLG
        ldaa #$08
        jsr SETADDR
-       jsr CURSOR_ON 
+       jsr CURSOR_ON
+       movb #$03, MSG_NUM
        bra exit1                                   ;exit
        
  ;________________________________________________________________________________________
@@ -390,7 +403,8 @@ t1s6: ;F2 state
        clr KEY_FLG
        ldaa #$48
        jsr SETADDR
-       jsr CURSOR_ON  
+       jsr CURSOR_ON
+       movb #$04, MSG_NUM 
        bra exit1                                   ;exit
 
 ;________________________________________________________________________________________
@@ -552,11 +566,14 @@ t3s1:
 
 
 t3s2:   ;backspace
+        ;bgnd
         jsr backspace
+        movb #$01, t3state
         rts
 
         
 t3s3:   ;full time1 message     
+        ;bgnd
         ldaa #$00
         ldx #TIME1
         tst FIRSTCH
@@ -936,16 +953,24 @@ t8state1:
  ;---------------------------------------------------------------------------------------     
          
   backspace:
- 
+       tst COUNT
+       beq bkspexit
        jsr GETADDR                   ;get current position of LCR
        deca                          ;decrement one
        jsr SETADDR                   ;set address to new position
+       ;bgnd
        ldx #BACKSPACE                ;
        jsr OUTSTRING                 ;output a blank character
        jsr GETADDR                   ;get current position of LCR
        deca                          ;decrement one
        jsr SETADDR                   ;set address to new position
+       ;bgnd
        dec COUNT                     ;reset the value of count
+       rts
+  
+bkspexit:
+
+       rts
        
    
   
@@ -1036,7 +1061,23 @@ mess_exit:
 
             movb #$01, t3state
             movb #$01, MSG_NUM
+            tst F1_FLG
+            bne F1addressset
+            tst F2_FLG
+            bne F2addressset
             rts
+            
+F1addressset:
+
+          ldaa #$08
+          jsr SETADDR
+          rts
+          
+F2addressset:
+
+          ldaa #$48
+          jsr SETADDR 
+          rts 
 
 ;-------------------Cooperative Fixed init message-----------------------
 
@@ -1101,8 +1142,8 @@ clearbuffer:
 ; Any constants can be defined here
 
  INITMSG: DC.B 'TIME1 =       <F1> to update LED1 periodTIME2 =       <F2> to update LED1 period', $00
- TIME1:  DC.B 'TIME1 =     <F1> to update LED1 period', $00
- TIME2:  DC.B 'TIME2 =     <F2> to update LED1 period', $00
+ TIME1:  DC.B 'TIME1 =       <F1> to update LED1 period', $00
+ TIME2:  DC.B 'TIME2 =       <F2> to update LED1 period', $00
  NODIG1: DC.B 'TIME1 = NO DIGITS ENTERED             ', $00
  NODIG2: DC.B 'TIME2 = NO DIGITS ENTERED             ', $00
  ZMAG1:  DC.B 'TIME1 = ZERO MAGNITUDE INAPPROPRIATE  ', $00
