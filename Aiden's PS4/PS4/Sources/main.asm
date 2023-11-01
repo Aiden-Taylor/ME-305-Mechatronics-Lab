@@ -62,8 +62,17 @@
 
 DEFAULT_RAM:  SECTION
 
-INTERVAL EQU $64
 
+TIOS EQU $0040
+TCTL2 EQU $0049
+TFLG1 EQU $004E
+TMSK1 EQU $004C
+TSCR  EQU $0046
+TCNTH EQU $0044
+TC0H  EQU $0050
+
+
+INTERVAL DS.W 1
 
 
 
@@ -76,17 +85,17 @@ INTERVAL EQU $64
 
 MyCode: SECTION
 main:
-		   bset $0040, %11111111
-		   bset $0050, %11111111
-		   bset $0051, %11111111
-		   bset $0049, %00000001  
-		   bset $004E, %11111111
-		   sei
-		   bset $004C, #$01
-		   bset $0046, %10100000
-		   ldd $0044
+		   movw #$03E8, INTERVAL
+		   
+		   bset TIOS, %11111111
+		   bset TCTL2, %00000001  
+		   bset TFLG1, %11111111
+		   cli
+		   bset TMSK1, #$01
+		   bset TSCR, %10100000
+		   ldd TCNTH
 		   addd INTERVAL
-		   std $0050
+		   std TC0H
 		   
 		   
 		   
@@ -103,7 +112,16 @@ spin:
 ;/------------------------------------------------------------------------------------/
 ; Add subroutines here:
 
+isubrout:
 
+        
+        ldd TC0H
+        addd INTERVAL
+        std TC0H
+        bset TFLG1, %11111111
+       
+        
+        rti
 ;/------------------------------------------------------------------------------------\
 ;| Messages |
 ;/------------------------------------------------------------------------------------/
@@ -116,11 +134,5 @@ spin:
         DC.W Entry
         
         ORG $FFEE
-        pshd
-        pshc
-        ldd $0044
-        addd INTERVAL
-        std $0050
-        bset $0049, %00000001
+        DC.W isubrout
         
-        rti

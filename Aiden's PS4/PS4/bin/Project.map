@@ -1,5 +1,5 @@
-*** EVALUATION ***
-PROGRAM "C:\Users\magoo\Downloads\Aiden's PS4\PS4\bin\Project.abs"
+
+PROGRAM "C:\Users\ataylo86\Downloads\Mechatronics-Lab-main\Mechatronics-Lab-main\Aiden's PS4\PS4\bin\Project.abs"
 
 *********************************************************************************************
 TARGET SECTION
@@ -30,18 +30,19 @@ Section Name                    Size  Type     From       To       Segment
 ---------------------------------------------------------------------------------------------
 .init                            227     R     0xC000     0xC0E2   ROM_C000
 .stack                          1024   R/W     0x2000     0x23FF   RAM
+.data                              2   R/W     0x2400     0x2401   RAM
 LIBRARY_RAM                        3   R/W     0x1000     0x1002   LIBRAM
-MyCode                            31     R     0x4000     0x401E   ROM_4000
+MyCode                            43     R     0x4000     0x402A   ROM_4000
 Lib_Keypad                       117     R      0x800      0x874   EEPROM
 Lib_Encoder                      177     R      0x875      0x925   EEPROM
 Lib_Delay                         56     R      0x926      0x95D   EEPROM
 main.asm__ORG00001                 2     R     0xFFFE     0xFFFF   .absSeg0
-main.asm__ORG00002                12     R     0xFFEE     0xFFF9   .absSeg1
+main.asm__ORG00002                 2     R     0xFFEE     0xFFEF   .absSeg1
 ME305LIBV3.0_Lib_Interface.asm__ORG00001          2     R     0xFFCE     0xFFCF   .absSeg2
 
 Summary of section sizes per section type:
-READ_ONLY (R):         270 (dec:      624)
-READ_WRITE (R/W):      403 (dec:     1027)
+READ_ONLY (R):         272 (dec:      626)
+READ_WRITE (R/W):      405 (dec:     1029)
 
 *********************************************************************************************
 VECTOR-ALLOCATION SECTION
@@ -54,10 +55,13 @@ OBJECT-ALLOCATION SECTION
 ---------------------------------------------------------------------------------------------
 MODULE:                 -- main.asm.o --
 - PROCEDURES:
-     main                                      4000      1D      29       1   MyCode      
-     spin                                      401D       2       2       0   MyCode      
+     main                                      4000      1E      30       1   MyCode      
+     spin                                      401E       2       2       0   MyCode      
+     isubrout                                  4020       B      11       1   MyCode      
 - VARIABLES:
+     INTERVAL                                  2400       2       2       3   .data       
      VAR00001                                  FFFE       2       2       0   .text       
+     VAR00002                                  FFEE       2       2       0   .text       
 MODULE:                 -- Lib_Delay.asm.o (ME305LIBV3.0.lib) --
 - PROCEDURES:
      DELAY_MICRO                                926       F      15       1   Lib_Delay   
@@ -102,7 +106,7 @@ MODULE:                 -- Lib_Interface.asm.o (ME305LIBV3.0.lib) --
 MODULE STATISTIC
   Name                                      Data   Code  Const
 ---------------------------------------------------------------------------------------------
-  main.asm.o                                   0     43      2
+  main.asm.o                                   2     43      4
   Lib_Delay.asm.o (ME305LIBV3.0.lib)           0     56      0
   Lib_Encoder.asm.o (ME305LIBV3.0.lib)         0    177      0
   Lib_Keypad.asm.o (ME305LIBV3.0.lib)          3    117      0
@@ -114,13 +118,15 @@ MODULE STATISTIC
 SECTION USE IN OBJECT-ALLOCATION SECTION
 ---------------------------------------------------------------------------------------------
 SECTION: ".text"
-  VAR00035 VAR00001 
+  VAR00035 VAR00002 VAR00001 
+SECTION: ".data"
+  INTERVAL 
 SECTION: ".init"
   Entry _Startup STARTUP_PLL STARTUP_SPI0 STARTUP_ATD1 STARTUP_PWM STARTUP_IO 
 SECTION: "LIBRARY_RAM"
   KEYREADY LCHARACTER LKEY_FLG 
 SECTION: "MyCode"
-  main spin 
+  main spin isubrout 
 SECTION: "Lib_Keypad"
   INITKEY GETCHAR ISR_KEYPAD VAR00001 
 SECTION: "Lib_Encoder"
@@ -146,8 +152,10 @@ OBJECT LIST SORTED BY ADDRESS
      KEYREADY                                  1000       1       1       0   LIBRARY_RAM 
      LCHARACTER                                1001       1       1       4   LIBRARY_RAM 
      LKEY_FLG                                  1002       1       1       3   LIBRARY_RAM 
-     main                                      4000      1D      29       1   MyCode      
-     spin                                      401D       2       2       0   MyCode      
+     INTERVAL                                  2400       2       2       3   .data       
+     main                                      4000      1E      30       1   MyCode      
+     spin                                      401E       2       2       0   MyCode      
+     isubrout                                  4020       B      11       1   MyCode      
      Entry                                     C000       0       0       1   .init       
      _Startup                                  C000      13      19       0   .init       
      STARTUP_PLL                               C013      20      32       1   .init       
@@ -156,6 +164,7 @@ OBJECT LIST SORTED BY ADDRESS
      STARTUP_PWM                               C092      1D      29       0   .init       
      STARTUP_IO                                C0AF      34      52       1   .init       
      VAR00035                                  FFCE       2       2       0   .text       
+     VAR00002                                  FFEE       2       2       0   .text       
      VAR00001                                  FFFE       2       2       0   .text       
 
 *********************************************************************************************
@@ -203,6 +212,8 @@ OBJECT-DEPENDENCIES SECTION
 INITKEY                   USES LCHARACTER LKEY_FLG 
 GETCHAR                   USES LCHARACTER LKEY_FLG 
 ISR_KEYPAD                USES VAR00001 LCHARACTER LKEY_FLG 
+main                      USES INTERVAL 
+isubrout                  USES INTERVAL 
 _Startup                  USES __SEG_END_SSTACK STARTUP_PLL STARTUP_IO 
                                 STARTUP_SPI0 DISABLE_ENCODER main 
 STARTUP_SPI0              USES DELAY_MILLI 
@@ -221,6 +232,10 @@ DEPENDENCY TREE
  | 
  +- Entry                (see above)
     
+ _ORG00002           
+ | 
+ +- isubrout            
+      
  _ORG00001           
  | 
  +- ISR_KEYPAD          
@@ -234,5 +249,5 @@ STATISTIC SECTION
 ExeFile:
 --------
 Number of blocks to be downloaded: 8
-Total size of all blocks to be downloaded: 624
+Total size of all blocks to be downloaded: 626
 
