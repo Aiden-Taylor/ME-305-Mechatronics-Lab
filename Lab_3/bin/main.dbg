@@ -2,7 +2,7 @@
 ;* Lab 3 Main [includes LibV2.2]                                                      *
 ;**************************************************************************************
 ;* Summary:                                                                           *
-;*   -                                                                                *
+;*   Main For Lab 3, DUE 11/02/2023                                                                                *
 ;*                                                                                    *
 ;* Author: Aiden Taylor & Julia Fay                                                   *
 ;*   Cal Poly University                                                              *
@@ -12,11 +12,9 @@
 ;*   -                                                                                *
 ;*                                                                                    *
 ;* ToDo:                                                                              *
+;*    -DONE!
 ;* 
-    ;make cursor turn off
-    ;display error msgs
-    ;give fixed msgs proper spacing 
-    
+;* 
 ;**************************************************************************************
 
 ;/------------------------------------------------------------------------------------\
@@ -64,6 +62,7 @@ R_LED_2 EQU %10000000 ; red LED output pin for LED pair_2
 LED_MSK_2 EQU %11000000 ; LED pair_2
 
 
+
 ;/------------------------------------------------------------------------------------\
 ;| Variables in RAM                                                                   |
 ;\------------------------------------------------------------------------------------/
@@ -86,6 +85,7 @@ KEY_BUFF DS.B 1
 
 ;params for t3
 MSG_NUM DS.B 1
+LNUM DS.B 1
 
 
 ;params for t4
@@ -133,6 +133,10 @@ ERR DS.B 1
 INPUT DS.B 1
 DPTR DS.W 1
 FIRSTCH DS.B 1
+
+;display
+COUNT_ERR DS.W 1
+TICKS_ERR DS.W 1
 
 ;/------------------------------------------------------------------------------------\
 ;|  Main Program Code                                                                 |
@@ -313,7 +317,8 @@ t1s3: ;ENT
 
 ;before jsr to conversion, check if any digits have been entered into buffer      
       
-       jsr CURSOR_OFF
+       jsr clrcurs
+       
        tst COUNT                                   ;test the current value of count 
        bne skip_NO_DIGITS                          ;if the count is not zero, branch 
        ldaa #$03                                   ;if the count is zero, put an error code into A 
@@ -332,14 +337,14 @@ skip_NO_DIGITS:
  
        tst F1_FLG                                  ;test the F1 flag
        beq skip_F1_a                               ;if the flag is zero, skip the next steps 
-       movb #01, ON1                               ;if the flag is 1, set ON1 to be true 
+       movb #01, ON1                               ;if the flag is 1, set ON1 to be true
        stx TICKS_1                                 ;store the results of the conversion 
          
 skip_F1_a:  
  
        tst F2_FLG                                  ;test the F2 flag
        beq skip_F2                                 ;if the flag is zero, skip the next steps 
-       movb #$01, ON2                              ;if the flag is 1, set ON2 to be true 
+       movb #$01, ON2                              ;if the flag is 1, set ON2 to be true
        stx TICKS_2                                 ;store the results of the conversion
 
 skip_F2:
@@ -554,9 +559,9 @@ TASK_3:
         deca
         beq t3s5
         deca
-        beq t3s6
+        lbeq t3s6
         deca
-        beq t3s7
+        lbeq t3s7
         deca
         lbeq t3s8
         deca
@@ -573,6 +578,7 @@ t3s0:     ;init
        movb #$01, FIRSTCH
        ldaa #$00         ;set LCD position to 0
        jsr SETADDR
+       movw #$07D0, TICKS_ERR
        ;jsr CURSOR_ON     ;turn on cursor
        movb #$0B, t3state ; go to init state 
        rts
@@ -580,6 +586,7 @@ t3s0:     ;init
 t3s1:
 
        ;hub
+             
        movb #$01, FIRSTCH
        ldab MSG_NUM            
        stab t3state
@@ -596,24 +603,27 @@ t3s2:   ;backspace
         
 t3s3:   ;full time1 message     
         ;bgnd
+        clr LNUM
         ldaa #$00
         ldx #TIME1
         tst FIRSTCH
-        bne char1
+        lbne char1
         jsr PUTCHAR
         rts
         
         
 t3s4:   ;full time2 message
+        movb #$01, LNUM
         ldaa #$40
         ldx #TIME2
         tst FIRSTCH
-        bne char1
+        lbne char1
         jsr PUTCHAR
         rts
 
 
 t3s5:   ;no digit 1 message
+        clr LNUM
         ldaa #$00
         ldx #NODIG1
         tst FIRSTCH
@@ -623,6 +633,7 @@ t3s5:   ;no digit 1 message
 
 
 t3s6:   ;no digit 2 message
+        movb #$01, LNUM
         ldaa #$40
         ldx #NODIG2
         tst FIRSTCH
@@ -632,6 +643,7 @@ t3s6:   ;no digit 2 message
         
 
 t3s7:   ;zero magnitude 1 message
+        clr LNUM
         ldaa #$00
         ldx #ZMAG1
         tst FIRSTCH
@@ -640,6 +652,7 @@ t3s7:   ;zero magnitude 1 message
         rts
 
 t3s8:   ;zero magnitude 2 message
+        movb #$01, LNUM
         ldaa #$40
         ldx #ZMAG2
         tst FIRSTCH
@@ -648,6 +661,7 @@ t3s8:   ;zero magnitude 2 message
         rts
 
 t3s9:   ;magnitude too large 1 message
+        clr LNUM
         ldaa #$00
         ldx #MAGTL1
         tst FIRSTCH
@@ -657,6 +671,7 @@ t3s9:   ;magnitude too large 1 message
 
 
 t3s10:  ;magnitude too large 2 message
+        movb #$01, LNUM
         ldaa #$40
         ldx #MAGTL2
         tst FIRSTCH
@@ -691,6 +706,10 @@ exit3:
 
 TASK_4: 
         ;bgnd
+        ldaa t4state ; get current t4state and branch accordingly
+        beq t4state0
+        deca
+        
         tst ON1
         beq turnofft4
         
@@ -792,6 +811,7 @@ TASK_5: ldaa t5state ; get current t5state and branch accordingly
         rts ; undefined state - do nothing but return
         
 t5state0: ; initialization for TASK_5
+        movw #$00FF, TICKS_1
         movw TICKS_1, COUNT_1 ; init COUNT_1
         clr DONE_1 ; init DONE_1 to FALSE
         movb #$01, t5state ; set next state
@@ -826,6 +846,8 @@ exit_t5s2:
 ;pattern 2
 
 TASK_6: 
+        
+        
         tst ON2
         beq turnofft6
 
@@ -932,6 +954,7 @@ TASK_7: ldaa t7state ; get current t2state and branch accordingly
         rts ; undefined state - do nothing but return
         
 t7state0: ; initialization for TASK_7
+        movw #$00FF, TICKS_2
         movw TICKS_2, COUNT_2 ; init COUNT_2
         clr DONE_2 ; init DONE_2 to FALSE
         movb #$01, t7state ; set next state
@@ -951,6 +974,7 @@ t7state1: ; Countdown_1
         
 t7s1a:  decw COUNT_2    ;decrement COUNT_2
         bne exit_t7s2   ;if COUNT_2 is not equal to zero, exit 
+        ;bgnd
         movb #$01, DONE_2     ;if COUNT_1 is zero, set DONE_2 to 1
      
         
@@ -1085,25 +1109,54 @@ PUTCHAR1:
           stx DPTR
           jsr SETADDR
           clr FIRSTCH
+          movw TICKS_ERR, COUNT_ERR
           
 PUTCHAR:          
           ldx DPTR
           ldab 0,x
-          beq mess_exit
+          beq ERR_DELAY
           incw DPTR
           jsr OUTCHAR
           rts
 
 
 mess_exit:
-
+            ;bgnd 
             movb #$01, t3state
             movb #$01, MSG_NUM
+            jsr clrcurs
+            ;bgnd
             tst F1_FLG
             bne F1addressset
             tst F2_FLG
             bne F2addressset
             rts
+            
+ERR_DELAY:
+            ;bgnd
+            jsr clrcurs
+            ldaa t3state
+            cmpa #$04
+            ble mess_exit
+            tst COUNT_ERR
+            beq err_exit
+            decw COUNT_ERR
+            rts
+            
+err_exit:
+            ;bgnd
+            
+            tst LNUM
+            bne F2errexit
+            movb #$03, MSG_NUM
+            movb #$01, t3state
+            rts
+            
+F2errexit:  movb #$04, MSG_NUM
+            movb #$01, t3state
+            rts
+
+
             
 F1addressset:
 
@@ -1117,6 +1170,12 @@ F2addressset:
           jsr SETADDR 
           rts 
 
+clrcurs:
+          psha
+          ldaa #$30
+          jsr SETADDR
+          pula
+          rts
 ;-------------------Cooperative Fixed init message-----------------------
 
 ICHAR1: 
