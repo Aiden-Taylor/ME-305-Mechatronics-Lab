@@ -17,7 +17,7 @@
     ;display error msgs
     ;if you randomly press F1 it breaks
     ;figure out how to do unsigned binary subtraction (maybe use acc d instead??? 
-    ; 
+    ;give fixed msgs proper spacing 
     
 ;**************************************************************************************
 
