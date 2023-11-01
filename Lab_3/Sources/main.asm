@@ -14,10 +14,7 @@
 ;* ToDo:                                                                              *
 ;* 
     ;make cursor turn off
-    ;display error msgs
-    ;if you randomly press F1 it breaks
-    ;figure out how to do unsigned binary subtraction (maybe use acc d instead??? 
-    ;give fixed msgs proper spacing 
+    ;error msg display time 
     
 ;**************************************************************************************
 
@@ -209,9 +206,11 @@ t1s1: ;
 
 ;check if its F1
  
-        bgnd
+        ;bgnd
         ldaa KEY_BUFF                               ;load accumulator A with the current char
-        tst F1_FLG 
+        tst F1_FLG
+        bne skipF1
+        tst F2_FLG
         bne skipF1                                  ;skip if F1 has already been pressed
         cmpa #$F1                                   ;compare whats in A to F1 
         bne skipF1                                  ;if its not F1, skip settting the state
@@ -224,7 +223,9 @@ skipF1:
                           
         tst F2_FLG 
         bne skipF2                                  ;skip if F1 has already been pressed
-        cmpa #$F2                                    ;compare whats in A to F2
+        tst F1_FLG
+        bne skipF2
+        cmpa #$F2                                   ;compare whats in A to F2
         bne skipF2                                  ;if its not F2, skip settting the state
         tst F2_FLG
         movb #$06 , t1state                         ;set the state to the appropriate number 
@@ -251,10 +252,16 @@ skipBS:
 skipENT: 
 
 ;check if its a digit 
-       
+        ;bgnd
+        psha
+        pulb
+        ldaa #$00
         
-        cmpa #$39                                   ;check if what in A is a number 
-        bgt skipDIGIT                               ;if its not a number, disregard the input 
+        cpd #$39                                   ;check if what in A is a number 
+        bgt skipDIGIT                               ;if its not a number, disregard the input
+        pshb
+        pula
+         
         movb #$02 , t1state                         ;set the state to digit handler 
         rts
 
@@ -268,7 +275,9 @@ skipDIGIT:
 t1s2: ;Digit Handler 
 
 ;checks if we should proceed with the digit handler state 
-
+        ldab COUNT
+        cmpb #$05
+        beq toomany
         tst F1_FLG                                  ;test F1 flag 
         bne skip_e                                  ;if not equal to 0, skip exiting 
         tst F2_FLG                                  ;test the F2 flag 
@@ -276,6 +285,11 @@ t1s2: ;Digit Handler
         clr KEY_FLG
         movb #$01 , t1state                         ;set the state back to 1
         lbra exit1                                   ;exit if equal to 0 
+
+toomany:
+        movb #$01, t1state
+        clr KEY_FLG
+        rts
 
 skip_e:
 
@@ -335,6 +349,7 @@ skip_F2:
        
 ;check for error and set variables accordingly so that user has to start over 
 
+       ;bgnd
        cmpa #$00                                   ;check whats in A 
        beq skipERROR                               ;check if an error was generated from conversion
        movb #$07, t1state                          ;if there is an error code set the state to the 
@@ -344,11 +359,12 @@ skip_F2:
                                                    ;the error state                                              
                                                      
 ;check which ON variable needs to be cleared if there is an error 
-      
+      ;bgnd
       tst F1_FLG                                   ;test the F1 flag
       beq skip_F1_b                                ;if the flag is zero, skip the next steps 
       clr ON1                                      ;clear ON1
       clr TICKS_1                                  ;clear TICKS_1
+      lbra exit1
       
 skip_F1_b: 
  
@@ -363,15 +379,15 @@ skip_F1_b:
                   
 skipERROR:
 
-;if there are no errors, clear the F1 and F2 flags and exit   
-      
-      
+;if there are no errors, clear the F1 and F2 flags and exit     
       
       jsr clearbuffer
       jsr CURSOR_OFF 
       clr KEY_FLG 
       clr F1_FLG 
-      clr F2_FLG  
+      clr F2_FLG
+      movb #$01, DONE_1
+      movb #$01, DONE_2  
       lbra exit1                                    ;exit
  ;________________________________________________________________________________________
 t1s4: ;BS
@@ -417,28 +433,29 @@ t1s7: ;Error state
 ;split the code into two sections. the F1 and F2 sections 
   
 ;fist test the F1 flag 
-
+       ;bgnd
+       ldaa MM_ERR
        tst F1_FLG                                   ;test the F1 flag
        beq skip_F1_e                                ;if the flag is zero, skip the next steps    
  
 ;now check the error number and set the message number for task 3 
  
-       ldaa MM_ERR                                  ;put the error number back into accumulator a 
+                                         ;put the error number back into accumulator a 
        cmpa #01                                     ;check if the error code is mag to large 
        bne skip_F1_toolarge                         ;skip setting the message num
-       movb #$07, MSG_NUM                           ;set the appropiate message num 
+       movb #$09, MSG_NUM                           ;set the appropiate message num 
 
 skip_F1_toolarge: 
 
        cmpa #02                                     ;check if the error code is zero magnitude 
        bne skip_F1_zeromag                          ;skip setting the message num
-       movb #$05, MSG_NUM                           ;set the appropiate message num 
+       movb #$07, MSG_NUM                           ;set the appropiate message num 
 
 skip_F1_zeromag: 
 
        cmpa #03                                     ;check if the error code is zero digits
        bne skip_F1_e                                ;skip setting the message num
-       movb #$03, MSG_NUM                           ;set the appropiate message num    
+       movb #$05, MSG_NUM                           ;set the appropiate message num    
    
 skip_F1_e: 
  
@@ -451,19 +468,19 @@ skip_F1_e:
  
        cmpa #01                                     ;check if the error code is mag to large 
        bne skip_F2_toolarge                         ;skip setting the message num
-       movb #$08, MSG_NUM                           ;set the appropiate message num 
+       movb #$0A, MSG_NUM                           ;set the appropiate message num 
 
 skip_F2_toolarge: 
 
        cmpa #02                                     ;check if the error code is zero magnitude 
        bne skip_F2_zeromag                          ;skip setting the message num
-       movb #$06, MSG_NUM                           ;set the appropiate message num 
+       movb #$08, MSG_NUM                           ;set the appropiate message num 
 
 skip_F2_zeromag: 
 
        cmpa #03                                     ;check if the error code is zero digits
        bne skip_F2_e                                ;skip setting the message num
-       movb #$04, MSG_NUM                           ;set the appropiate message num 
+       movb #$06, MSG_NUM                           ;set the appropiate message num 
  
 skip_F2_e: 
 
@@ -472,8 +489,11 @@ skip_F2_e:
         clr F1_FLG 
         clr F2_FLG
         movb #$01 , t1state                         ;set the state back to 1
+        jsr clearbuffer
+        clr KEY_FLG
 
 exit1:
+        ;clr KEY_FLG
         rts
 ;----------------------TASK 2 - KEYPAD -------------------------------------------; 
  
@@ -537,7 +557,7 @@ TASK_3:
         deca
         beq t3s7
         deca
-        beq t3s8
+        lbeq t3s8
         deca
         lbeq t3s9
         deca
@@ -561,7 +581,8 @@ t3s1:
        ;hub
        movb #$01, FIRSTCH
        ldab MSG_NUM            
-       stab t3state            
+       stab t3state
+       movb #$01, MSG_NUM            
        rts
 
 
@@ -686,12 +707,14 @@ TASK_4:
         beq t4state5
         deca
         beq t4state6
+        deca
+        beq t4state7
         rts ; undefined state - do nothing but return
         
 turnofft4:
         ;changes lights to off
         bclr PORTP, LED_MSK_1
-        movb #$01, t4state
+        movb #$07, t4state
         rts
         
         
@@ -749,6 +772,12 @@ t4state6: ; not G, not R
         movb #$01, t4state ; otherwise if done, set next state
 exit_t4s6:
         rts ; exit TASK_4
+        
+t4state7: 
+        
+        bclr PORTP, LED_MSK_1
+        movb #$01, t4state
+        rts         
  
 
 
@@ -813,12 +842,14 @@ TASK_6:
         beq t6state5
         deca
         beq t6state6
+        deca
+        beq t6state7
         rts ; undefined state - do nothing but return
         
 turnofft6:
         ;changes lights to off
         bclr PORTP, LED_MSK_2
-        movb #$01, t6state
+        movb #$07, t6state
         rts
                 
         
@@ -877,6 +908,12 @@ t6state6: ; not G, not R
         movb #$01, t6state ; otherwise if done, set next state
 exit_t6s6:
         rts ; exit TASK_4
+        
+t6state7: 
+        
+        bclr PORTP, LED_MSK_2
+        movb #$01, t6state
+        rts 
         
 
 
@@ -1144,12 +1181,12 @@ clearbuffer:
  INITMSG: DC.B 'TIME1 =       <F1> to update LED1 periodTIME2 =       <F2> to update LED1 period', $00
  TIME1:  DC.B 'TIME1 =       <F1> to update LED1 period', $00
  TIME2:  DC.B 'TIME2 =       <F2> to update LED1 period', $00
- NODIG1: DC.B 'TIME1 = NO DIGITS ENTERED             ', $00
- NODIG2: DC.B 'TIME2 = NO DIGITS ENTERED             ', $00
- ZMAG1:  DC.B 'TIME1 = ZERO MAGNITUDE INAPPROPRIATE  ', $00
- ZMAG2:  DC.B 'TIME2 = ZERO MAGNITUDE INAPPROPRIATE  ', $00
- MAGTL1: DC.B 'TIME1 = MAGNITUDE TOO LARGE           ', $00
- MAGTL2: DC.B 'TIME2 = MAGNITUDE TOO LARGE           ', $00
+ NODIG1: DC.B 'TIME1 = NO DIGITS ENTERED               ', $00
+ NODIG2: DC.B 'TIME2 = NO DIGITS ENTERED               ', $00
+ ZMAG1:  DC.B 'TIME1 = ZERO MAGNITUDE INAPPROPRIATE    ', $00
+ ZMAG2:  DC.B 'TIME2 = ZERO MAGNITUDE INAPPROPRIATE    ', $00
+ MAGTL1: DC.B 'TIME1 = MAGNITUDE TOO LARGE             ', $00
+ MAGTL2: DC.B 'TIME2 = MAGNITUDE TOO LARGE             ', $00
  BACKSPACE: DC.B ' ' , $00 
  
  
