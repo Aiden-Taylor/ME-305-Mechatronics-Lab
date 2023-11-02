@@ -1,0 +1,831 @@
+;**************************************************************************************
+;* Blank Project Main [includes LibV2.2]                                              *
+;**************************************************************************************
+;* Summary:                                                                           *
+;*   -                                                                                *
+;*                                                                                    *
+;* Author: Julia Fay & Aiden Taylor                                                   *
+;*   Cal Poly University                                                              *
+;*   Fall 2023                                                                        *
+;*                                                                                    *
+;* Revision History:                                                                  *
+;*   -                                                                                *
+;*                                                                                    *
+;* ToDo:                                                                              *
+;*   -                                                                                *
+;**************************************************************************************
+
+;/------------------------------------------------------------------------------------\
+;| Include all associated files                                                       |
+;\------------------------------------------------------------------------------------/
+; The following are external files to be included during assembly
+
+
+;/------------------------------------------------------------------------------------\
+;| External Definitions                                                               |
+;\------------------------------------------------------------------------------------/
+; All labels that are referenced by the linker need an external definition
+
+              XDEF  main
+
+;/------------------------------------------------------------------------------------\
+;| External References                                                                |
+;\------------------------------------------------------------------------------------/
+; All labels from other files must have an external reference
+
+              XREF  ENABLE_MOTOR, DISABLE_MOTOR
+              XREF  STARTUP_MOTOR, UPDATE_MOTOR, CURRENT_MOTOR
+              XREF  STARTUP_PWM, STARTUP_ATD0, STARTUP_ATD1
+              XREF  OUTDACA, OUTDACB
+              XREF  STARTUP_ENCODER, READ_ENCODER
+              XREF  INITLCD, SETADDR, GETADDR, CURSOR_ON, CURSOR_OFF, DISP_OFF
+              XREF  OUTCHAR, OUTCHAR_AT, OUTSTRING, OUTSTRING_AT
+              XREF  INITKEY, LKEY_FLG, GETCHAR
+              XREF  LCDTEMPLATE, UPDATELCD_L1, UPDATELCD_L2
+              XREF  LVREF_BUF, LVACT_BUF, LERR_BUF,LEFF_BUF, LKP_BUF, LKI_BUF
+              XREF  Entry, ISR_KEYPAD
+            
+;/------------------------------------------------------------------------------------\
+;| Assembler Equates                                                                  |
+;\------------------------------------------------------------------------------------/
+; Constant values can be equated here
+
+
+
+;/------------------------------------------------------------------------------------\
+;| Variables in RAM                                                                   |
+;\------------------------------------------------------------------------------------/
+; The following variables are located in unpaged ram
+
+DEFAULT_RAM:  SECTION
+
+;params for t2 
+
+SELECT_FLG DS.B 1 
+COUNT DS.B 1 
+MM_ERR  DS.B 1
+NINT DS.B 1
+WAVE_NUM DS.B 1 
+
+;params for t3 
+KEY_FLG DS.B 1
+KEY_BUFF DS.B 1
+
+;params for t4
+MSG_NUM DS.B 1
+LNUM DS.B 1
+
+;params for t5 
+
+;state vars
+t1state DS.B 1
+t2state DS.B 1
+t3state DS.B 1
+t4state DS.B 1
+t5state DS.B 1
+t6state DS.B 1
+t7state DS.B 1
+t8state DS.B 1
+
+;subroutines ---------
+
+;convert
+RESULT DS.W 1 
+BUFFER DS.B 3
+TMP DS.B 1
+ERR DS.B 1 
+
+;input
+INPUT DS.B 1
+DPTR DS.W 1
+FIRSTCH DS.B 1
+
+;display
+COUNT_ERR DS.W 1
+TICKS_ERR DS.W 1
+
+;interrupt 
+Chan0 EQU $01
+TIOS  EQU $0040
+TCTL2 EQU $0049
+TFLG1 EQU $004E
+TMSK1 EQU $004C
+TSCR  EQU $0046
+TCNTH EQU $0044
+TC0   EQU $0050
+INTERVAL DS.W 1
+
+;/------------------------------------------------------------------------------------\
+;|  Main Program Code                                                                 |
+;\------------------------------------------------------------------------------------/
+; Your code goes here
+
+MyCode:       SECTION
+main:   
+  
+        clr t1state ; initialize all tasks to state 0
+        clr t2state
+        clr t3state
+        clr t4state
+        clr t5state 
+        
+top:
+       
+        jsr TASK_1  ; execute tasks endlessly
+        jsr TASK_2
+        jsr TASK_3
+        jsr TASK_4
+        ;jsr TASK_5
+        bra top       
+         
+spin:   bra   spin                     ; endless horizontal loop
+
+
+;-------------TASK_1 TC0 SETUP ---------------------------------------------------------
+
+TASK_1: 
+
+;Step 1: Pre-initialization
+		   
+		   movw #$03E8, INTERVAL ; Determine the number of bus clock counts that corresponds to 0.1 msec.
+		   
+;Step 2: Timer Initialization
+		   
+		   bset TIOS, Chan0     ; Set timer channel 0 for output compare
+		   bset TCTL2,Chan0     ; Set timer channel 0 to toggle its output pin
+		   bset TFLG1, Chan0    ; Clear timer channel flag by writing a 1 to it 
+		   cli                  ; Clear I bit 
+		   bset TMSK1, Chan0    ; enable maskable interrupts 
+		   
+
+		   bset TSCR, %10100000 ; enable timer channel output compare intuerrupts 
+		                        ; sets TEN = 1  (enable timer bit)
+		                        ; sets TSBCK = 1 (timer stop in background mode) 
+
+;Step 3: Generating the first interrupt		   
+		  
+		   ldd TCNTH            ; read current timer count 
+		   addd INTERVAL        ; add interval to count 
+		   std TC0              ; load result into TC0 
+
+
+
+
+
+ ;-------------TASK_2 MASTERMIND ---------------------------------------------------------
+
+ TASK_2: 
+ 
+        ldaa t2state ;get state
+        beq t2s0
+        deca
+        beq t2s1
+        deca
+        beq t2s2
+        deca  
+        beq t2s3
+        deca 
+        beq t2s4 
+        deca 
+        beq t2s5 
+        deca 
+        beq t2s6
+        rts
+
+;__________________________________________________________________________________
+
+t2s0: ; init TASK_2
+
+;clear all of the flags and relevant ITCVs
+ 
+        clr SELECT_FLG 
+        clr KEY_FLG 
+        clr COUNT
+        jsr clearbuffer                             ;clear buffer
+        movb #$01, t1state                          ;set next state
+        lbra exit2                                  ;exit
+        
+ ;__________________________________________________________________________________
+       
+t2s1: ;        
+        
+        tst KEY_FLG                                 ;first test if there is a key to be checked
+        lbeq exit1                                  ;if there is no key exit
+        
+ ;check if 1-4 have already been pressed for the first time 
+ 
+        ldaa KEY_BUFF                               ;load accumulator A with the current char
+        tst SELECT_FLG                              ;test if have already selected a wave 
+        bne skip_select                             ;skip setting the t1 state if already pressed once 
+ 
+ ;if 1-4 has not been pushed yet, check if its being pushed for the first time 
+ 
+ ;load accumulator d with the current ascii hex digit to make sure all arithmetic is correct 
+       
+        psha                                        ;push whats in a to the stack 
+        pulb                                        ;pul what was in a into b 
+        ldaa #$00                                   ;put zeros in a to make it a positive num
+        cpd #$34                                    ;check if what in A is 1-4 
+        bgt skip_select                             ;if its not 1-4, disregard the input  
+        pshb                                        ;restore the stack 
+        pula  
+        movb #$05 , t2state                         ;set the state to select  
+        lbra exit2 
+              
+
+skip_select:
+ 
+;check if its a BS 
+       
+        cmpa #$08                                   ;compare whats in A to BS 
+        bne skipBS                                  ;if its not BS, skip settting the state 
+        movb #$04 , t2state                         ;set the state to the appropriate number 
+        lbra exit1                                  ;exit
+
+skipBS: 
+
+;check if its a ENT  
+
+        cmpa #$0A                                   ;compare whats in A to ENT 
+        bne skipENT                                 ;if its not BS, skip settting the state 
+        movb #$03 , t2state                         ;set the state to the appropriate number 
+        lbra exit1                                  ;exit
+        
+skipENT:
+
+;check if its a digit
+ 
+        psha                                        ;push whats in a to the stack 
+        pulb                                        ;pul what was in a into b 
+        ldaa #$00                                   ;put zeros in a to make it a positive num
+        
+        cpd #$39                                    ;check if what in A is a number 
+        bgt skipDIGIT                               ;if its not a number, disregard the input
+        pshb                                        ;restore the stack 
+        pula
+         
+        movb #$02 , t1state                         ;set the state to digit handler 
+        lbra exit1                                  ;exit
+
+skipDIGIT: 
+
+        clr KEY_FLG
+        lbra exit1                                  ;exit
+  
+;__________________________________________________________________________________
+        
+t2s2: ;Digit Handler 
+
+;checks if we should proceed with the digit handler state 
+
+        ldab COUNT                                  ;load b with count 
+        cmpb #$03                                   ;check if count is 3
+        beq toomany                                 ;if count is 3 stop taking inputs and leave
+        tst SELECT_FLG                              ;test SELECT_FLG 
+        bne skip_e                                  ;if not equal to 0, skip exiting 
+
+toomany:        
+        
+        clr KEY_FLG                                 ;clear keyflag 
+        movb #$01 , t2state                         ;set the state back to 1
+        lbra exit2                                  ;exit  
+                                
+skip_e:
+
+;now proceed with the digit handler
+   
+        ldy #BUFFER                                 ;load index register y with buffer 
+        ldaa COUNT                                  ;load A with the current value of COUNT 
+        ldab KEY_BUFF                               ;load b with KEY_BUFF 
+        stab a,y                                    ;store the contents of b at the position of COUNT in BUFFER
+       
+        inc COUNT                                   ;increment count 
+        clr KEY_FLG                                 ;set key flag to 0 to acknowledge KEYPAD
+        movb #$01 , t1state                         ;set the state back to 1  
+        movb #$04, t3state                          ;set state in display task to echo the char
+        lbra exit1                                  ;exit 
+
+;__________________________________________________________________________________
+        
+t2s3: ;ENTER 
+
+         
+;before jsr to conversion, check if any digits have been entered into buffer      
+      
+       jsr clrcurs                                 ;turn off the cursor when enter is hit   
+       tst COUNT                                   ;test the current value of count 
+       bne skip_NO_DIGITS                          ;if the count is not zero, branch 
+       ldaa #$03                                   ;if the count is zero, put an error code into A 
+       bra check_error                             ;branch to the set error state below 
+
+
+ skip_NO_DIGITS: 
+
+;send to conversion to get a BCD form of the input 
+    
+       jsr conversion                              ;convert the contents of buffer to binary 
+       stx NINT                                    ;store the result of conversion in NINT 
+       clr COUNT                                   ;set count back to zero 
+       clr BUFFER                                  ;clear the contents of the BUFFER
+       
+            
+check_error: 
+       
+;automatically set the state back to 1 for all cases  
+
+       movb #$01, t2state                          ;set the state back to 1 
+       
+;check for error and set variables and state accordingly so that user has to start over 
+
+       cmpa #$00                                   ;check whats in A 
+       beq skipERROR                               ;check if an error was generated from conversion
+       movb #$06, t2state                          ;if there is an error code set the state to the 
+                                                   ;error state
+       staa MM_ERR                                 ;store the error code of accumulator A into a variable 
+                                                   ;so it is not affected by other code before it gets to 
+                                                   ;the error state 
+       clr NINT                                    ;clear NINT 
+       clr KEY_FLG                                 ;clear key flag
+       jsr clearbuffer
+       jsr CURSOR_OFF   
+       lbra exit2                                   
+
+skipERROR: 
+
+;if there are no errors, clear the select and key flags and buffer and exit     
+      
+      jsr clearbuffer
+      jsr CURSOR_OFF 
+      clr KEY_FLG 
+      clr SELECT_FLG  
+      lbra exit2                                    ;exit
+
+;________________________________________________________________________________________
+
+t2s4: ;BS
+ 
+       movb #$03 , t4state                         ;set the state in task 4 to the BS state   
+       movb #$01 , t2state                         ;set the state back to 1
+       clr KEY_FLG 
+       lbra exit2                                   ;exit
+
+;________________________________________________________________________________________
+
+t2s5: ;SELECT state 
+ 
+       
+       movb #$01, SELECT_FLG                       ;set the F1_FLG to be true
+       movb #$01 , t2state                         ;set the state back to 1  
+       ldaa KEY_BUFF                               ;load a with whats in KEY_BUFF 
+       staa WAVE_NUM                               ;store the wave number 
+       ;set the display state (task 4) ? ;set state in task 5? 
+       clr KEY_FLG                                 ;clear the key flag  
+       bra exit2                                   ;exit
+
+
+ ;not sure where to clear wave_num  
+ 
+     
+;________________________________________________________________________________________
+
+t2s6: ;Error state 
+
+
+;checks the error code in accumulator A to set the appropiate fixed 
+;message state to be displayed through task 4 
+
+
+;now check the error number and set the message number for task 4 
+ 
+       ldaa MM_ERR                                  ;put the error number back into accumulator a 
+       cmpa #01                                     ;check if the error code is mag to large 
+       bne skip_toolarge                         ;skip setting the message num
+       movb #$01, MSG_NUM                           ;set the appropiate message num 
+
+skip_toolarge: 
+
+       cmpa #02                                     ;check if the error code is zero magnitude 
+       bne skip_zeromag                          ;skip setting the message num
+       movb #$01, MSG_NUM                           ;set the appropiate message num 
+
+skip_zeromag: 
+
+       cmpa #03                                     ;check if the error code is zero digits
+       bne skip_zerodigits                          ;skip setting the message num
+       movb #$01, MSG_NUM                           ;set the appropiate message num    
+
+skip_zerodigits: 
+   
+       movb #$01 , t2state                         ;set the state back to 1
+       jsr clearbuffer
+       clr KEY_FLG
+       
+       
+;might be missing the clearing of some variables here 
+
+exit2: 
+ 
+       rts                                         
+
+ ;-------------TASK_3 KEYPAD ---------------------------------------------------------
+
+ TASK_3:
+ 
+        ldaa t3state ;get state
+        beq t3s0
+        deca
+        beq t3s1
+        deca
+        beq t3s2
+        rts
+
+t3s0:   ;init
+        
+        jsr INITKEY       ;initialize keypad
+        movb #$01, t3state
+        rts
+        
+t3s1:   ;Wait for Key   
+   
+        tst LKEY_FLG             ;check if there is a digit in the buffer 
+        beq exit3                ;if no key then exit 
+        jsr GETCHAR              ;get the character 
+        stab KEY_BUFF            ;stores the input char into key buffer
+        movb #$01, KEY_FLG       ;set ITCV keyflag to notifiy MM of key input
+        movb #$02, t3state       ;set the state to state 2 
+        bra exit2                ;exit
+        
+t3s2:   ;Wait for Acknowledgement 
+
+        tst KEY_FLG              ;test the ITCV KEY_FLG 
+        bne exit3                ;if it is still 1 then do not change state 
+        movb #$01, t3state       ;if it is 0, set state back to 1         
+
+exit3: rts                       ;exit 
+        
+        
+        
+;-------------TASK_4 DISPLAY ---------------------------------------------------------
+
+
+TASK_4:
+
+        ldaa t4state
+        beq t4s0
+        deca
+        beq t4s1
+        deca
+        beq t3s2
+        deca
+        beq t4s3
+        deca
+        beq t4s4
+        deca
+        lbeq t4s5
+        deca
+        lbeq t4s6
+        deca
+        lbeq t4s7
+        deca
+        lbeq t4s8
+        deca
+        lbeq t4s9
+        deca
+        lbeq t4s10
+        deca
+        lbeq t4s11
+        deca 
+        lbeq t4s12
+        rts
+        
+t4s0:   ;init    
+        
+        jsr INITLCD             ;initialize LCD
+        movb #$01, FIRSTCH      ;set first char to be true 
+        ldaa #$00               ;set LCD position to 0
+        jsr SETADDR             ;set the address 
+        movw #$07D0, TICKS_ERR  ;set the ticks error to be ___
+        movb #$0B, t3state      ;automatically go to state 11  
+        rts                     ;exit 
+
+
+
+
+
+;-------------TASK_5 FUNCTION GENERATOR -----------------------------------------------
+        
+
+
+
+
+;/------------------------------------------------------------------------------------\
+;| Subroutines                                                                        |
+;\------------------------------------------------------------------------------------/
+; General purpose subroutines go here
+
+;------ISUBROUT-----------------------------------------------------------------------;
+
+isubrout:
+
+        
+        ldd TC0                ; read current timer count  
+        addd INTERVAL          ; add interval 
+        std TC0                ; store result  
+        bset TFLG1, %11111111  ; clear timer channel 0 flag by writing a 1 to it
+       
+        
+        rti
+
+;------BACKSPACE----------------------------------------------------------------------;   
+         
+backspace:
+  
+        tst COUNT                     ;test if count is zero
+        beq bkspexit                  ;if the count is zero, dont allow backspace to occur 
+        jsr GETADDR                   ;get current position of LCR
+        deca                          ;decrement one
+        jsr SETADDR                   ;set address to new position
+        ldx #BACKSPACE                ;load a blank space 
+        jsr OUTSTRING                 ;output a blank space
+        jsr GETADDR                   ;get current position of LCR
+        deca                          ;decrement one
+        jsr SETADDR                   ;set address to new position
+        dec COUNT                     ;reset the value of count
+  
+bkspexit:
+
+       rts
+       
+;------CONVERSION---------------------------------------------------------------------------;
+
+conversion:
+		
+;clear all variables 
+
+	    	clrw RESULT
+	    	clr TMP
+	     	clr ERR
+	    	ldx #BUFFER
+	    	
+;pushes registers to stack so that they remain unchanged by the subroutine 
+	  
+  	   	pshy		
+  	  	pshb
+  	  	pshc
+		
+		
+convloop:
+
+	
+	    	ldaa COUNT		;check if COUNT has finished for loop
+	    	beq loopfin		;branch to exit if COUNT is done
+		
+		
+	     	ldy RESULT		;load current value of RESULT into register y for use
+	    	ldd #$000A		;load hex 10 into accumulator for use
+    		emul			    ;multiply register y and acc d
+	    	std RESULT		;keep the bottom 2 bytes of the emul since we are never dealing with 4 bit nums
+		
+		
+		
+	    	ldaa TMP	  	;TMP is used for index addressing
+	    	ldab a,x	  	;reference the correct digit in the BUFFER using TMP
+	    	subb #$30	  	;subtract $30 to get the decimal value of the ascii code
+	    	
+		
+	    	clra
+	    	addd RESULT		;add RESULT and acc d 
+	    	tsta          ;test if a is zero 
+	    	bne ERR1      ;if it is not zero, it has "overflowed"
+	    	std RESULT		;store addition in RESULT
+	    	inc TMP		  	;inc TMP so that BUFFER digits are correctly referenced
+	    	dec COUNT		  ;dec COUNT to track how long the loop has operated for
+	    	bra convloop
+			
+
+ERR1:		
+
+	    	movb #$01, ERR ;set ERR for MAGNITUDE TOO LARGE
+    		bra cnvexit
+	
+loopfin:
+		
+	    	ldx RESULT     ;load x with result 
+	    	bne cnvexit	   ;if the result is zero, fall through and set error state
+		
+ERR2:
+
+	    	movb #$02, ERR  ;set ERR for ZERO MAGNITUDE INAPPROPRIATE
+
+cnvexit:
+
+	    	ldaa ERR		;load ERRor into accumulator a
+	    	
+;pulls registers from stack to restore them to pre-subroutine states
+
+	    	pulc        
+	    	pulb
+    		puly
+    		rts         ;return
+               
+;-------------------Cooperative Fixed Messaging-------------------------------------------;        
+
+PUTCHAR1:
+    
+        stx DPTR                      ;store the contents of x into DPTR 
+        jsr SETADDR                   ;set the address on the LCD 
+        clr FIRSTCH                   ;clear first char  
+        movw TICKS_ERR, COUNT_ERR     ;initialize the amount of ticks an error will disply for
+          
+PUTCHAR:  
+        
+        ldx DPTR                      ;put whats in DPTR into x 
+        ldab 0,x                      ;input the current char to be displayed in b 
+        beq ERR_DELAY                 
+        incw DPTR                     ;increment the position of DPTR to get next character 
+        jsr OUTCHAR                   ;output the current charater 
+        rts                           ;exit 
+
+mess_exit:
+
+        movb #$01, t4state
+        movb #$01, MSG_NUM
+        jsr clrcurs
+        tst F1_FLG
+        bne F1addressset
+        tst F2_FLG
+        bne F2addressset
+        rts
+        
+        
+ERR_DELAY:
+       
+        jsr clrcurs
+        ldaa t4state
+        cmpa #$04
+        ble mess_exit
+        tst COUNT_ERR
+        beq err_exit
+        decw COUNT_ERR
+        rts
+            
+err_exit:
+        
+        tst LNUM
+        bne F2errexit
+        movb #$03, MSG_NUM
+        movb #$01, t4state
+        rts
+            
+F2errexit:  
+
+        movb #$04, MSG_NUM
+        movb #$01, t4state
+        rts
+         
+F1addressset:
+
+        ldaa #$08
+        jsr SETADDR
+        rts
+          
+F2addressset:
+
+        ldaa #$48
+        jsr SETADDR 
+        rts 
+
+clrcurs: ;resets the cursor address 
+
+        psha
+        ldaa #$30
+        jsr SETADDR
+        pula
+        rts
+        
+        
+;-----------------clearbuffer----------------------   
+
+clearbuffer:
+
+;reset the buffer so it is full of zeros 
+
+        ldx #BUFFER
+        ldaa #$00
+        clr a, x
+        inca
+        clr a, x
+        inca
+        clr a, x
+        rts
+       
+
+;/------------------------------------------------------------------------------------\
+;| ASCII Messages and Constant Data                                                   |
+;\------------------------------------------------------------------------------------/
+; Any constants can be defined here
+
+TOP:  		DC.B '1: SAW, 2: SINE-7, 3: SQUARE, 4: SINE-15', $00	;message for the top of the screen
+
+SAWMSG:  		DC.B 'SAWTOOTH WAVE        NINT:     [1-->255]', $00	;message for when SAWTOOTH is chosen
+SAWE1: 		DC.B 'SAWTOOTH WAVE        MAGNITUDE TOO LARGE', $00	;message for when SAWTOOTH MAGNITUDE TOO LARGE
+SAWE2:  	DC.B 'SAWTOOTH WAVE        INVALID MAGNITUDE  ', $00	;message for when SAWTOOTH INVALID MAGNITUDE  
+SAWE3:  	DC.B 'SAWTOOTH WAVE        NO DIGITS ENTERED  ', $00	;message for when SAWTOOTH NO DIGITS ENTERED  
+
+SEG7MSG:	  	DC.B '7-SEGMENT SINE WAVE  NINT:     [1-->255]', $00	;message for when 7 Seg sine is chosen
+SEG7E1:		DC.B '7-SEGMENT SINE WAVE  MAGNITUDE TOO LARGE', $00	;message for when 7 Seg sine MAGNITUDE TOO LARGE
+SEG7E2:		DC.B '7-SEGMENT SINE WAVE  INVALID MAGNITUDE  ', $00	;message for when 7 Seg sine INVALID MAGNITUDE  
+SEG7E3:		DC.B '7-SEGMENT SINE WAVE  NO DIGITS ENTERED  ', $00	;message for when 7 Seg sine NO DIGITS ENTERED  
+
+SQUAREMSG:		DC.B 'SQUARE WAVE          NINT:     [1-->255]', $00	;message for when SQUARE is chosen
+SQUAREE1:	DC.B 'SQUARE WAVE          MAGNITUDE TOO LARGE', $00	;message for when SQUARE MAGNITUDE TOO LARGE
+SQUAREE2:	DC.B 'SQUARE WAVE          INVALID MAGNITUDE  ', $00	;message for when SQUARE INVALID MAGNITUDE  
+SQUAREE3:	DC.B 'SQUARE WAVE          NO DIGITS ENTERED  ', $00	;message for when SQUARE is chosen
+
+SEG15MSG:		DC.B '15-SEGMENT SINE WAVE NINT:     [1-->255]', $00	;message for when 15 seg sine is chosen
+SEG15E1:	DC.B '15-SEGMENT SINE WAVE MAGNITUDE TOO LARGE', $00	;message for when 15 seg sine MAGNITUDE TOO LARGE
+SEG15E2:	DC.B '15-SEGMENT SINE WAVE INVALID MAGNITUDE  ', $00	;message for when 15 seg sine INVALID MAGNITUDE  
+SEG15E3:	DC.B '15-SEGMENT SINE WAVE NO DIGITS ENTERED  ', $00	;message for when 15 seg sine NO DIGITS ENTERED  
+
+SAWTOOTH:
+		DC.B 2 		; number of segments for SAWTOOTH
+		DC.W 0	 	; initial DAC input value
+		DC.B 19	 	; length for segment_1
+		DC.W 172 	; increment for segment_1
+		DC.B 1	 	; length for segment_2
+		DC.W -3268 	; increment for segment_2
+		
+SQUARE:
+		DC.B 4 		; number of segments for TRIANGLE
+		DC.W 0	 	; initial DAC input value
+		DC.B 9	 	; length for segment_1
+		DC.W 0 		; increment for segment_1
+		DC.B 1	 	; length for segment_2
+		DC.W 3268 	; increment for segment_2
+		DC.B 9	 	; length for segment_3
+		DC.W 0	 	; increment for segment_3
+		DC.B 9	 	; length for segment_4
+		DC.W -3268 	; increment for segment_4
+		
+SINE_7:
+		DC.B 7		; number of segments for SINE_7
+		DC.W 2048	; initial DAC input value
+		DC.B 25		; length for segment_1
+		DC.W 33		; increment for segment_1
+		DC.B 50		; length for segment_2
+		DC.W 8		; increment for segment_2
+		DC.B 50		; length for segment_3
+		DC.W -8		; increment for segment_3
+		DC.B 50		; length for segment_4
+		DC.W -33	; increment for segment_4
+		DC.B 50		; length for segment_5
+		DC.W -8		; increment for segment_5
+		DC.B 50		; length for segment_6
+		DC.W 8		; increment for segment_6
+		DC.W 33		; length for segment_7
+		DC.B 25		; increment for segment_7
+		
+SINE_15:
+		DC.B 15 	; number of segments for SINE
+		DC.W 2048 	; initial DAC input value
+		DC.B 10		; length for segment_1
+		DC.W 41 	; increment for segment_1
+		DC.B 21 	; length for segment_2
+		DC.W 37 	; increment for segment_2
+		DC.B 21 	; length for segment_3
+		DC.W 25 	; increment for segment_3
+		DC.B 21 	; length for segment_4
+		DC.W 9 		; increment for segment_4
+		DC.B 21 	; length for segment_5
+		DC.W -9 	; increment for segment_5
+		DC.B 21 	; length for segment_6
+		DC.W -25 	; increment for segment_6
+		DC.B 21 	; length for segment_7
+		DC.W -37 	; increment for segment_7
+		DC.B 20 	; length for segment_8
+		DC.W -41 	; increment for segment_8
+		DC.B 21 	; length for segment_9
+		DC.W -37 	; increment for segment_9
+		DC.B 21 	; length for segment_10
+		DC.W -25 	; increment for segment_10
+		DC.B 21 	; length for segment_11
+		DC.W -9 	; increment for segment_11
+		DC.B 21 	; length for segment_12
+		DC.W 9 		; increment for segment_12
+		DC.B 21 	; length for segment_13
+		DC.W 25 	; increment for segment_13
+		DC.B 21 	; length for segment_14
+		DC.W 37 	; increment for segment_14
+		DC.B 10 	; length for segment_15
+		DC.W 41 	; increment for segment_15
+
+;/------------------------------------------------------------------------------------\
+;| Vectors                                                                            |
+;\------------------------------------------------------------------------------------/
+; Add interrupt and reset vectors here
+
+        ORG   $FFFE                    ; reset vector address
+        DC.W  Entry
+
+        ORG   $FFEE                    ; chan 0 vector address 
+        DC.W  isubrout 
