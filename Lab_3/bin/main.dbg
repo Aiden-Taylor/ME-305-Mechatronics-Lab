@@ -52,13 +52,13 @@
 ;\------------------------------------------------------------------------------------/
 ; Constant values can be equated here
 
-PORTP EQU $0258 ; output port for LEDs
+PORTP EQU $0258         ; output port for LEDs
 DDRP EQU $025A
-G_LED_1 EQU %00010000 ; green LED output pin for LED pair_1
-R_LED_1 EQU %00100000 ; red LED output pin for LED pair_1
+G_LED_1 EQU %00010000   ; green LED output pin for LED pair_1
+R_LED_1 EQU %00100000   ; red LED output pin for LED pair_1
 LED_MSK_1 EQU %00110000 ; LED pair_1
-G_LED_2 EQU %01000000 ; green LED output pin for LED pair_2
-R_LED_2 EQU %10000000 ; red LED output pin for LED pair_2
+G_LED_2 EQU %01000000   ; green LED output pin for LED pair_2
+R_LED_2 EQU %10000000   ; red LED output pin for LED pair_2
 LED_MSK_2 EQU %11000000 ; LED pair_2
 
 
@@ -106,11 +106,6 @@ DONE_2 DS.B 1
 TICKS_2 DS.W 1
 COUNT_2 DS.W 1
 
-;params for t8
-
-    ;delay
-
-
 ;state vars
 t1state DS.B 1
 t2state DS.B 1
@@ -145,14 +140,14 @@ TICKS_ERR DS.W 1
 
 MyCode:       SECTION
 main:  
-       clr t1state ; initialize all tasks to state0
-       clr t2state
-       clr t3state
-       clr t4state
-       clr t5state
-       clr t6state
-       clr t7state
-       clr t8state
+        clr t1state ; initialize all tasks to state 0
+        clr t2state
+        clr t3state
+        clr t4state
+        clr t5state
+        clr t6state
+        clr t7state
+        clr t8state
        
 Top:
         ;bgnd
@@ -166,7 +161,7 @@ Top:
         jsr TASK_8
         bra Top       
        
-spin: bra spin
+spin:   bra spin
 
 ;-------------TASK_1 MASTERMIND ---------------------------------------------------------
 
@@ -188,20 +183,20 @@ TASK_1:
         lbeq t1s6
         deca
         lbeq t1s7
-        rts ; undefined state - do nothing but return
+        rts          ; undefined state - do nothing but return
 ;__________________________________________________________________________________
 t1s0: ; init TASK_1
 
-;clear all of the flags 
+;clear all of the flags and relevant ITCVs 
         clr TICKS_1
         clr TICKS_2
         clr F1_FLG 
         clr F2_FLG 
         clr KEY_FLG 
         clr COUNT
-        jsr clearbuffer   
-        movb #$01, t1state ; set next state
-        rts
+        jsr clearbuffer                             ;clear buffer
+        movb #$01, t1state                          ;set next state
+        lbra exit1                                  ;exit
 ;__________________________________________________________________________________
 t1s1: ;
 
@@ -213,89 +208,90 @@ t1s1: ;
  
         ;bgnd
         ldaa KEY_BUFF                               ;load accumulator A with the current char
-        tst F1_FLG
-        bne skipF1
-        tst F2_FLG
-        bne skipF1                                  ;skip if F1 has already been pressed
-        cmpa #$F1                                   ;compare whats in A to F1 
+        tst F1_FLG                                  ;test if F1_FLG has already been pressed 
+        bne skipF1                                  ;skip if it has already been pressed
+        tst F2_FLG                                  ;test if F2_FLG has already been pressed
+        bne skipF1                                  ;skip if F2 has already been pressed
+        cmpa #$F1                                   ;if not pressed compare whats in A to F1 
         bne skipF1                                  ;if its not F1, skip settting the state
         movb #$05 , t1state                         ;set the state to the appropriate number  
-        rts
+        lbra exit1                                  ;exit
 
 skipF1:  
 
 ;check if its F2
                           
-        tst F2_FLG 
+        tst F2_FLG                                  ;test F2_FLG to see if it has been pressed
         bne skipF2                                  ;skip if F1 has already been pressed
-        tst F1_FLG
-        bne skipF2
+        tst F1_FLG                                  ;test F1_FLG to see if it has been pressed
+        bne skipF2                                  ;skip if either have been pressed
         cmpa #$F2                                   ;compare whats in A to F2
         bne skipF2                                  ;if its not F2, skip settting the state
-        tst F2_FLG
         movb #$06 , t1state                         ;set the state to the appropriate number 
-        rts
+        lbra exit1                                  ;exit
 
 skipF2:
 
 ;check if its a BS 
        
-        cmpa #$08                                    ;compare whats in A to BS 
+        cmpa #$08                                   ;compare whats in A to BS 
         bne skipBS                                  ;if its not BS, skip settting the state 
         movb #$04 , t1state                         ;set the state to the appropriate number 
-        rts
+        lbra exit1                                  ;exit
 
 skipBS: 
 
 ;check if its a ENT  
 
-        cmpa #$0A                                    ;compare whats in A to ENT 
+        cmpa #$0A                                   ;compare whats in A to ENT 
         bne skipENT                                 ;if its not BS, skip settting the state 
         movb #$03 , t1state                         ;set the state to the appropriate number 
-        rts
+        lbra exit1                                  ;exit
         
 skipENT: 
 
-;check if its a digit 
-        ;bgnd
-        psha
-        pulb
-        ldaa #$00
+;check if its a digit
+ 
+;load contents of a into b to ensure + signed arithmetic is occuring to avoid errors with F1 and F2 
+
+        psha                                        ;push whats in a to the stack 
+        pulb                                        ;pul what was in a into b 
+        ldaa #$00                                   ;put zeros in a to make it a positive num
         
-        cpd #$39                                   ;check if what in A is a number 
+        cpd #$39                                    ;check if what in A is a number 
         bgt skipDIGIT                               ;if its not a number, disregard the input
-        pshb
+        pshb                                        ;restore the stack 
         pula
          
         movb #$02 , t1state                         ;set the state to digit handler 
-        rts
+        lbra exit1                                  ;exit
 
 skipDIGIT: 
 
         clr KEY_FLG
-        rts
+        lbra exit1                                  ;exit
 
 ;___________________________________________________________________________________
 
 t1s2: ;Digit Handler 
 
 ;checks if we should proceed with the digit handler state 
-        ldab COUNT
-        cmpb #$05
-        beq toomany
+
+        ldab COUNT                                  ;load b with count 
+        cmpb #$05                                   ;check if count is 5
+        beq toomany                                 ;if count is 5 stop taking inputs and leave
         tst F1_FLG                                  ;test F1 flag 
         bne skip_e                                  ;if not equal to 0, skip exiting 
         tst F2_FLG                                  ;test the F2 flag 
         bne skip_e                                  ;if not equal to 0, skip exiting 
-        clr KEY_FLG
+        clr KEY_FLG                                 ;clear keyflag 
         movb #$01 , t1state                         ;set the state back to 1
-        lbra exit1                                   ;exit if equal to 0 
+        lbra exit1                                  ;exit  
 
 toomany:
-        movb #$01, t1state
-        clr KEY_FLG
-        rts
-
+        movb #$01, t1state                          ;set the state back to 1 
+        clr KEY_FLG                                 ;clear keyflag 
+        lbra exit1                                  ;exit
 skip_e:
 
 ;now proceed with the digit handler
@@ -308,17 +304,17 @@ skip_e:
         inc COUNT                                   ;increment count 
         movb #$00, KEY_FLG                          ;set key flag to 0 to acknowledge KEYPAD
         movb #$01 , t1state                         ;set the state back to 1
-        clr KEY_FLG                                 ;clear key flag 
-        jsr OUTCHAR
-        lbra exit1                                   ;exit 
+        clr KEY_FLG                                 ;clear key flag
+         
+        movb #$0C, t3state                          ;set state in display task to echo the char
+        lbra exit1                                  ;exit 
 ;________________________________________________________________________________________
 t1s3: ;ENT 
  
 
 ;before jsr to conversion, check if any digits have been entered into buffer      
       
-       jsr clrcurs
-       
+       jsr clrcurs                                 ;turn off the cursor when enter is hit   
        tst COUNT                                   ;test the current value of count 
        bne skip_NO_DIGITS                          ;if the count is not zero, branch 
        ldaa #$03                                   ;if the count is zero, put an error code into A 
@@ -353,7 +349,7 @@ skip_F2:
 
        movb #$01, t1state                          ;set the state back to 1 
        
-;check for error and set variables accordingly so that user has to start over 
+;check for error and set variables and state accordingly so that user has to start over 
 
        ;bgnd
        cmpa #$00                                   ;check whats in A 
@@ -365,12 +361,12 @@ skip_F2:
                                                    ;the error state                                              
                                                      
 ;check which ON variable needs to be cleared if there is an error 
-      ;bgnd
+      
       tst F1_FLG                                   ;test the F1 flag
       beq skip_F1_b                                ;if the flag is zero, skip the next steps 
       clr ON1                                      ;clear ON1
       clr TICKS_1                                  ;clear TICKS_1
-      lbra exit1
+      lbra exit1                                   ;exit
       
 skip_F1_b: 
  
@@ -505,7 +501,6 @@ exit1:
  
 TASK_2:
  
-        ;bgnd
         ldaa t2state ;get state
         beq t2s0
         deca
@@ -514,32 +509,30 @@ TASK_2:
         beq t2s2
         rts
 
-t2s0:
-
-        ;init
+t2s0:   ;init
         
         jsr INITKEY       ;initialize keypad
         movb #$01, t2state
         rts
         
-t2s1:     
+t2s1:   ;Wait for Key   
    
-        tst LKEY_FLG
-        beq exit2
-        jsr GETCHAR
-        stab KEY_BUFF     ;stores the input char into key buffer
-        movb #$01, KEY_FLG        ;notifies MM of key input
-        movb #$02, t2state
-        bra exit2                                   ;exit
+        tst LKEY_FLG             ;check if there is a digit in the buffer 
+        beq exit2                ;if no key then exit 
+        jsr GETCHAR              ;get the character 
+        stab KEY_BUFF            ;stores the input char into key buffer
+        movb #$01, KEY_FLG       ;set ITCV keyflag to notifiy MM of key input
+        movb #$02, t2state       ;set the state to state 2 
+        bra exit2                ;exit
         
-t2s2:
+t2s2:   ;Wait for Acknowledgement 
 
-        tst KEY_FLG
-        bne exit2
-        movb #$01, t2state
+        tst KEY_FLG              ;test the ITCV KEY_FLG 
+        bne exit2                ;if it is still 1 then do not change state 
+        movb #$01, t2state       ;if it is 0, set state back to 1 
         
 
-exit2: rts        
+exit2: rts                       ;exit 
         
         
 ;---------------------TASK 3 - DISPLAY ---------------------------------------------;
@@ -557,7 +550,7 @@ TASK_3:
         deca
         beq t3s4
         deca
-        beq t3s5
+        lbeq t3s5
         deca
         lbeq t3s6
         deca
@@ -570,142 +563,154 @@ TASK_3:
         lbeq t3s10
         deca
         lbeq t3s11
+       deca 
+       lbeq t3s12
         rts
         
-t3s0:     ;init    
+t3s0:   ;init    
         
-       jsr INITLCD       ;initialize LCD
-       movb #$01, FIRSTCH
-       ldaa #$00         ;set LCD position to 0
-       jsr SETADDR
-       movw #$07D0, TICKS_ERR
-       ;jsr CURSOR_ON     ;turn on cursor
-       movb #$0B, t3state ; go to init state 
-       rts
+        jsr INITLCD             ;initialize LCD
+        movb #$01, FIRSTCH      ;set first char to be true 
+        ldaa #$00               ;set LCD position to 0
+        jsr SETADDR             ;set the address 
+        movw #$07D0, TICKS_ERR  ;set the ticks error to be ___
+        movb #$0B, t3state      ;automatically go to state 11  
+        rts                     ;exit 
         
-t3s1:
-
-       ;hub
+t3s1:   ;hub
              
-       movb #$01, FIRSTCH
-       ldab MSG_NUM            
-       stab t3state
-       movb #$01, MSG_NUM            
-       rts
+        movb #$01, FIRSTCH      ;set first char to be true  
+        ldab MSG_NUM            ;load message number into b 
+        stab t3state            ;store message number in state 
+        movb #$01, MSG_NUM      ;reset message num       
+        rts                     ;exit
 
 
-t3s2:   ;backspace
-        ;bgnd
-        jsr backspace
-        movb #$01, t3state
-        rts
+t3s2:   ;backspace 
+
+        jsr backspace           ;go to backspace subroutine 
+        movb #$01, t3state      ;reset to state 1 
+        rts                     ;exit
 
         
 t3s3:   ;full time1 message     
-        ;bgnd
-        clr LNUM
-        ldaa #$00
-        ldx #TIME1
-        tst FIRSTCH
-        lbne char1
-        jsr PUTCHAR
-        rts
+        
+        clr LNUM                ;clear LCD line number variable to set line number to the top 
+        ldaa #$00               ;set the address in accumulator a  
+        ldx #TIME1              ;load the time1 message into x 
+        tst FIRSTCH             ;check if its first character 
+        lbne char1              ;branch to the char1 line where you jump to char1 subroutine 
+        jsr PUTCHAR             ;otherwise jsr to the regular putchar subroutine 
+        rts                     ;exit
         
         
 t3s4:   ;full time2 message
-        movb #$01, LNUM
-        ldaa #$40
-        ldx #TIME2
-        tst FIRSTCH
-        lbne char1
-        jsr PUTCHAR
-        rts
+       
+        movb #$01, LNUM         ;load a 1 into LNUM to set line number to the bottom 
+        ldaa #$40               ;set the LCD address in accumulator a 
+        ldx #TIME2              ;load time 2 message into x 
+        tst FIRSTCH             ;check if its first character 
+        lbne char1              ;branch to the char1 line where you jump to char1 subroutine
+        jsr PUTCHAR             ;otherwise jsr to the regular putchar subroutine 
+        rts                     ;exit
 
 
 t3s5:   ;no digit 1 message
-        clr LNUM
-        ldaa #$00
-        ldx #NODIG1
-        tst FIRSTCH
-        bne char1
-        jsr PUTCHAR
-        rts
+       
+        clr LNUM                ;clear LCD line number variable to set line number to the top
+        ldaa #$00               ;set the LCD address in accumulator a
+        ldx #NODIG1             ;load message into x 
+        tst FIRSTCH             ;check if its first character
+        bne char1               ;branch to the char1 line where you jump to char1 subroutine
+        jsr PUTCHAR             ;otherwise jsr to the regular putchar subroutine
+        rts                     ;exit
 
 
 t3s6:   ;no digit 2 message
-        movb #$01, LNUM
-        ldaa #$40
-        ldx #NODIG2
-        tst FIRSTCH
-        bne char1
-        jsr PUTCHAR
-        rts
+       
+        movb #$01, LNUM         ;load a 1 into LNUM to set line number to the bottom 
+        ldaa #$40               ;set the LCD address in accumulator a 
+        ldx #NODIG2             ;load message into x 
+        tst FIRSTCH             ;check if its first character
+        bne char1               ;branch to the char1 line where you jump to char1 subroutine
+        jsr PUTCHAR             ;otherwise jsr to the regular putchar subroutine
+        rts                     ;exit
         
 
 t3s7:   ;zero magnitude 1 message
-        clr LNUM
-        ldaa #$00
-        ldx #ZMAG1
-        tst FIRSTCH
-        bne char1
-        jsr PUTCHAR
-        rts
+      
+        clr LNUM                ;clear LCD line number variable to set line number to the top
+        ldaa #$00               ;set the LCD address in accumulator a
+        ldx #ZMAG1              ;load message into x 
+        tst FIRSTCH             ;check if its first character
+        bne char1               ;branch to the char1 line where you jump to char1 subroutine
+        jsr PUTCHAR             ;otherwise jsr to the regular putchar subroutine
+        rts               ;exit
 
 t3s8:   ;zero magnitude 2 message
-        movb #$01, LNUM
-        ldaa #$40
-        ldx #ZMAG2
-        tst FIRSTCH
-        bne char1
-        jsr PUTCHAR
-        rts
+       
+        movb #$01, LNUM         ;load a 1 into LNUM to set line number to the bottom 
+        ldaa #$40               ;set the LCD address in accumulator a 
+        ldx #ZMAG2              ;load message into x 
+        tst FIRSTCH             ;check if its first character
+        bne char1               ;branch to the char1 line where you jump to char1 subroutine
+        jsr PUTCHAR             ;otherwise jsr to the regular putchar subroutine
+        rts               ;exit
 
 t3s9:   ;magnitude too large 1 message
-        clr LNUM
-        ldaa #$00
-        ldx #MAGTL1
-        tst FIRSTCH
-        bne char1
-        jsr PUTCHAR
-        rts
+       
+        clr LNUM                ;clear LCD line number variable to set line number to the top
+        ldaa #$00               ;set the LCD address in accumulator a
+        ldx #MAGTL1             ;load message into x 
+        tst FIRSTCH             ;check if its first character
+        bne char1               ;branch to the char1 line where you jump to char1 subroutine
+        jsr PUTCHAR             ;otherwise jsr to the regular putchar subroutine
+        rts                     ;exit
 
 
 t3s10:  ;magnitude too large 2 message
-        movb #$01, LNUM
-        ldaa #$40
+        
+        movb #$01, LNUM         ;load a 1 into LNUM to set line number to the bottom 
+        ldaa #$40               ;set the LCD address in accumulator a 
         ldx #MAGTL2
-        tst FIRSTCH
-        bne char1
-        jsr PUTCHAR
-        rts
+       tst FIRSTCH              ;check if its first character
+        bne char1               ;branch to the char1 line where you jump to char1 subroutine
+        jsr PUTCHAR             ;otherwise jsr to the regular putchar subroutine
+        rts                     ;exit
 
 t3s11:  ;display full screen (init message)
 
-       ldx #INITMSG
-       tst FIRSTCH
-       bne initmsg
-       jsr ICHAR
-       rts
+        ldx #INITMSG            ;load the F1 and F2 starting screen 
+        tst FIRSTCH             ;check if its the first character 
+        bne initmsg             ;if first char, go to the char1 subroutine 
+        jsr ICHAR               ;if not go to regular subroutine 
+        rts                     ;exit                     
        
 initmsg: ;first char of init message
        
-       jsr ICHAR1
-       rts
+        jsr ICHAR1              ;go to starting message first char subroutine 
+        rts                     ;exit
        
-char1:    ;first char of any message
+char1:  ;first char of any message
 
-       jsr PUTCHAR1
-       rts 
+        jsr PUTCHAR1            ;go to general first char subroutine 
+        rts                     ;exit
+
+t3s12:  ;echo 
+
+        ldab KEY_BUFF           ;load accumulator b with whats in KEY_BUFF 
+        jsr OUTCHAR             ;display the inputted digit 
+        movb #$01, t3state      ;reset to state 1
         
 exit3:
 
-       rts
+        rts
        
 ;------------------TASK 4--------------------------------------------------
 ;pattern 1
 
 TASK_4: 
-        ;bgnd
+
         ldaa t4state ; get current t4state and branch accordingly
         beq t4state0
         deca
@@ -846,8 +851,7 @@ exit_t5s2:
 ;pattern 2
 
 TASK_6: 
-        
-        
+         
         tst ON2
         beq turnofft6
 
@@ -873,9 +877,7 @@ turnofft6:
         ;changes lights to off
         bclr PORTP, LED_MSK_2
         movb #$07, t6state
-        rts
-                
-        
+        rts    
         
 t6state0: ; init TASK_1 (not G, not R)
         clr ON2
@@ -939,11 +941,6 @@ t6state7:
         rts 
         
 
-
-
-
-
-
 ;------------------TASK 7--------------------------------------------------
 ;timing 2
 
@@ -982,10 +979,6 @@ exit_t7s2:
         rts ; exit TASK_7
 
 
-
-
-
-
 ;------------------TASK 8--------------------------------------------------
           ;delay
           
@@ -1004,204 +997,210 @@ t8state1:
         jsr DELAY_1ms
         rts ; exit TASK_8
         
-        
-  
+         
 ;/------------------------------------------------------------------------------------\
 ;| Subroutines                                                                        |
 ;\------------------------------------------------------------------------------------/
 ; General purpose subroutines go here
 
-  
  ;---------------------------------------------------------------------------------------     
          
   backspace:
-       tst COUNT
-       beq bkspexit
-       jsr GETADDR                   ;get current position of LCR
-       deca                          ;decrement one
-       jsr SETADDR                   ;set address to new position
-       ;bgnd
-       ldx #BACKSPACE                ;
-       jsr OUTSTRING                 ;output a blank character
-       jsr GETADDR                   ;get current position of LCR
-       deca                          ;decrement one
-       jsr SETADDR                   ;set address to new position
-       ;bgnd
-       dec COUNT                     ;reset the value of count
-       rts
+  
+        tst COUNT                     ;test if count is zero
+        beq bkspexit                  ;if the count is zero, dont allow backspace to occur 
+        jsr GETADDR                   ;get current position of LCR
+        deca                          ;decrement one
+        jsr SETADDR                   ;set address to new position
+        ldx #BACKSPACE                ;load a blank space 
+        jsr OUTSTRING                 ;output a blank space
+        jsr GETADDR                   ;get current position of LCR
+        deca                          ;decrement one
+        jsr SETADDR                   ;set address to new position
+        dec COUNT                     ;reset the value of count
   
 bkspexit:
 
        rts
        
-   
   
   ;------CONVERSIONS---------------------------------------------------------------------------;
 
 conversion:
 		
-		;init here
-		clrw RESULT
-		clr TMP
-		clr ERR
-		ldx #BUFFER
-		pshy			;pushes registers to stack so that they remain unchanged by the subroutine
-		pshb
-		pshc
+;clear all variables 
+
+	    	clrw RESULT
+	    	clr TMP
+	     	clr ERR
+	    	ldx #BUFFER
+	    	
+;pushes registers to stack so that they remain unchanged by the subroutine 
+	  
+  	   	pshy		
+  	  	pshb
+  	  	pshc
 		
 		
 convloop:
 
-		;loop goes here
-		ldaa COUNT		;check if COUNT has finished for loop
-		beq loopfin		;branch to exit if COUNT is done
+	
+	    	ldaa COUNT		;check if COUNT has finished for loop
+	    	beq loopfin		;branch to exit if COUNT is done
 		
 		
-		ldy RESULT		;load current value of RESULT into register y for use
-		ldd #$000A		;load hex 10 into accumulator for use
-		emul			    ;multiply register y and acc d
-		tsty          ;sets flag for y
-		bne ERR1      ;checks if the multiplication overflowed to y
-		std RESULT		;keep the bottom 2 bytes of the emul since we are never dealing with 4 bit nums
+	     	ldy RESULT		;load current value of RESULT into register y for use
+	    	ldd #$000A		;load hex 10 into accumulator for use
+    		emul			    ;multiply register y and acc d
+	    	tsty          ;sets flag for y
+	    	bne ERR1      ;checks if the multiplication overflowed to y
+	    	std RESULT		;keep the bottom 2 bytes of the emul since we are never dealing with 4 bit nums
 		
 		
 		
-		ldaa TMP		;TMP is used for index addressing
-		ldab a,x		;reference the correct digit in the BUFFER using TMP
-		subb #$30		;subtract $30 to get the decimal value of the ascii code
+	    	ldaa TMP	  	;TMP is used for index addressing
+	    	ldab a,x	  	;reference the correct digit in the BUFFER using TMP
+	    	subb #$30	  	;subtract $30 to get the decimal value of the ascii code
+	    	
 		
-		
-		clra
-		addd RESULT		;add RESULT and acc d 
-		bcs ERR1      ;branch if the addition triggers an overflow, causing error 1
-		std RESULT		;store addition in RESULT
-		inc TMP		  	;inc TMP so that BUFFER digits are correctly referenced
-		dec COUNT		  ;dec COUNT to track how long the loop has operated for
-		bra convloop
+	    	clra
+	    	addd RESULT		;add RESULT and acc d 
+	    	bcs ERR1      ;branch if the addition triggers an overflow, causing error 1
+	    	std RESULT		;store addition in RESULT
+	    	inc TMP		  	;inc TMP so that BUFFER digits are correctly referenced
+	    	dec COUNT		  ;dec COUNT to track how long the loop has operated for
+	    	bra convloop
 			
 
 ERR1:		
 
-		movb #$01, ERR ;set ERR for MAGNITUDE TOO LARGE
-		bra cnvexit
+	    	movb #$01, ERR ;set ERR for MAGNITUDE TOO LARGE
+    		bra cnvexit
 	
 loopfin:
 		
-		ldx RESULT     ;happens at the end of the loop to check for error 2
-		bne cnvexit	
+	    	ldx RESULT     ;load x with result 
+	    	bne cnvexit	   ;if the result is zero, fall through and set error state
 		
 ERR2:
 
-		movb #$02, ERR  ;set ERR for ZERO MAGNITUDE INAPPROPRIATE
+	    	movb #$02, ERR  ;set ERR for ZERO MAGNITUDE INAPPROPRIATE
 
 cnvexit:
 
-		ldaa ERR		;load ERRor into accumulator a
-		pulc        ;pulls registers from stack to restore them to pre-subroutine states
-		pulb
-		puly
-		rts         ;return
+	    	ldaa ERR		;load ERRor into accumulator a
+	    	
+;pulls registers from stack to restore them to pre-subroutine states
+
+	    	pulc        
+	    	pulb
+    		puly
+    		rts         ;return
         
 
 ;-------------------Cooperative Fixed Messaging-------------------------------------------;        
 
-PUTCHAR1:    
-          stx DPTR
-          jsr SETADDR
-          clr FIRSTCH
-          movw TICKS_ERR, COUNT_ERR
+PUTCHAR1:
+    
+        stx DPTR                      ;store the contents of x into DPTR 
+        jsr SETADDR                   ;set the address on the LCD 
+        clr FIRSTCH                   ;clear first char  
+        movw TICKS_ERR, COUNT_ERR     ;initialize the amount of ticks an error will disply for
           
-PUTCHAR:          
-          ldx DPTR
-          ldab 0,x
-          beq ERR_DELAY
-          incw DPTR
-          jsr OUTCHAR
-          rts
-
+PUTCHAR:  
+        
+        ldx DPTR                      ;put whats in DPTR into x 
+        ldab 0,x                      ;input the current char to be displayed in b 
+        beq ERR_DELAY                 
+        incw DPTR                     ;increment the position of DPTR to get next character 
+        jsr OUTCHAR                   ;output the current charater 
+        rts                           ;exit 
 
 mess_exit:
-            ;bgnd 
-            movb #$01, t3state
-            movb #$01, MSG_NUM
-            jsr clrcurs
-            ;bgnd
-            tst F1_FLG
-            bne F1addressset
-            tst F2_FLG
-            bne F2addressset
-            rts
-            
+
+        movb #$01, t3state
+        movb #$01, MSG_NUM
+        jsr clrcurs
+        tst F1_FLG
+        bne F1addressset
+        tst F2_FLG
+        bne F2addressset
+        rts
+        
+        
 ERR_DELAY:
-            ;bgnd
-            jsr clrcurs
-            ldaa t3state
-            cmpa #$04
-            ble mess_exit
-            tst COUNT_ERR
-            beq err_exit
-            decw COUNT_ERR
-            rts
+       
+        jsr clrcurs
+        ldaa t3state
+        cmpa #$04
+        ble mess_exit
+        tst COUNT_ERR
+        beq err_exit
+        decw COUNT_ERR
+        rts
             
 err_exit:
-            ;bgnd
+        
+        tst LNUM
+        bne F2errexit
+        movb #$03, MSG_NUM
+        movb #$01, t3state
+        rts
             
-            tst LNUM
-            bne F2errexit
-            movb #$03, MSG_NUM
-            movb #$01, t3state
-            rts
-            
-F2errexit:  movb #$04, MSG_NUM
-            movb #$01, t3state
-            rts
+F2errexit:  
 
-
-            
+        movb #$04, MSG_NUM
+        movb #$01, t3state
+        rts
+         
 F1addressset:
 
-          ldaa #$08
-          jsr SETADDR
-          rts
+        ldaa #$08
+        jsr SETADDR
+        rts
           
 F2addressset:
 
-          ldaa #$48
-          jsr SETADDR 
-          rts 
+        ldaa #$48
+        jsr SETADDR 
+        rts 
 
-clrcurs:
-          psha
-          ldaa #$30
-          jsr SETADDR
-          pula
-          rts
+clrcurs: ;resets the cursor address 
+
+        psha
+        ldaa #$30
+        jsr SETADDR
+        pula
+        rts
+        
 ;-------------------Cooperative Fixed init message-----------------------
 
 ICHAR1: 
-          stx DPTR
-          jsr SETADDR
-          clr FIRSTCH
+         
+        stx DPTR
+        jsr SETADDR
+        clr FIRSTCH
           
 ICHAR:        
-          ldx DPTR
-          ldab 0,x
-          beq mess_exit
-          incw DPTR
-          jsr OUTCHAR
-          jsr GETADDR
-          cmpa #$28
-          beq changeline
-          rts
+       
+        ldx DPTR
+        ldab 0,x
+        beq mess_exit
+        incw DPTR
+        jsr OUTCHAR
+        jsr GETADDR
+        cmpa #$28
+        beq changeline
+        rts
 
 changeline: 
 
-          ldaa #$40
-          jsr SETADDR
-          rts
+        ldaa #$40
+        jsr SETADDR
+        rts
 
 
-;----------------------DElay----------------------------
+;----------------------Delay----------------------------
 
 DELAY_1ms:
         ldy #$0584
@@ -1219,18 +1218,20 @@ DELAY_1ms:
 
 clearbuffer:
 
-      ldx #BUFFER
-      ldaa #$00
-      clr a, x
-      inca
-      clr a, x
-      inca
-      clr a, x
-      inca
-      clr a, x
-      inca
-      clr a, x
-      rts
+;reset the buffer so it is full of zeros 
+
+        ldx #BUFFER
+        ldaa #$00
+        clr a, x
+        inca
+        clr a, x
+        inca
+        clr a, x
+        inca
+        clr a, x
+        inca
+        clr a, x
+        rts
 
 
 ;/------------------------------------------------------------------------------------\
