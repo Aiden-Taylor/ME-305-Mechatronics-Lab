@@ -64,7 +64,7 @@ DEFAULT_RAM:  SECTION
 SELECT_FLG DS.B 1 
 COUNT DS.B 1 
 MM_ERR  DS.B 1
-NINT DS.B 1
+NINT DS.W 1
 WAVE_NUM DS.B 1 
 
 ;params for t3 
@@ -75,7 +75,19 @@ KEY_BUFF DS.B 1
 MSG_NUM DS.B 1
 LNUM DS.B 1
 
-;params for t5 
+;params for t5
+RUN DS.B 1
+CINT DS.W 1 
+NEWBTI DS.B 1  
+WAVEPTR DS.B 1  
+CSEG DS.B 1 
+LSEG DS.B 1  
+SEGPTR DS.B 1  
+SEGINC DS.B 1  
+VALUE DS.B 1 
+DWAVE DS.B 1 
+DPRMPT DS.B 1
+NINTOK DS.B 1 
 
 ;state vars
 t1state DS.B 1
@@ -143,7 +155,14 @@ spin:   bra   spin                     ; endless horizontal loop
 
 ;-------------TASK_1 TC0 SETUP ---------------------------------------------------------
 
-TASK_1: 
+TASK_1:
+
+        ldaa t1state ;get state
+        beq t1s0
+        deca
+        beq t1s1
+
+t1s0: 
 
 ;Step 1: Pre-initialization
 		   
@@ -166,9 +185,11 @@ TASK_1:
 		  
 		   ldd TCNTH            ; read current timer count 
 		   addd INTERVAL        ; add interval to count 
-		   std TC0              ; load result into TC0 
+		   std TC0              ; load result into TC0
 
+t1s1:  
 
+ rts 
 
 
 
@@ -181,15 +202,15 @@ TASK_1:
         deca
         beq t2s1
         deca
-        beq t2s2
+        lbeq t2s2
         deca  
-        beq t2s3
+        lbeq t2s3
         deca 
-        beq t2s4 
+        lbeq t2s4 
         deca 
-        beq t2s5 
+        lbeq t2s5 
         deca 
-        beq t2s6
+        lbeq t2s6
         rts
 
 ;__________________________________________________________________________________
@@ -202,15 +223,15 @@ t2s0: ; init TASK_2
         clr KEY_FLG 
         clr COUNT
         jsr clearbuffer                             ;clear buffer
-        movb #$01, t1state                          ;set next state
+        movb #$01, t2state                          ;set next state
         lbra exit2                                  ;exit
         
  ;__________________________________________________________________________________
        
-t2s1: ;        
+t2s1: ;hub        
         
         tst KEY_FLG                                 ;first test if there is a key to be checked
-        lbeq exit1                                  ;if there is no key exit
+        lbeq exit2                                  ;if there is no key exit
         
  ;check if 1-4 have already been pressed for the first time 
  
@@ -225,13 +246,13 @@ t2s1: ;
         psha                                        ;push whats in a to the stack 
         pulb                                        ;pul what was in a into b 
         ldaa #$00                                   ;put zeros in a to make it a positive num
+        
         cpd #$34                                    ;check if what in A is 1-4 
         bgt skip_select                             ;if its not 1-4, disregard the input  
         pshb                                        ;restore the stack 
         pula  
         movb #$05 , t2state                         ;set the state to select  
-        lbra exit2 
-              
+        lbra exit2               
 
 skip_select:
  
@@ -240,7 +261,7 @@ skip_select:
         cmpa #$08                                   ;compare whats in A to BS 
         bne skipBS                                  ;if its not BS, skip settting the state 
         movb #$04 , t2state                         ;set the state to the appropriate number 
-        lbra exit1                                  ;exit
+        lbra exit2                                  ;exit
 
 skipBS: 
 
@@ -249,7 +270,7 @@ skipBS:
         cmpa #$0A                                   ;compare whats in A to ENT 
         bne skipENT                                 ;if its not BS, skip settting the state 
         movb #$03 , t2state                         ;set the state to the appropriate number 
-        lbra exit1                                  ;exit
+        lbra exit2                                  ;exit
         
 skipENT:
 
@@ -264,13 +285,13 @@ skipENT:
         pshb                                        ;restore the stack 
         pula
          
-        movb #$02 , t1state                         ;set the state to digit handler 
-        lbra exit1                                  ;exit
+        movb #$02 , t2state                         ;set the state to digit handler 
+        lbra exit2                                  ;exit
 
 skipDIGIT: 
 
         clr KEY_FLG
-        lbra exit1                                  ;exit
+        lbra exit2                                  ;exit
   
 ;__________________________________________________________________________________
         
@@ -301,9 +322,9 @@ skip_e:
        
         inc COUNT                                   ;increment count 
         clr KEY_FLG                                 ;set key flag to 0 to acknowledge KEYPAD
-        movb #$01 , t1state                         ;set the state back to 1  
-        movb #$04, t3state                          ;set state in display task to echo the char
-        lbra exit1                                  ;exit 
+        movb #$01 , t2state                         ;set the state back to 1  
+        movb #$0B, t4state                          ;set state in display task to echo the char
+        lbra exit2                                  ;exit 
 
 ;__________________________________________________________________________________
         
@@ -311,7 +332,7 @@ t2s3: ;ENTER
 
          
 ;before jsr to conversion, check if any digits have been entered into buffer      
-      
+       
        jsr clrcurs                                 ;turn off the cursor when enter is hit   
        tst COUNT                                   ;test the current value of count 
        bne skip_NO_DIGITS                          ;if the count is not zero, branch 
@@ -354,10 +375,13 @@ skipERROR:
 
 ;if there are no errors, clear the select and key flags and buffer and exit     
       
-      jsr clearbuffer
+      movb #$01, RUN 
+      jsr clearbuffer                               ;set run to be true if there are no errors 
       jsr CURSOR_OFF 
       clr KEY_FLG 
       clr SELECT_FLG  
+      movb #$01, DWAVE 
+      movb #$01, NINTOK 
       lbra exit2                                    ;exit
 
 ;________________________________________________________________________________________
@@ -374,11 +398,25 @@ t2s4: ;BS
 t2s5: ;SELECT state 
  
        
-       movb #$01, SELECT_FLG                       ;set the F1_FLG to be true
-       movb #$01 , t2state                         ;set the state back to 1  
+       
+       movb #$01, SELECT_FLG                       ;set the SELECT_FLG to be true
+       clr DWAVE 
+       clr NINTOK 
+       movb #$01 , t2state                         ;set the state back to 1 
+       clr RUN                                     ;clear run 
        ldaa KEY_BUFF                               ;load a with whats in KEY_BUFF 
+       suba #$30	  	                             ;subtract $30 to get the decimal value of the ascii code
        staa WAVE_NUM                               ;store the wave number 
-       ;set the display state (task 4) ? ;set state in task 5? 
+       
+      ;set the display state in task 4 
+       ldab WAVE_NUM           ;load wave number into b
+       addb #$03               ;add 3 to get the corresponding task 4 state
+       stab t4state            ;store message number in state 
+       
+      ;set state in task 5?
+      
+      
+       
        clr KEY_FLG                                 ;clear the key flag  
        bra exit2                                   ;exit
 
@@ -399,20 +437,20 @@ t2s6: ;Error state
  
        ldaa MM_ERR                                  ;put the error number back into accumulator a 
        cmpa #01                                     ;check if the error code is mag to large 
-       bne skip_toolarge                         ;skip setting the message num
-       movb #$01, MSG_NUM                           ;set the appropiate message num 
+       bne skip_toolarge                            ;skip setting the message num
+       movb #$08, MSG_NUM                           ;set the appropiate message num 
 
 skip_toolarge: 
 
        cmpa #02                                     ;check if the error code is zero magnitude 
-       bne skip_zeromag                          ;skip setting the message num
-       movb #$01, MSG_NUM                           ;set the appropiate message num 
+       bne skip_zeromag                             ;skip setting the message num
+       movb #$09, MSG_NUM                           ;set the appropiate message num 
 
 skip_zeromag: 
 
        cmpa #03                                     ;check if the error code is zero digits
        bne skip_zerodigits                          ;skip setting the message num
-       movb #$01, MSG_NUM                           ;set the appropiate message num    
+       movb #$0A, MSG_NUM                           ;set the appropiate message num    
 
 skip_zerodigits: 
    
@@ -475,11 +513,11 @@ TASK_4:
         deca
         beq t4s1
         deca
-        beq t3s2
+        lbeq t4s2
         deca
-        beq t4s3
+        lbeq t4s3
         deca
-        beq t4s4
+        lbeq t4s4
         deca
         lbeq t4s5
         deca
@@ -494,29 +532,270 @@ TASK_4:
         lbeq t4s10
         deca
         lbeq t4s11
-        deca 
-        lbeq t4s12
         rts
-        
+;________________________________________________________________________________________
+
 t4s0:   ;init    
         
         jsr INITLCD             ;initialize LCD
         movb #$01, FIRSTCH      ;set first char to be true 
         ldaa #$00               ;set LCD position to 0
         jsr SETADDR             ;set the address 
-        movw #$07D0, TICKS_ERR  ;set the ticks error to be ___
-        movb #$0B, t3state      ;automatically go to state 11  
+        movw #$5000, TICKS_ERR  ;set the ticks error to be ___
+        movb #$02, t4state      ;automatically go to state 2 to display the initial message   
         rts                     ;exit 
 
+;________________________________________________________________________________________
+t4s1:  ;hub
+             
+        movb #$01, FIRSTCH      ;set first char to be true  
+        ldab MSG_NUM            ;load message number into b 
+        stab t4state            ;store message number in state 
+        movb #$01, MSG_NUM      ;reset message num       
+        rts                     ;exit 
+ 
+;________________________________________________________________________________________
+t4s2:  ;initial message display 
 
+        ldx #TOP
+        ldaa #$00               ;set LCD position to 0
+        tst FIRSTCH 
+        lbne char1
+        jsr PUTCHAR           
+        rts 
+  
+;________________________________________________________________________________________
+t4s3:   ;backspace 
 
+        jsr backspace           ;go to backspace subroutine 
+        movb #$01, t3state      ;reset to state 1 
+        rts                     ;exit      
+        
+;________________________________________________________________________________________
+t4s4:   ;saw message (wave #1)
 
+        ldx #SAWMSG
+        ldaa #$40               ;set LCD position to 40
+        tst FIRSTCH 
+        bne char1
+        jsr PUTCHAR
+        rts  
+          
+ ;________________________________________________________________________________________
+t4s5:   ;7-seg message  (wave #2)
 
+        ldx #SEG7MSG
+        ldaa #$40               ;set LCD position to 40
+        tst FIRSTCH 
+        bne char1
+        jsr PUTCHAR
+        rts  
+          
+;________________________________________________________________________________________
+t4s6:   ;square message  (wawve #3)
+
+        ldx #SQUAREMSG 
+        ldaa #$40               ;set LCD position to 40
+        tst FIRSTCH 
+        bne char1
+        jsr PUTCHAR
+        rts  
+         
+;________________________________________________________________________________________
+t4s7:   ;15-seg message  (wave #4) 
+
+        ldx #SEG15MSG 
+        ldaa #$40               ;set LCD position to 40
+        tst FIRSTCH 
+        bne char1
+        jsr PUTCHAR
+        rts 
+;________________________________________________________________________________________
+t4s8:   ;too large error message
+
+ ;can have only three error message states by storing the previous state in a variable and
+ ;and setting the task 4 state back to that state 
+ 
+        ldx #E1
+        ldaa #$55               ;set LCD position to 61
+        tst FIRSTCH 
+        bne char1
+        jsr PUTCHAR
+        rts 
+
+;________________________________________________________________________________________
+t4s9:   ;invalid magnitude message
+        
+        ldx #E2
+        ldaa #$55               ;set LCD position to 61
+        tst FIRSTCH 
+        bne char1
+        jsr PUTCHAR
+        rts 
+
+;________________________________________________________________________________________
+t4s10:  ;no digits entered message
+
+        ldx #E3
+        ldaa #$55               ;set LCD position to 61
+        tst FIRSTCH 
+        bne char1
+        jsr PUTCHAR
+        rts 
+;________________________________________________________________________________________
+t4s11:   ;echo 
+
+        ldaa COUNT 
+        adda #$5A
+        jsr SETADDR 
+        jsr CURSOR_ON 
+        ldab KEY_BUFF           ;load accumulator b with whats in KEY_BUFF 
+        jsr OUTCHAR             ;display the inputted digit 
+        movb #$01, t4state      ;reset to state 1
+
+char1: 
+  
+        jsr PUTCHAR1      
+        
 ;-------------TASK_5 FUNCTION GENERATOR -----------------------------------------------
         
 
+ TASK_5:
+
+        ldaa t5state
+        beq t5s0
+        deca
+        beq t5s1
+        deca
+        beq t5s2
+        deca
+        lbeq t5s3
+        deca
+        lbeq t5s4
+        rts
+        
+;________________________________________________________________________________________
+
+t5s0:   ;init    
+        
+        movb #$01, t5state                   
+
+;________________________________________________________________________________________
+
+t5s1:  ;wait for wave 
+             
+;set the corrrect wave address  
+       
+       ldaa WAVE_NUM 
+       lbeq exit5 
+       deca 
+       beq t5w1
+       deca 
+       beq t5w2 
+       deca 
+       beq t5w3 
+       deca
+       beq t5w4 
+       rts
+       
+t5w1:
+
+       ldx #SAWTOOTH
+       movb #$02, t5state
+       rts  
+
+t5w2: 
+
+       ldx #SQUARE
+       movb #$02, t5state
+       rts 
+      
+t5w3: 
+
+       ldx #SINE_7
+       movb #$02, t5state
+       rts 
+
+t5w4: 
+
+       ldx #SINE_15
+       movb #$02, t5state
+       rts  
+      
+                        
+ 
+;________________________________________________________________________________________
+
+t5s2:  ;new wave 
 
 
+        tst DWAVE ; wait for display of wave message
+        bne t5s2a
+        ldx WAVEPTR ; point to start of data for wave
+        movb 0,X, CSEG ; get number of wave segments
+        movw 1,X, VALUE ; get initial value for DAC
+        movb 3,X, LSEG ; load segment length
+        movw 4,X, SEGINC ; load segment increment
+        inx ; inc SEGPTR to next segment
+        inx
+        inx
+        inx
+        inx
+        inx
+        stx SEGPTR ; store incremented SEGPTR for next segment
+        movb #$01, DPRMPT ; set flag for display of NINT prompt
+        movb #$03, t5state ; set next state
+        t5s2a: rts
+
+        
+        
+;________________________________________________________________________________________
+
+t5s3:  ;wait for NINT        
+        
+     ;set run if correct nint
+     
+        tst NINTOK
+        beq exit5 
+        movb #$04, t5state 
+        rts 
+         
+;________________________________________________________________________________________
+
+t5s4:  ;Display wave  
+
+        tst RUN
+        beq t5s4c ; do not update function generator if RUN=0
+        tst NEWBTI
+        beq t5s4e ; do not update function generator if NEWBTI=0
+        dec LSEG ; decrement segment length counter
+        bne t5s4b ; if not at end, simply update DAC output
+        dec CSEG ; if at end, decrement segment counter
+        bne t5s4a ; if not last segment, skip reinit of wave
+        ldx WAVEPTR ; point to start of data for wave
+        movb 0,X, CSEG ; get number of wave segments
+        inx ; inc SEGPTR to start of first segment
+        inx
+        inx
+        stx SEGPTR ; store incremented SEGPTR
+        t5s4a: ldx SEGPTR ; point to start of new segment
+        movb 0,X, LSEG ; initialize segment length counter
+        movw 1,X, SEGINC ; load segment increment
+        inx ; inc SEGPTR to next segment
+        inx
+        inx
+        stx SEGPTR ; store incremented SEGPTR
+        t5s4b: ldd VALUE ; get current DAC input value
+        addd SEGINC ; add SEGINC to current DAC input value
+        std VALUE ; store incremented DAC input value
+        bra t5s4d
+        t5s4c: movb #$01, t5state ; set next state
+        t5s4d: clr NEWBTI
+        t5s4e: rts
+ 
+ exit5: 
+ 
+        rts 
 
 ;/------------------------------------------------------------------------------------\
 ;| Subroutines                                                                        |
@@ -527,6 +806,27 @@ t4s0:   ;init
 
 isubrout:
 
+;first check run is one 
+
+       tst RUN 
+       beq NXT_INT
+
+;next check if CINT is zero 
+        
+       tst CINT 
+       beq NEW_CINT 
+       dec CINT  
+       bra NXT_INT 
+        
+NEW_CINT: 
+
+       ldaa NINT 
+       staa CINT 
+       movb #$01, NEWBTI 
+       ldd VALUE 
+       jsr OUTDACA 
+       
+NXT_INT:
         
         ldd TC0                ; read current timer count  
         addd INTERVAL          ; add interval 
@@ -641,20 +941,16 @@ PUTCHAR:
         
         ldx DPTR                      ;put whats in DPTR into x 
         ldab 0,x                      ;input the current char to be displayed in b 
-        beq ERR_DELAY                 
+        beq ERR_DELAY 
         incw DPTR                     ;increment the position of DPTR to get next character 
         jsr OUTCHAR                   ;output the current charater 
         rts                           ;exit 
-
+        
 mess_exit:
 
         movb #$01, t4state
         movb #$01, MSG_NUM
         jsr clrcurs
-        tst F1_FLG
-        bne F1addressset
-        tst F2_FLG
-        bne F2addressset
         rts
         
         
@@ -662,8 +958,9 @@ ERR_DELAY:
        
         jsr clrcurs
         ldaa t4state
-        cmpa #$04
+        cmpa #$07
         ble mess_exit
+      
         tst COUNT_ERR
         beq err_exit
         decw COUNT_ERR
@@ -671,29 +968,12 @@ ERR_DELAY:
             
 err_exit:
         
-        tst LNUM
-        bne F2errexit
-        movb #$03, MSG_NUM
-        movb #$01, t4state
+        ldab WAVE_NUM           ;load wave number into b
+        addb #$03               ;add 3 to get the corresponding task 4 state
+        stab t4state            ;store message number in state
+        movb #$01, FIRSTCH
         rts
             
-F2errexit:  
-
-        movb #$04, MSG_NUM
-        movb #$01, t4state
-        rts
-         
-F1addressset:
-
-        ldaa #$08
-        jsr SETADDR
-        rts
-          
-F2addressset:
-
-        ldaa #$48
-        jsr SETADDR 
-        rts 
 
 clrcurs: ;resets the cursor address 
 
@@ -745,7 +1025,12 @@ SQUAREE3:	DC.B 'SQUARE WAVE          NO DIGITS ENTERED  ', $00	;message for when
 SEG15MSG:		DC.B '15-SEGMENT SINE WAVE NINT:     [1-->255]', $00	;message for when 15 seg sine is chosen
 SEG15E1:	DC.B '15-SEGMENT SINE WAVE MAGNITUDE TOO LARGE', $00	;message for when 15 seg sine MAGNITUDE TOO LARGE
 SEG15E2:	DC.B '15-SEGMENT SINE WAVE INVALID MAGNITUDE  ', $00	;message for when 15 seg sine INVALID MAGNITUDE  
-SEG15E3:	DC.B '15-SEGMENT SINE WAVE NO DIGITS ENTERED  ', $00	;message for when 15 seg sine NO DIGITS ENTERED  
+SEG15E3:	DC.B '15-SEGMENT SINE WAVE NO DIGITS ENTERED  ', $00	;message for when 15 seg sine NO DIGITS ENTERED
+
+BACKSPACE: DC.B ' ' , $00 
+E1:	DC.B 'MAGNITUDE TOO LARGE', $00	;message for when MAGNITUDE TOO LARGE
+E2:	DC.B 'INVALID MAGNITUDE  ', $00	;message for when INVALID MAGNITUDE  
+E3:	DC.B 'NO DIGITS ENTERED  ', $00	;message for when NO DIGITS ENTERED    
 
 SAWTOOTH:
 		DC.B 2 		; number of segments for SAWTOOTH
