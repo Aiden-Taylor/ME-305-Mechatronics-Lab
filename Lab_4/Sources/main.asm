@@ -59,6 +59,17 @@
 
 DEFAULT_RAM:  SECTION
 
+;params for t1 interrupt 
+Chan0 EQU $01
+TIOS  EQU $0040
+TCTL2 EQU $0049
+TFLG1 EQU $004E
+TMSK1 EQU $004C
+TSCR  EQU $0046
+TCNTH EQU $0044
+TC0   EQU $0050
+INTERVAL DS.W 1
+
 ;params for t2 
 
 SELECT_FLG DS.B 1 
@@ -73,7 +84,6 @@ KEY_BUFF DS.B 1
 
 ;params for t4
 MSG_NUM DS.B 1
-LNUM DS.B 1
 
 ;params for t5
 RUN DS.B 1
@@ -116,16 +126,6 @@ FIRSTCH DS.B 1
 COUNT_ERR DS.W 1
 TICKS_ERR DS.W 1
 
-;interrupt 
-Chan0 EQU $01
-TIOS  EQU $0040
-TCTL2 EQU $0049
-TFLG1 EQU $004E
-TMSK1 EQU $004C
-TSCR  EQU $0046
-TCNTH EQU $0044
-TC0   EQU $0050
-INTERVAL DS.W 1
 
 ;/------------------------------------------------------------------------------------\
 ;|  Main Program Code                                                                 |
@@ -147,7 +147,7 @@ top:
         jsr TASK_2
         jsr TASK_3
         jsr TASK_4
-        ;jsr TASK_5
+        jsr TASK_5
         bra top       
          
 spin:   bra   spin                     ; endless horizontal loop
@@ -186,6 +186,8 @@ t1s0:
 		   ldd TCNTH            ; read current timer count 
 		   addd INTERVAL        ; add interval to count 
 		   std TC0              ; load result into TC0
+		   
+		   movb #$01, t1state   ;set t1state to 1 
 
 t1s1:  
 
@@ -397,32 +399,26 @@ t2s4: ;BS
 
 t2s5: ;SELECT state 
  
-       
-       
+         
        movb #$01, SELECT_FLG                       ;set the SELECT_FLG to be true
-       clr DWAVE 
-       clr NINTOK 
-       movb #$01 , t2state                         ;set the state back to 1 
+       clr DWAVE                                   ;clear the display wave flag 
+       clr NINTOK                                  ;clear NINTOK 
        clr RUN                                     ;clear run 
        ldaa KEY_BUFF                               ;load a with whats in KEY_BUFF 
        suba #$30	  	                             ;subtract $30 to get the decimal value of the ascii code
        staa WAVE_NUM                               ;store the wave number 
        
       ;set the display state in task 4 
-       ldab WAVE_NUM           ;load wave number into b
-       addb #$03               ;add 3 to get the corresponding task 4 state
-       stab t4state            ;store message number in state 
-       
-      ;set state in task 5?
       
-      
+       adda #$03               ;add 3 to get the corresponding task 4 state
+       staa t4state            ;store message number in state 
        
+      ;set the state back to one, clear key flag, and exit 
+      
+       movb #$01 , t2state                         ;set the state back to 1 
        clr KEY_FLG                                 ;clear the key flag  
        bra exit2                                   ;exit
-
-
- ;not sure where to clear wave_num  
- 
+       
      
 ;________________________________________________________________________________________
 
@@ -555,7 +551,7 @@ t4s1:  ;hub
         rts                     ;exit 
  
 ;________________________________________________________________________________________
-t4s2:  ;initial message display 
+t4s2:  ;set screen 
 
         ldx #TOP
         ldaa #$00               ;set LCD position to 0
@@ -743,7 +739,7 @@ t5s2:  ;new wave
         inx
         inx
         stx SEGPTR ; store incremented SEGPTR for next segment
-        movb #$01, DPRMPT ; set flag for display of NINT prompt
+        ;movb #$01, DPRMPT ; set flag for display of NINT prompt
         movb #$03, t5state ; set next state
         t5s2a: rts
 
@@ -1008,26 +1004,15 @@ clearbuffer:
 TOP:  		DC.B '1: SAW, 2: SINE-7, 3: SQUARE, 4: SINE-15', $00	;message for the top of the screen
 
 SAWMSG:  		DC.B 'SAWTOOTH WAVE        NINT:     [1-->255]', $00	;message for when SAWTOOTH is chosen
-SAWE1: 		DC.B 'SAWTOOTH WAVE        MAGNITUDE TOO LARGE', $00	;message for when SAWTOOTH MAGNITUDE TOO LARGE
-SAWE2:  	DC.B 'SAWTOOTH WAVE        INVALID MAGNITUDE  ', $00	;message for when SAWTOOTH INVALID MAGNITUDE  
-SAWE3:  	DC.B 'SAWTOOTH WAVE        NO DIGITS ENTERED  ', $00	;message for when SAWTOOTH NO DIGITS ENTERED  
 
 SEG7MSG:	  	DC.B '7-SEGMENT SINE WAVE  NINT:     [1-->255]', $00	;message for when 7 Seg sine is chosen
-SEG7E1:		DC.B '7-SEGMENT SINE WAVE  MAGNITUDE TOO LARGE', $00	;message for when 7 Seg sine MAGNITUDE TOO LARGE
-SEG7E2:		DC.B '7-SEGMENT SINE WAVE  INVALID MAGNITUDE  ', $00	;message for when 7 Seg sine INVALID MAGNITUDE  
-SEG7E3:		DC.B '7-SEGMENT SINE WAVE  NO DIGITS ENTERED  ', $00	;message for when 7 Seg sine NO DIGITS ENTERED  
 
 SQUAREMSG:		DC.B 'SQUARE WAVE          NINT:     [1-->255]', $00	;message for when SQUARE is chosen
-SQUAREE1:	DC.B 'SQUARE WAVE          MAGNITUDE TOO LARGE', $00	;message for when SQUARE MAGNITUDE TOO LARGE
-SQUAREE2:	DC.B 'SQUARE WAVE          INVALID MAGNITUDE  ', $00	;message for when SQUARE INVALID MAGNITUDE  
-SQUAREE3:	DC.B 'SQUARE WAVE          NO DIGITS ENTERED  ', $00	;message for when SQUARE is chosen
 
 SEG15MSG:		DC.B '15-SEGMENT SINE WAVE NINT:     [1-->255]', $00	;message for when 15 seg sine is chosen
-SEG15E1:	DC.B '15-SEGMENT SINE WAVE MAGNITUDE TOO LARGE', $00	;message for when 15 seg sine MAGNITUDE TOO LARGE
-SEG15E2:	DC.B '15-SEGMENT SINE WAVE INVALID MAGNITUDE  ', $00	;message for when 15 seg sine INVALID MAGNITUDE  
-SEG15E3:	DC.B '15-SEGMENT SINE WAVE NO DIGITS ENTERED  ', $00	;message for when 15 seg sine NO DIGITS ENTERED
 
 BACKSPACE: DC.B ' ' , $00 
+
 E1:	DC.B 'MAGNITUDE TOO LARGE', $00	;message for when MAGNITUDE TOO LARGE
 E2:	DC.B 'INVALID MAGNITUDE  ', $00	;message for when INVALID MAGNITUDE  
 E3:	DC.B 'NO DIGITS ENTERED  ', $00	;message for when NO DIGITS ENTERED    
