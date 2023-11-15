@@ -68,8 +68,8 @@ DEFAULT_RAM:  SECTION
 
 MyCode:       SECTION
 main:   
-        ldd #$00FF
-        ldy #$00FF
+        ldd #$4001
+        ldy #$8000
         
         
 spin:   
@@ -85,18 +85,24 @@ spin:
 
 dbaddn:
          pshy
-         addd SP
+         addd sp
          bvs satu
+         
          puly
          rts
          
 satu:             
-         bmi satuneg
+         tsty
+         blt satuneg
          ldd #$7FFF
+         
+         puly
          rts
          
 satuneg: 
          ldd #$8000
+         
+         puly
          rts
 
 ;/------------------------------------------------------------------------------------\

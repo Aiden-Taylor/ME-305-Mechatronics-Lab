@@ -1,5 +1,5 @@
-*** EVALUATION ***
-PROGRAM "C:\Users\magoo\Downloads\Aiden's PS5\PS5\bin\Project.abs"
+
+PROGRAM "C:\Users\jcfay\Downloads\Mechatronics-Lab-main\Mechatronics-Lab-main\Aiden's PS5\PS5\bin\Project.abs"
 
 *********************************************************************************************
 TARGET SECTION
@@ -31,7 +31,7 @@ Section Name                    Size  Type     From       To       Segment
 .init                            227     R     0xC000     0xC0E2   ROM_C000
 .stack                          1024   R/W     0x2000     0x23FF   RAM
 LIBRARY_RAM                        3   R/W     0x1000     0x1002   LIBRAM
-MyCode                            29     R     0x4000     0x401C   ROM_4000
+MyCode                            33     R     0x4000     0x4020   ROM_4000
 Lib_Keypad                       117     R      0x800      0x874   EEPROM
 Lib_Encoder                      177     R      0x875      0x925   EEPROM
 Lib_Delay                         56     R      0x926      0x95D   EEPROM
@@ -39,7 +39,7 @@ main.asm__ORG00001                 2     R     0xFFFE     0xFFFF   .absSeg0
 ME305LIBV3.0_Lib_Interface.asm__ORG00001          2     R     0xFFCE     0xFFCF   .absSeg1
 
 Summary of section sizes per section type:
-READ_ONLY (R):         262 (dec:      610)
+READ_ONLY (R):         266 (dec:      614)
 READ_WRITE (R/W):      403 (dec:     1027)
 
 *********************************************************************************************
@@ -56,8 +56,8 @@ MODULE:                 -- main.asm.o --
      main                                      4000       6       6       1   MyCode      
      spin                                      4006       6       6       0   MyCode      
      dbaddn                                    400C       7       7       1   MyCode      
-     satu                                      4013       6       6       0   MyCode      
-     satuneg                                   4019       4       4       0   MyCode      
+     satu                                      4013       9       9       0   MyCode      
+     satuneg                                   401C       5       5       0   MyCode      
 - VARIABLES:
      VAR00001                                  FFFE       2       2       0   .text       
 MODULE:                 -- Lib_Delay.asm.o (ME305LIBV3.0.lib) --
@@ -104,7 +104,7 @@ MODULE:                 -- Lib_Interface.asm.o (ME305LIBV3.0.lib) --
 MODULE STATISTIC
   Name                                      Data   Code  Const
 ---------------------------------------------------------------------------------------------
-  main.asm.o                                   0     29      2
+  main.asm.o                                   0     33      2
   Lib_Delay.asm.o (ME305LIBV3.0.lib)           0     56      0
   Lib_Encoder.asm.o (ME305LIBV3.0.lib)         0    177      0
   Lib_Keypad.asm.o (ME305LIBV3.0.lib)          3    117      0
@@ -151,8 +151,8 @@ OBJECT LIST SORTED BY ADDRESS
      main                                      4000       6       6       1   MyCode      
      spin                                      4006       6       6       0   MyCode      
      dbaddn                                    400C       7       7       1   MyCode      
-     satu                                      4013       6       6       0   MyCode      
-     satuneg                                   4019       4       4       0   MyCode      
+     satu                                      4013       9       9       0   MyCode      
+     satuneg                                   401C       5       5       0   MyCode      
      Entry                                     C000       0       0       1   .init       
      _Startup                                  C000      13      19       0   .init       
      STARTUP_PLL                               C013      20      32       1   .init       
@@ -240,5 +240,5 @@ STATISTIC SECTION
 ExeFile:
 --------
 Number of blocks to be downloaded: 7
-Total size of all blocks to be downloaded: 610
+Total size of all blocks to be downloaded: 614
 
