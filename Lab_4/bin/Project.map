@@ -1,5 +1,5 @@
 
-PROGRAM "C:\Users\jcfay\Downloads\Lab_4\bin\Project.abs"
+PROGRAM "C:\Users\jcfay\OneDrive - Cal Poly\2. Mechatronics Lab\Lab_4\bin\Project.abs"
 
 *********************************************************************************************
 TARGET SECTION
@@ -32,9 +32,9 @@ Section Name                    Size  Type     From       To       Segment
 ---------------------------------------------------------------------------------------------
 .init                            227     R     0xC000     0xC0E2   ROM_C000
 .stack                          1024   R/W     0x2000     0x23FF   RAM
-.data                             48   R/W     0x2400     0x242F   RAM
+.data                             51   R/W     0x2400     0x2432   RAM
 LIBRARY_RAM                       35   R/W     0x1000     0x1022   LIBRAM
-MyCode                          2082     R     0x4000     0x4821   ROM_4000
+MyCode                          1655     R     0x4000     0x4676   ROM_4000
 Lib_DAC                           45     R      0x800      0x82C   EEPROM
 Lib_Keypad                       117     R      0x82D      0x8A1   EEPROM
 Lib_Encoder                      177     R      0x8A2      0x952   EEPROM
@@ -45,8 +45,8 @@ main.asm__ORG00002                 2     R     0xFFEE     0xFFEF   .absSeg1
 ME305LIBV3.0_Lib_Interface.asm__ORG00001          2     R     0xFFCE     0xFFCF   .absSeg2
 
 Summary of section sizes per section type:
-READ_ONLY (R):         CD8 (dec:     3288)
-READ_WRITE (R/W):      453 (dec:     1107)
+READ_ONLY (R):         B2D (dec:     2861)
+READ_WRITE (R/W):      456 (dec:     1110)
 
 *********************************************************************************************
 VECTOR-ALLOCATION SECTION
@@ -60,211 +60,199 @@ OBJECT-ALLOCATION SECTION
 MODULE:                 -- main.asm.o --
 - PROCEDURES:
      main                                      4000       F      15       1   MyCode      
-     top                                       400F       E      14       0   MyCode      
-     spin                                      401D       2       2       0   MyCode      
-     TASK_1                                    401F       8       8       1   MyCode      
-     t1s0                                      4027      1E      30       0   MyCode      
-     t1s1                                      4045       1       1       0   MyCode      
-     TASK_2                                    4046      22      34       1   MyCode      
-     t2s0                                      4068      15      21       0   MyCode      
-     t2s1                                      407D      23      35       0   MyCode      
-     skip_select                               40A0       D      13       0   MyCode      
-     skipBS                                    40AD       D      13       0   MyCode      
-     skipENT                                   40BA      14      20       0   MyCode      
-     skipDIGIT                                 40CE       7       7       0   MyCode      
-     t2s2                                      40D5       C      12       0   MyCode      
-     toomany                                   40E1       C      12       0   MyCode      
-     skip_e                                    40ED      1F      31       0   MyCode      
-     t2s3                                      410C       C      12       0   MyCode      
-     skip_NO_DIGITS                            4118       C      12       0   MyCode      
-     check_error                               4124      21      33       0   MyCode      
-     skipERROR                                 4145      1F      31       0   MyCode      
-     t2s4                                      4164      11      17       0   MyCode      
-     t2s5                                      4175      28      40       0   MyCode      
-     t2s6                                      419D       C      12       0   MyCode      
-     skip_toolarge                             41A9       9       9       0   MyCode      
-     skip_zeromag                              41B2       9       9       0   MyCode      
-     skip_zerodigits                           41BB       B      11       0   MyCode      
-     exit2                                     41C6       1       1       0   MyCode      
-     TASK_3                                    41C7       C      12       1   MyCode      
-     t3s0                                      41D3       9       9       0   MyCode      
-     t3s1                                      41DC      17      23       0   MyCode      
-     t3s2                                      41F3       A      10       0   MyCode      
-     exit3                                     41FD       1       1       0   MyCode      
-     TASK_4                                    41FE      3B      59       1   MyCode      
-     t4s0                                      4239      19      25       0   MyCode      
-     t4s1                                      4252      11      17       0   MyCode      
-     t4s2                                      4263      10      16       0   MyCode      
-     t4s3                                      4273       9       9       0   MyCode      
-     t4s4                                      427C       E      14       0   MyCode      
-     t4s5                                      428A       E      14       0   MyCode      
-     t4s6                                      4298       E      14       0   MyCode      
-     t4s7                                      42A6       E      14       0   MyCode      
-     t4s8                                      42B4       E      14       0   MyCode      
-     t4s9                                      42C2       E      14       0   MyCode      
-     t4s10                                     42D0       E      14       0   MyCode      
-     t4s11                                     42DE      16      22       0   MyCode      
-     char1                                     42F4      19      25       0   MyCode      
-     t5s0                                      430D       5       5       0   MyCode      
-     t5s1                                      4312      14      20       0   MyCode      
-     t5w1                                      4326       9       9       0   MyCode      
-     t5w2                                      432F       9       9       0   MyCode      
-     t5w3                                      4338       9       9       0   MyCode      
-     t5w4                                      4341       9       9       0   MyCode      
-     t5s2                                      434A      2F      47       0   MyCode      
-     t5s2a                                     4379       1       1       0   MyCode      
-     t5s3                                      437A       B      11       0   MyCode      
-     t5s4                                      4385      22      34       0   MyCode      
-     t5s4a                                     43A7      13      19       0   MyCode      
-     t5s4b                                     43BA       B      11       0   MyCode      
-     t5s4c                                     43C5       5       5       0   MyCode      
-     t5s4d                                     43CA       3       3       0   MyCode      
-     t5s4e                                     43CD       1       1       0   MyCode      
-     exit5                                     43CE       1       1       0   MyCode      
-     isubrout                                  43CF       F      15       1   MyCode      
-     NEW_CINT                                  43DE      11      17       0   MyCode      
-     NXT_INT                                   43EF       B      11       0   MyCode      
-     backspace                                 43FA      1C      28       1   MyCode      
-     bkspexit                                  4416       1       1       0   MyCode      
-     conversion                                4417      10      16       1   MyCode      
-     convloop                                  4427      28      40       0   MyCode      
-     ERR1                                      444F       7       7       0   MyCode      
-     loopfin                                   4456       A      10       0   MyCode      
-     cnvexit                                   4460       7       7       0   MyCode      
-     PUTCHAR1                                  4467       F      15       1   MyCode      
-     PUTCHAR                                   4476       F      15       8   MyCode      
-     mess_exit                                 4485       E      14       0   MyCode      
-     ERR_DELAY                                 4493      14      20       0   MyCode      
-     err_exit                                  44A7       E      14       0   MyCode      
-     clrcurs                                   44B5       8       8       3   MyCode      
-     clearbuffer                               44BD       E      14       4   MyCode      
-     TOP                                       44CB      29      41       1   MyCode      
-     SAWMSG                                    44F4      29      41       1   MyCode      
-     SAWE1                                     451D      29      41       0   MyCode      
-     SAWE2                                     4546      29      41       0   MyCode      
-     SAWE3                                     456F      29      41       0   MyCode      
-     SEG7MSG                                   4598      29      41       1   MyCode      
-     SEG7E1                                    45C1      29      41       0   MyCode      
-     SEG7E2                                    45EA      29      41       0   MyCode      
-     SEG7E3                                    4613      29      41       0   MyCode      
-     SQUAREMSG                                 463C      29      41       1   MyCode      
-     SQUAREE1                                  4665      29      41       0   MyCode      
-     SQUAREE2                                  468E      29      41       0   MyCode      
-     SQUAREE3                                  46B7      29      41       0   MyCode      
-     SEG15MSG                                  46E0      29      41       1   MyCode      
-     SEG15E1                                   4709      29      41       0   MyCode      
-     SEG15E2                                   4732      29      41       0   MyCode      
-     SEG15E3                                   475B      29      41       0   MyCode      
-     BACKSPACE                                 4784       2       2       1   MyCode      
-     E1                                        4786      14      20       1   MyCode      
-     E2                                        479A      14      20       1   MyCode      
-     E3                                        47AE      14      20       1   MyCode      
-     VAR00001                                  47C2       1       1       1   MyCode      
-     VAR00002                                  47C3       2       2       0   MyCode      
-     VAR00003                                  47C5       1       1       0   MyCode      
-     VAR00004                                  47C6       2       2       0   MyCode      
-     VAR00005                                  47C8       1       1       0   MyCode      
-     VAR00006                                  47C9       2       2       0   MyCode      
-     VAR00007                                  47CB       1       1       1   MyCode      
-     VAR00008                                  47CC       2       2       0   MyCode      
-     VAR00009                                  47CE       1       1       0   MyCode      
-     VAR00010                                  47CF       2       2       0   MyCode      
-     VAR00011                                  47D1       1       1       0   MyCode      
-     VAR00012                                  47D2       2       2       0   MyCode      
-     VAR00013                                  47D4       1       1       0   MyCode      
-     VAR00014                                  47D5       2       2       0   MyCode      
-     VAR00015                                  47D7       1       1       0   MyCode      
-     VAR00016                                  47D8       2       2       0   MyCode      
-     VAR00017                                  47DA       1       1       1   MyCode      
-     VAR00018                                  47DB       2       2       0   MyCode      
-     VAR00019                                  47DD       1       1       0   MyCode      
-     VAR00020                                  47DE       2       2       0   MyCode      
-     VAR00021                                  47E0       1       1       0   MyCode      
-     VAR00022                                  47E1       2       2       0   MyCode      
-     VAR00023                                  47E3       1       1       0   MyCode      
-     VAR00024                                  47E4       2       2       0   MyCode      
-     VAR00025                                  47E6       1       1       0   MyCode      
-     VAR00026                                  47E7       2       2       0   MyCode      
-     VAR00027                                  47E9       1       1       0   MyCode      
-     VAR00028                                  47EA       2       2       0   MyCode      
-     VAR00029                                  47EC       1       1       0   MyCode      
-     VAR00030                                  47ED       2       2       0   MyCode      
-     VAR00031                                  47EF       2       2       0   MyCode      
-     VAR00032                                  47F1       1       1       0   MyCode      
-     VAR00033                                  47F2       1       1       1   MyCode      
-     VAR00034                                  47F3       2       2       0   MyCode      
-     VAR00035                                  47F5       1       1       0   MyCode      
-     VAR00036                                  47F6       2       2       0   MyCode      
-     VAR00037                                  47F8       1       1       0   MyCode      
-     VAR00038                                  47F9       2       2       0   MyCode      
-     VAR00039                                  47FB       1       1       0   MyCode      
-     VAR00040                                  47FC       2       2       0   MyCode      
-     VAR00041                                  47FE       1       1       0   MyCode      
-     VAR00042                                  47FF       2       2       0   MyCode      
-     VAR00043                                  4801       1       1       0   MyCode      
-     VAR00044                                  4802       2       2       0   MyCode      
-     VAR00045                                  4804       1       1       0   MyCode      
-     VAR00046                                  4805       2       2       0   MyCode      
-     VAR00047                                  4807       1       1       0   MyCode      
-     VAR00048                                  4808       2       2       0   MyCode      
-     VAR00049                                  480A       1       1       0   MyCode      
-     VAR00050                                  480B       2       2       0   MyCode      
-     VAR00051                                  480D       1       1       0   MyCode      
-     VAR00052                                  480E       2       2       0   MyCode      
-     VAR00053                                  4810       1       1       0   MyCode      
-     VAR00054                                  4811       2       2       0   MyCode      
-     VAR00055                                  4813       1       1       0   MyCode      
-     VAR00056                                  4814       2       2       0   MyCode      
-     VAR00057                                  4816       1       1       0   MyCode      
-     VAR00058                                  4817       2       2       0   MyCode      
-     VAR00059                                  4819       1       1       0   MyCode      
-     VAR00060                                  481A       2       2       0   MyCode      
-     VAR00061                                  481C       1       1       0   MyCode      
-     VAR00062                                  481D       2       2       0   MyCode      
-     VAR00063                                  481F       1       1       0   MyCode      
-     VAR00064                                  4820       2       2       0   MyCode      
+     top                                       400F      11      17       0   MyCode      
+     spin                                      4020       2       2       0   MyCode      
+     TASK_1                                    4022       8       8       1   MyCode      
+     t1s0                                      402A      23      35       0   MyCode      
+     t1s1                                      404D       1       1       0   MyCode      
+     TASK_2                                    404E      22      34       1   MyCode      
+     t2s0                                      4070      18      24       0   MyCode      
+     t2s1                                      4088      23      35       0   MyCode      
+     skip_select                               40AB       D      13       0   MyCode      
+     skipBS                                    40B8       D      13       0   MyCode      
+     skipENT                                   40C5      14      20       0   MyCode      
+     skipDIGIT                                 40D9       7       7       0   MyCode      
+     t2s2                                      40E0       C      12       0   MyCode      
+     toomany                                   40EC       C      12       0   MyCode      
+     skip_e                                    40F8      1F      31       0   MyCode      
+     t2s3                                      4117       C      12       0   MyCode      
+     skip_NO_DIGITS                            4123       C      12       0   MyCode      
+     check_error                               412F      21      33       0   MyCode      
+     skipERROR                                 4150      18      24       0   MyCode      
+     t2s4                                      4168      11      17       0   MyCode      
+     t2s5                                      4179      27      39       0   MyCode      
+     t2s6                                      41A0       C      12       0   MyCode      
+     skip_toolarge                             41AC       9       9       0   MyCode      
+     skip_zeromag                              41B5       9       9       0   MyCode      
+     skip_zerodigits                           41BE       B      11       0   MyCode      
+     exit2                                     41C9       1       1       0   MyCode      
+     TASK_3                                    41CA       C      12       1   MyCode      
+     t3s0                                      41D6       C      12       0   MyCode      
+     t3s1                                      41E2      17      23       0   MyCode      
+     t3s2                                      41F9       A      10       0   MyCode      
+     exit3                                     4203       1       1       0   MyCode      
+     TASK_4                                    4204      3B      59       1   MyCode      
+     t4s0                                      423F      19      25       0   MyCode      
+     t4s1                                      4258      11      17       0   MyCode      
+     t4s2                                      4269      10      16       0   MyCode      
+     t4s3                                      4279      11      17       0   MyCode      
+     t4s4                                      428A       E      14       0   MyCode      
+     t4s5                                      4298       E      14       0   MyCode      
+     t4s6                                      42A6       E      14       0   MyCode      
+     t4s7                                      42B4       E      14       0   MyCode      
+     t4s8                                      42C2       E      14       0   MyCode      
+     t4s9                                      42D0       E      14       0   MyCode      
+     t4s10                                     42DE       E      14       0   MyCode      
+     t4s11                                     42EC      17      23       0   MyCode      
+     char1                                     4303       3       3       0   MyCode      
+     TASK_5                                    4306      16      22       1   MyCode      
+     t5s0                                      431C      29      41       0   MyCode      
+     t5s1                                      4345      14      20       0   MyCode      
+     t5w1                                      4359       C      12       0   MyCode      
+     t5w2                                      4365       C      12       0   MyCode      
+     t5w3                                      4371       C      12       0   MyCode      
+     t5w4                                      437D       C      12       0   MyCode      
+     t5s2                                      4389      2A      42       0   MyCode      
+     t5s2a                                     43B3       1       1       0   MyCode      
+     t5s3                                      43B4      10      16       0   MyCode      
+     t5s4                                      43C4      22      34       0   MyCode      
+     t5s4a                                     43E6      13      19       0   MyCode      
+     t5s4b                                     43F9       B      11       0   MyCode      
+     t5s4c                                     4404       5       5       0   MyCode      
+     t5s4d                                     4409       3       3       0   MyCode      
+     t5s4e                                     440C       1       1       0   MyCode      
+     exit5                                     440D       1       1       0   MyCode      
+     isubrout                                  440E      11      17       1   MyCode      
+     NEW_CINT                                  441F      11      17       0   MyCode      
+     NXT_INT                                   4430       B      11       0   MyCode      
+     backspace                                 443B      1C      28       1   MyCode      
+     bkspexit                                  4457       1       1       0   MyCode      
+     conversion                                4458      10      16       1   MyCode      
+     convloop                                  4468      28      40       0   MyCode      
+     ERR1                                      4490       7       7       0   MyCode      
+     loopfin                                   4497       A      10       0   MyCode      
+     cnvexit                                   44A1       7       7       0   MyCode      
+     PUTCHAR1                                  44A8       F      15       1   MyCode      
+     PUTCHAR                                   44B7       F      15       8   MyCode      
+     mess_exit                                 44C6       E      14       0   MyCode      
+     ERR_DELAY                                 44D4      14      20       0   MyCode      
+     err_exit                                  44E8       E      14       0   MyCode      
+     clrcurs                                   44F6       8       8       3   MyCode      
+     clearbuffer                               44FE       E      14       4   MyCode      
+     TOP                                       450C      29      41       1   MyCode      
+     SAWMSG                                    4535      29      41       1   MyCode      
+     SEG7MSG                                   455E      29      41       1   MyCode      
+     SQUAREMSG                                 4587      29      41       1   MyCode      
+     SEG15MSG                                  45B0      29      41       1   MyCode      
+     BACKSPACE                                 45D9       2       2       1   MyCode      
+     E1                                        45DB      14      20       1   MyCode      
+     E2                                        45EF      14      20       1   MyCode      
+     E3                                        4603      14      20       1   MyCode      
+     SAWTOOTH                                  4617       1       1       1   MyCode      
+     VAR00001                                  4618       2       2       0   MyCode      
+     VAR00002                                  461A       1       1       0   MyCode      
+     VAR00003                                  461B       2       2       0   MyCode      
+     VAR00004                                  461D       1       1       0   MyCode      
+     VAR00005                                  461E       2       2       0   MyCode      
+     SINE_7                                    4620       1       1       1   MyCode      
+     VAR00006                                  4621       2       2       0   MyCode      
+     VAR00007                                  4623       1       1       0   MyCode      
+     VAR00008                                  4624       2       2       0   MyCode      
+     VAR00009                                  4626       1       1       0   MyCode      
+     VAR00010                                  4627       2       2       0   MyCode      
+     VAR00011                                  4629       1       1       0   MyCode      
+     VAR00012                                  462A       2       2       0   MyCode      
+     VAR00013                                  462C       1       1       0   MyCode      
+     VAR00014                                  462D       2       2       0   MyCode      
+     VAR00015                                  462F       1       1       0   MyCode      
+     VAR00016                                  4630       2       2       0   MyCode      
+     VAR00017                                  4632       1       1       0   MyCode      
+     VAR00018                                  4633       2       2       0   MyCode      
+     VAR00019                                  4635       1       1       0   MyCode      
+     VAR00020                                  4636       2       2       0   MyCode      
+     SQUARE                                    4638       1       1       1   MyCode      
+     VAR00021                                  4639       2       2       0   MyCode      
+     VAR00022                                  463B       1       1       0   MyCode      
+     VAR00023                                  463C       2       2       0   MyCode      
+     VAR00024                                  463E       1       1       0   MyCode      
+     VAR00025                                  463F       2       2       0   MyCode      
+     VAR00026                                  4641       1       1       0   MyCode      
+     VAR00027                                  4642       2       2       0   MyCode      
+     VAR00028                                  4644       1       1       0   MyCode      
+     VAR00029                                  4645       2       2       0   MyCode      
+     SINE_15                                   4647       1       1       1   MyCode      
+     VAR00030                                  4648       2       2       0   MyCode      
+     VAR00031                                  464A       1       1       0   MyCode      
+     VAR00032                                  464B       2       2       0   MyCode      
+     VAR00033                                  464D       1       1       0   MyCode      
+     VAR00034                                  464E       2       2       0   MyCode      
+     VAR00035                                  4650       1       1       0   MyCode      
+     VAR00036                                  4651       2       2       0   MyCode      
+     VAR00037                                  4653       1       1       0   MyCode      
+     VAR00038                                  4654       2       2       0   MyCode      
+     VAR00039                                  4656       1       1       0   MyCode      
+     VAR00040                                  4657       2       2       0   MyCode      
+     VAR00041                                  4659       1       1       0   MyCode      
+     VAR00042                                  465A       2       2       0   MyCode      
+     VAR00043                                  465C       1       1       0   MyCode      
+     VAR00044                                  465D       2       2       0   MyCode      
+     VAR00045                                  465F       1       1       0   MyCode      
+     VAR00046                                  4660       2       2       0   MyCode      
+     VAR00047                                  4662       1       1       0   MyCode      
+     VAR00048                                  4663       2       2       0   MyCode      
+     VAR00049                                  4665       1       1       0   MyCode      
+     VAR00050                                  4666       2       2       0   MyCode      
+     VAR00051                                  4668       1       1       0   MyCode      
+     VAR00052                                  4669       2       2       0   MyCode      
+     VAR00053                                  466B       1       1       0   MyCode      
+     VAR00054                                  466C       2       2       0   MyCode      
+     VAR00055                                  466E       1       1       0   MyCode      
+     VAR00056                                  466F       2       2       0   MyCode      
+     VAR00057                                  4671       1       1       0   MyCode      
+     VAR00058                                  4672       2       2       0   MyCode      
+     VAR00059                                  4674       1       1       0   MyCode      
+     VAR00060                                  4675       2       2       0   MyCode      
 - VARIABLES:
-     SELECT_FLG                                2400       1       1       5   .data       
-     COUNT                                     2401       1       1      11   .data       
-     MM_ERR                                    2402       1       1       2   .data       
-     NINT                                      2403       2       2       3   .data       
-     WAVE_NUM                                  2405       1       1       4   .data       
-     KEY_FLG                                   2406       1       1      12   .data       
-     KEY_BUFF                                  2407       1       1       5   .data       
-     MSG_NUM                                   2408       1       1       6   .data       
-     LNUM                                      2409       1       1       0   .data       
-     RUN                                       240A       1       1       4   .data       
-     CINT                                      240B       2       2       3   .data       
-     NEWBTI                                    240D       1       1       3   .data       
-     WAVEPTR                                   240E       1       1       2   .data       
-     CSEG                                      240F       1       1       3   .data       
-     LSEG                                      2410       1       1       3   .data       
-     SEGPTR                                    2411       1       1       4   .data       
-     SEGINC                                    2412       1       1       3   .data       
-     VALUE                                     2413       1       1       4   .data       
-     DWAVE                                     2414       1       1       3   .data       
-     DPRMPT                                    2415       1       1       1   .data       
-     NINTOK                                    2416       1       1       3   .data       
-     t1state                                   2417       1       1       2   .data       
-     t2state                                   2418       1       1      14   .data       
-     t3state                                   2419       1       1       6   .data       
-     t4state                                   241A       1       1      11   .data       
-     t5state                                   241B       1       1      10   .data       
-     t6state                                   241C       1       1       0   .data       
-     t7state                                   241D       1       1       0   .data       
-     t8state                                   241E       1       1       0   .data       
-     RESULT                                    241F       2       2       6   .data       
-     BUFFER                                    2421       3       3       4   .data       
-     TMP                                       2424       1       1       3   .data       
-     ERR                                       2425       1       1       4   .data       
-     INPUT                                     2426       1       1       0   .data       
-     DPTR                                      2427       2       2       3   .data       
-     FIRSTCH                                   2429       1       1      12   .data       
-     COUNT_ERR                                 242A       2       2       3   .data       
-     TICKS_ERR                                 242C       2       2       2   .data       
-     INTERVAL                                  242E       2       2       3   .data       
-     VAR00065                                  FFFE       2       2       0   .text       
-     VAR00066                                  FFEE       2       2       0   .text       
+     INTERVAL                                  2400       2       2       3   .data       
+     SELECT_FLG                                2402       1       1       5   .data       
+     COUNT                                     2403       1       1      12   .data       
+     MM_ERR                                    2404       1       1       2   .data       
+     NINT                                      2405       2       2       4   .data       
+     WAVE_NUM                                  2407       1       1       4   .data       
+     KEY_FLG                                   2408       1       1      12   .data       
+     KEY_BUFF                                  2409       1       1       6   .data       
+     MSG_NUM                                   240A       1       1       7   .data       
+     RUN                                       240B       1       1       5   .data       
+     CINT                                      240C       2       2       4   .data       
+     NEWBTI                                    240E       1       1       3   .data       
+     WAVEPTR                                   240F       2       2       7   .data       
+     CSEG                                      2411       1       1       4   .data       
+     LSEG                                      2412       1       1       4   .data       
+     SEGPTR                                    2413       2       2       5   .data       
+     SEGINC                                    2415       2       2       4   .data       
+     VALUE                                     2417       2       2       5   .data       
+     DWAVE                                     2419       1       1       3   .data       
+     DPRMPT                                    241A       1       1       0   .data       
+     NINTOK                                    241B       1       1       4   .data       
+     t1state                                   241C       1       1       3   .data       
+     t2state                                   241D       1       1      14   .data       
+     t3state                                   241E       1       1       5   .data       
+     t4state                                   241F       1       1      11   .data       
+     t5state                                   2420       1       1      10   .data       
+     t6state                                   2421       1       1       0   .data       
+     t7state                                   2422       1       1       0   .data       
+     t8state                                   2423       1       1       0   .data       
+     RESULT                                    2424       2       2       6   .data       
+     BUFFER                                    2426       3       3       4   .data       
+     TMP                                       2429       1       1       3   .data       
+     ERR                                       242A       1       1       4   .data       
+     INPUT                                     242B       1       1       0   .data       
+     DPTR                                      242C       2       2       3   .data       
+     FIRSTCH                                   242E       1       1      12   .data       
+     COUNT_ERR                                 242F       2       2       3   .data       
+     TICKS_ERR                                 2431       2       2       2   .data       
+     VAR00061                                  FFFE       2       2       0   .text       
+     VAR00062                                  FFEE       2       2       0   .text       
 MODULE:                 -- Lib_DAC.asm.o (ME305LIBV3.0.lib) --
 - PROCEDURES:
      OUTDACA                                    800       6       6       1   Lib_DAC     
@@ -305,7 +293,7 @@ MODULE:                 -- Lib_LCD.asm.o (ME305LIBV3.0.lib) --
      DISP_ON                                    A23       8       8       1   Lib_LCD     
      CURSOR_ON                                  A2B       8       8       1   Lib_LCD     
      CURSOR_OFF                                 A33       1       1       2   Lib_LCD     
-     SETADDR                                    A34       E      14      21   Lib_LCD     
+     SETADDR                                    A34       E      14      22   Lib_LCD     
      GETADDR                                    A42       C      12       4   Lib_LCD     
      CLRSCREEN                                  A4E      1C      28       3   Lib_LCD     
      OUTCHAR_AT                                 A6A       3       3       0   Lib_LCD     
@@ -356,7 +344,7 @@ MODULE:                 -- Lib_Interface.asm.o (ME305LIBV3.0.lib) --
 MODULE STATISTIC
   Name                                      Data   Code  Const
 ---------------------------------------------------------------------------------------------
-  main.asm.o                                  48   2082      4
+  main.asm.o                                  51   1655      4
   Lib_DAC.asm.o (ME305LIBV3.0.lib)             0     45      0
   Lib_Delay.asm.o (ME305LIBV3.0.lib)           0     56      0
   Lib_Encoder.asm.o (ME305LIBV3.0.lib)         0    177      0
@@ -370,12 +358,12 @@ MODULE STATISTIC
 SECTION USE IN OBJECT-ALLOCATION SECTION
 ---------------------------------------------------------------------------------------------
 SECTION: ".text"
-  VAR00035 VAR00066 VAR00065 
+  VAR00035 VAR00062 VAR00061 
 SECTION: ".data"
-  SELECT_FLG COUNT MM_ERR NINT WAVE_NUM KEY_FLG KEY_BUFF MSG_NUM LNUM RUN CINT 
-  NEWBTI WAVEPTR CSEG LSEG SEGPTR SEGINC VALUE DWAVE DPRMPT NINTOK t1state 
+  INTERVAL SELECT_FLG COUNT MM_ERR NINT WAVE_NUM KEY_FLG KEY_BUFF MSG_NUM RUN 
+  CINT NEWBTI WAVEPTR CSEG LSEG SEGPTR SEGINC VALUE DWAVE DPRMPT NINTOK t1state 
   t2state t3state t4state t5state t6state t7state t8state RESULT BUFFER TMP ERR 
-  INPUT DPTR FIRSTCH COUNT_ERR TICKS_ERR INTERVAL 
+  INPUT DPTR FIRSTCH COUNT_ERR TICKS_ERR 
 SECTION: ".init"
   Entry _Startup STARTUP_PLL STARTUP_SPI0 STARTUP_ATD1 STARTUP_PWM STARTUP_IO 
 SECTION: "LIBRARY_RAM"
@@ -386,20 +374,19 @@ SECTION: "MyCode"
   skipDIGIT t2s2 toomany skip_e t2s3 skip_NO_DIGITS check_error skipERROR t2s4 
   t2s5 t2s6 skip_toolarge skip_zeromag skip_zerodigits exit2 TASK_3 t3s0 t3s1 
   t3s2 exit3 TASK_4 t4s0 t4s1 t4s2 t4s3 t4s4 t4s5 t4s6 t4s7 t4s8 t4s9 t4s10 
-  t4s11 char1 t5s0 t5s1 t5w1 t5w2 t5w3 t5w4 t5s2 t5s2a t5s3 t5s4 t5s4a t5s4b 
-  t5s4c t5s4d t5s4e exit5 isubrout NEW_CINT NXT_INT backspace bkspexit 
+  t4s11 char1 TASK_5 t5s0 t5s1 t5w1 t5w2 t5w3 t5w4 t5s2 t5s2a t5s3 t5s4 t5s4a 
+  t5s4b t5s4c t5s4d t5s4e exit5 isubrout NEW_CINT NXT_INT backspace bkspexit 
   conversion convloop ERR1 loopfin cnvexit PUTCHAR1 PUTCHAR mess_exit ERR_DELAY 
-  err_exit clrcurs clearbuffer TOP SAWMSG SAWE1 SAWE2 SAWE3 SEG7MSG SEG7E1 
-  SEG7E2 SEG7E3 SQUAREMSG SQUAREE1 SQUAREE2 SQUAREE3 SEG15MSG SEG15E1 SEG15E2 
-  SEG15E3 BACKSPACE E1 E2 E3 VAR00001 VAR00002 VAR00003 VAR00004 VAR00005 
+  err_exit clrcurs clearbuffer TOP SAWMSG SEG7MSG SQUAREMSG SEG15MSG BACKSPACE 
+  E1 E2 E3 SAWTOOTH VAR00001 VAR00002 VAR00003 VAR00004 VAR00005 SINE_7 
   VAR00006 VAR00007 VAR00008 VAR00009 VAR00010 VAR00011 VAR00012 VAR00013 
-  VAR00014 VAR00015 VAR00016 VAR00017 VAR00018 VAR00019 VAR00020 VAR00021 
-  VAR00022 VAR00023 VAR00024 VAR00025 VAR00026 VAR00027 VAR00028 VAR00029 
-  VAR00030 VAR00031 VAR00032 VAR00033 VAR00034 VAR00035 VAR00036 VAR00037 
-  VAR00038 VAR00039 VAR00040 VAR00041 VAR00042 VAR00043 VAR00044 VAR00045 
-  VAR00046 VAR00047 VAR00048 VAR00049 VAR00050 VAR00051 VAR00052 VAR00053 
-  VAR00054 VAR00055 VAR00056 VAR00057 VAR00058 VAR00059 VAR00060 VAR00061 
-  VAR00062 VAR00063 VAR00064 
+  VAR00014 VAR00015 VAR00016 VAR00017 VAR00018 VAR00019 VAR00020 SQUARE 
+  VAR00021 VAR00022 VAR00023 VAR00024 VAR00025 VAR00026 VAR00027 VAR00028 
+  VAR00029 SINE_15 VAR00030 VAR00031 VAR00032 VAR00033 VAR00034 VAR00035 
+  VAR00036 VAR00037 VAR00038 VAR00039 VAR00040 VAR00041 VAR00042 VAR00043 
+  VAR00044 VAR00045 VAR00046 VAR00047 VAR00048 VAR00049 VAR00050 VAR00051 
+  VAR00052 VAR00053 VAR00054 VAR00055 VAR00056 VAR00057 VAR00058 VAR00059 
+  VAR00060 
 SECTION: "Lib_DAC"
   OUTDACA OUTDACB OUTDAC 
 SECTION: "Lib_Keypad"
@@ -437,7 +424,7 @@ OBJECT LIST SORTED BY ADDRESS
      DISP_ON                                    A23       8       8       1   Lib_LCD     
      CURSOR_ON                                  A2B       8       8       1   Lib_LCD     
      CURSOR_OFF                                 A33       1       1       2   Lib_LCD     
-     SETADDR                                    A34       E      14      21   Lib_LCD     
+     SETADDR                                    A34       E      14      22   Lib_LCD     
      GETADDR                                    A42       C      12       4   Lib_LCD     
      CLRSCREEN                                  A4E      1C      28       3   Lib_LCD     
      OUTCHAR_AT                                 A6A       3       3       0   Lib_LCD     
@@ -473,209 +460,197 @@ OBJECT LIST SORTED BY ADDRESS
      LKP_NULL                                  101C       1       1       0   LIBRARY_RAM 
      LKI_BUF                                   101D       5       5       2   LIBRARY_RAM 
      LKI_NULL                                  1022       1       1       0   LIBRARY_RAM 
-     SELECT_FLG                                2400       1       1       5   .data       
-     COUNT                                     2401       1       1      11   .data       
-     MM_ERR                                    2402       1       1       2   .data       
-     NINT                                      2403       2       2       3   .data       
-     WAVE_NUM                                  2405       1       1       4   .data       
-     KEY_FLG                                   2406       1       1      12   .data       
-     KEY_BUFF                                  2407       1       1       5   .data       
-     MSG_NUM                                   2408       1       1       6   .data       
-     LNUM                                      2409       1       1       0   .data       
-     RUN                                       240A       1       1       4   .data       
-     CINT                                      240B       2       2       3   .data       
-     NEWBTI                                    240D       1       1       3   .data       
-     WAVEPTR                                   240E       1       1       2   .data       
-     CSEG                                      240F       1       1       3   .data       
-     LSEG                                      2410       1       1       3   .data       
-     SEGPTR                                    2411       1       1       4   .data       
-     SEGINC                                    2412       1       1       3   .data       
-     VALUE                                     2413       1       1       4   .data       
-     DWAVE                                     2414       1       1       3   .data       
-     DPRMPT                                    2415       1       1       1   .data       
-     NINTOK                                    2416       1       1       3   .data       
-     t1state                                   2417       1       1       2   .data       
-     t2state                                   2418       1       1      14   .data       
-     t3state                                   2419       1       1       6   .data       
-     t4state                                   241A       1       1      11   .data       
-     t5state                                   241B       1       1      10   .data       
-     t6state                                   241C       1       1       0   .data       
-     t7state                                   241D       1       1       0   .data       
-     t8state                                   241E       1       1       0   .data       
-     RESULT                                    241F       2       2       6   .data       
-     BUFFER                                    2421       3       3       4   .data       
-     TMP                                       2424       1       1       3   .data       
-     ERR                                       2425       1       1       4   .data       
-     INPUT                                     2426       1       1       0   .data       
-     DPTR                                      2427       2       2       3   .data       
-     FIRSTCH                                   2429       1       1      12   .data       
-     COUNT_ERR                                 242A       2       2       3   .data       
-     TICKS_ERR                                 242C       2       2       2   .data       
-     INTERVAL                                  242E       2       2       3   .data       
+     INTERVAL                                  2400       2       2       3   .data       
+     SELECT_FLG                                2402       1       1       5   .data       
+     COUNT                                     2403       1       1      12   .data       
+     MM_ERR                                    2404       1       1       2   .data       
+     NINT                                      2405       2       2       4   .data       
+     WAVE_NUM                                  2407       1       1       4   .data       
+     KEY_FLG                                   2408       1       1      12   .data       
+     KEY_BUFF                                  2409       1       1       6   .data       
+     MSG_NUM                                   240A       1       1       7   .data       
+     RUN                                       240B       1       1       5   .data       
+     CINT                                      240C       2       2       4   .data       
+     NEWBTI                                    240E       1       1       3   .data       
+     WAVEPTR                                   240F       2       2       7   .data       
+     CSEG                                      2411       1       1       4   .data       
+     LSEG                                      2412       1       1       4   .data       
+     SEGPTR                                    2413       2       2       5   .data       
+     SEGINC                                    2415       2       2       4   .data       
+     VALUE                                     2417       2       2       5   .data       
+     DWAVE                                     2419       1       1       3   .data       
+     DPRMPT                                    241A       1       1       0   .data       
+     NINTOK                                    241B       1       1       4   .data       
+     t1state                                   241C       1       1       3   .data       
+     t2state                                   241D       1       1      14   .data       
+     t3state                                   241E       1       1       5   .data       
+     t4state                                   241F       1       1      11   .data       
+     t5state                                   2420       1       1      10   .data       
+     t6state                                   2421       1       1       0   .data       
+     t7state                                   2422       1       1       0   .data       
+     t8state                                   2423       1       1       0   .data       
+     RESULT                                    2424       2       2       6   .data       
+     BUFFER                                    2426       3       3       4   .data       
+     TMP                                       2429       1       1       3   .data       
+     ERR                                       242A       1       1       4   .data       
+     INPUT                                     242B       1       1       0   .data       
+     DPTR                                      242C       2       2       3   .data       
+     FIRSTCH                                   242E       1       1      12   .data       
+     COUNT_ERR                                 242F       2       2       3   .data       
+     TICKS_ERR                                 2431       2       2       2   .data       
      main                                      4000       F      15       1   MyCode      
-     top                                       400F       E      14       0   MyCode      
-     spin                                      401D       2       2       0   MyCode      
-     TASK_1                                    401F       8       8       1   MyCode      
-     t1s0                                      4027      1E      30       0   MyCode      
-     t1s1                                      4045       1       1       0   MyCode      
-     TASK_2                                    4046      22      34       1   MyCode      
-     t2s0                                      4068      15      21       0   MyCode      
-     t2s1                                      407D      23      35       0   MyCode      
-     skip_select                               40A0       D      13       0   MyCode      
-     skipBS                                    40AD       D      13       0   MyCode      
-     skipENT                                   40BA      14      20       0   MyCode      
-     skipDIGIT                                 40CE       7       7       0   MyCode      
-     t2s2                                      40D5       C      12       0   MyCode      
-     toomany                                   40E1       C      12       0   MyCode      
-     skip_e                                    40ED      1F      31       0   MyCode      
-     t2s3                                      410C       C      12       0   MyCode      
-     skip_NO_DIGITS                            4118       C      12       0   MyCode      
-     check_error                               4124      21      33       0   MyCode      
-     skipERROR                                 4145      1F      31       0   MyCode      
-     t2s4                                      4164      11      17       0   MyCode      
-     t2s5                                      4175      28      40       0   MyCode      
-     t2s6                                      419D       C      12       0   MyCode      
-     skip_toolarge                             41A9       9       9       0   MyCode      
-     skip_zeromag                              41B2       9       9       0   MyCode      
-     skip_zerodigits                           41BB       B      11       0   MyCode      
-     exit2                                     41C6       1       1       0   MyCode      
-     TASK_3                                    41C7       C      12       1   MyCode      
-     t3s0                                      41D3       9       9       0   MyCode      
-     t3s1                                      41DC      17      23       0   MyCode      
-     t3s2                                      41F3       A      10       0   MyCode      
-     exit3                                     41FD       1       1       0   MyCode      
-     TASK_4                                    41FE      3B      59       1   MyCode      
-     t4s0                                      4239      19      25       0   MyCode      
-     t4s1                                      4252      11      17       0   MyCode      
-     t4s2                                      4263      10      16       0   MyCode      
-     t4s3                                      4273       9       9       0   MyCode      
-     t4s4                                      427C       E      14       0   MyCode      
-     t4s5                                      428A       E      14       0   MyCode      
-     t4s6                                      4298       E      14       0   MyCode      
-     t4s7                                      42A6       E      14       0   MyCode      
-     t4s8                                      42B4       E      14       0   MyCode      
-     t4s9                                      42C2       E      14       0   MyCode      
-     t4s10                                     42D0       E      14       0   MyCode      
-     t4s11                                     42DE      16      22       0   MyCode      
-     char1                                     42F4      19      25       0   MyCode      
-     t5s0                                      430D       5       5       0   MyCode      
-     t5s1                                      4312      14      20       0   MyCode      
-     t5w1                                      4326       9       9       0   MyCode      
-     t5w2                                      432F       9       9       0   MyCode      
-     t5w3                                      4338       9       9       0   MyCode      
-     t5w4                                      4341       9       9       0   MyCode      
-     t5s2                                      434A      2F      47       0   MyCode      
-     t5s2a                                     4379       1       1       0   MyCode      
-     t5s3                                      437A       B      11       0   MyCode      
-     t5s4                                      4385      22      34       0   MyCode      
-     t5s4a                                     43A7      13      19       0   MyCode      
-     t5s4b                                     43BA       B      11       0   MyCode      
-     t5s4c                                     43C5       5       5       0   MyCode      
-     t5s4d                                     43CA       3       3       0   MyCode      
-     t5s4e                                     43CD       1       1       0   MyCode      
-     exit5                                     43CE       1       1       0   MyCode      
-     isubrout                                  43CF       F      15       1   MyCode      
-     NEW_CINT                                  43DE      11      17       0   MyCode      
-     NXT_INT                                   43EF       B      11       0   MyCode      
-     backspace                                 43FA      1C      28       1   MyCode      
-     bkspexit                                  4416       1       1       0   MyCode      
-     conversion                                4417      10      16       1   MyCode      
-     convloop                                  4427      28      40       0   MyCode      
-     ERR1                                      444F       7       7       0   MyCode      
-     loopfin                                   4456       A      10       0   MyCode      
-     cnvexit                                   4460       7       7       0   MyCode      
-     PUTCHAR1                                  4467       F      15       1   MyCode      
-     PUTCHAR                                   4476       F      15       8   MyCode      
-     mess_exit                                 4485       E      14       0   MyCode      
-     ERR_DELAY                                 4493      14      20       0   MyCode      
-     err_exit                                  44A7       E      14       0   MyCode      
-     clrcurs                                   44B5       8       8       3   MyCode      
-     clearbuffer                               44BD       E      14       4   MyCode      
-     TOP                                       44CB      29      41       1   MyCode      
-     SAWMSG                                    44F4      29      41       1   MyCode      
-     SAWE1                                     451D      29      41       0   MyCode      
-     SAWE2                                     4546      29      41       0   MyCode      
-     SAWE3                                     456F      29      41       0   MyCode      
-     SEG7MSG                                   4598      29      41       1   MyCode      
-     SEG7E1                                    45C1      29      41       0   MyCode      
-     SEG7E2                                    45EA      29      41       0   MyCode      
-     SEG7E3                                    4613      29      41       0   MyCode      
-     SQUAREMSG                                 463C      29      41       1   MyCode      
-     SQUAREE1                                  4665      29      41       0   MyCode      
-     SQUAREE2                                  468E      29      41       0   MyCode      
-     SQUAREE3                                  46B7      29      41       0   MyCode      
-     SEG15MSG                                  46E0      29      41       1   MyCode      
-     SEG15E1                                   4709      29      41       0   MyCode      
-     SEG15E2                                   4732      29      41       0   MyCode      
-     SEG15E3                                   475B      29      41       0   MyCode      
-     BACKSPACE                                 4784       2       2       1   MyCode      
-     E1                                        4786      14      20       1   MyCode      
-     E2                                        479A      14      20       1   MyCode      
-     E3                                        47AE      14      20       1   MyCode      
-     VAR00001                                  47C2       1       1       1   MyCode      
-     VAR00002                                  47C3       2       2       0   MyCode      
-     VAR00003                                  47C5       1       1       0   MyCode      
-     VAR00004                                  47C6       2       2       0   MyCode      
-     VAR00005                                  47C8       1       1       0   MyCode      
-     VAR00006                                  47C9       2       2       0   MyCode      
-     VAR00007                                  47CB       1       1       1   MyCode      
-     VAR00008                                  47CC       2       2       0   MyCode      
-     VAR00009                                  47CE       1       1       0   MyCode      
-     VAR00010                                  47CF       2       2       0   MyCode      
-     VAR00011                                  47D1       1       1       0   MyCode      
-     VAR00012                                  47D2       2       2       0   MyCode      
-     VAR00013                                  47D4       1       1       0   MyCode      
-     VAR00014                                  47D5       2       2       0   MyCode      
-     VAR00015                                  47D7       1       1       0   MyCode      
-     VAR00016                                  47D8       2       2       0   MyCode      
-     VAR00017                                  47DA       1       1       1   MyCode      
-     VAR00018                                  47DB       2       2       0   MyCode      
-     VAR00019                                  47DD       1       1       0   MyCode      
-     VAR00020                                  47DE       2       2       0   MyCode      
-     VAR00021                                  47E0       1       1       0   MyCode      
-     VAR00022                                  47E1       2       2       0   MyCode      
-     VAR00023                                  47E3       1       1       0   MyCode      
-     VAR00024                                  47E4       2       2       0   MyCode      
-     VAR00025                                  47E6       1       1       0   MyCode      
-     VAR00026                                  47E7       2       2       0   MyCode      
-     VAR00027                                  47E9       1       1       0   MyCode      
-     VAR00028                                  47EA       2       2       0   MyCode      
-     VAR00029                                  47EC       1       1       0   MyCode      
-     VAR00030                                  47ED       2       2       0   MyCode      
-     VAR00031                                  47EF       2       2       0   MyCode      
-     VAR00032                                  47F1       1       1       0   MyCode      
-     VAR00033                                  47F2       1       1       1   MyCode      
-     VAR00034                                  47F3       2       2       0   MyCode      
-     VAR00035                                  47F5       1       1       0   MyCode      
-     VAR00036                                  47F6       2       2       0   MyCode      
-     VAR00037                                  47F8       1       1       0   MyCode      
-     VAR00038                                  47F9       2       2       0   MyCode      
-     VAR00039                                  47FB       1       1       0   MyCode      
-     VAR00040                                  47FC       2       2       0   MyCode      
-     VAR00041                                  47FE       1       1       0   MyCode      
-     VAR00042                                  47FF       2       2       0   MyCode      
-     VAR00043                                  4801       1       1       0   MyCode      
-     VAR00044                                  4802       2       2       0   MyCode      
-     VAR00045                                  4804       1       1       0   MyCode      
-     VAR00046                                  4805       2       2       0   MyCode      
-     VAR00047                                  4807       1       1       0   MyCode      
-     VAR00048                                  4808       2       2       0   MyCode      
-     VAR00049                                  480A       1       1       0   MyCode      
-     VAR00050                                  480B       2       2       0   MyCode      
-     VAR00051                                  480D       1       1       0   MyCode      
-     VAR00052                                  480E       2       2       0   MyCode      
-     VAR00053                                  4810       1       1       0   MyCode      
-     VAR00054                                  4811       2       2       0   MyCode      
-     VAR00055                                  4813       1       1       0   MyCode      
-     VAR00056                                  4814       2       2       0   MyCode      
-     VAR00057                                  4816       1       1       0   MyCode      
-     VAR00058                                  4817       2       2       0   MyCode      
-     VAR00059                                  4819       1       1       0   MyCode      
-     VAR00060                                  481A       2       2       0   MyCode      
-     VAR00061                                  481C       1       1       0   MyCode      
-     VAR00062                                  481D       2       2       0   MyCode      
-     VAR00063                                  481F       1       1       0   MyCode      
-     VAR00064                                  4820       2       2       0   MyCode      
+     top                                       400F      11      17       0   MyCode      
+     spin                                      4020       2       2       0   MyCode      
+     TASK_1                                    4022       8       8       1   MyCode      
+     t1s0                                      402A      23      35       0   MyCode      
+     t1s1                                      404D       1       1       0   MyCode      
+     TASK_2                                    404E      22      34       1   MyCode      
+     t2s0                                      4070      18      24       0   MyCode      
+     t2s1                                      4088      23      35       0   MyCode      
+     skip_select                               40AB       D      13       0   MyCode      
+     skipBS                                    40B8       D      13       0   MyCode      
+     skipENT                                   40C5      14      20       0   MyCode      
+     skipDIGIT                                 40D9       7       7       0   MyCode      
+     t2s2                                      40E0       C      12       0   MyCode      
+     toomany                                   40EC       C      12       0   MyCode      
+     skip_e                                    40F8      1F      31       0   MyCode      
+     t2s3                                      4117       C      12       0   MyCode      
+     skip_NO_DIGITS                            4123       C      12       0   MyCode      
+     check_error                               412F      21      33       0   MyCode      
+     skipERROR                                 4150      18      24       0   MyCode      
+     t2s4                                      4168      11      17       0   MyCode      
+     t2s5                                      4179      27      39       0   MyCode      
+     t2s6                                      41A0       C      12       0   MyCode      
+     skip_toolarge                             41AC       9       9       0   MyCode      
+     skip_zeromag                              41B5       9       9       0   MyCode      
+     skip_zerodigits                           41BE       B      11       0   MyCode      
+     exit2                                     41C9       1       1       0   MyCode      
+     TASK_3                                    41CA       C      12       1   MyCode      
+     t3s0                                      41D6       C      12       0   MyCode      
+     t3s1                                      41E2      17      23       0   MyCode      
+     t3s2                                      41F9       A      10       0   MyCode      
+     exit3                                     4203       1       1       0   MyCode      
+     TASK_4                                    4204      3B      59       1   MyCode      
+     t4s0                                      423F      19      25       0   MyCode      
+     t4s1                                      4258      11      17       0   MyCode      
+     t4s2                                      4269      10      16       0   MyCode      
+     t4s3                                      4279      11      17       0   MyCode      
+     t4s4                                      428A       E      14       0   MyCode      
+     t4s5                                      4298       E      14       0   MyCode      
+     t4s6                                      42A6       E      14       0   MyCode      
+     t4s7                                      42B4       E      14       0   MyCode      
+     t4s8                                      42C2       E      14       0   MyCode      
+     t4s9                                      42D0       E      14       0   MyCode      
+     t4s10                                     42DE       E      14       0   MyCode      
+     t4s11                                     42EC      17      23       0   MyCode      
+     char1                                     4303       3       3       0   MyCode      
+     TASK_5                                    4306      16      22       1   MyCode      
+     t5s0                                      431C      29      41       0   MyCode      
+     t5s1                                      4345      14      20       0   MyCode      
+     t5w1                                      4359       C      12       0   MyCode      
+     t5w2                                      4365       C      12       0   MyCode      
+     t5w3                                      4371       C      12       0   MyCode      
+     t5w4                                      437D       C      12       0   MyCode      
+     t5s2                                      4389      2A      42       0   MyCode      
+     t5s2a                                     43B3       1       1       0   MyCode      
+     t5s3                                      43B4      10      16       0   MyCode      
+     t5s4                                      43C4      22      34       0   MyCode      
+     t5s4a                                     43E6      13      19       0   MyCode      
+     t5s4b                                     43F9       B      11       0   MyCode      
+     t5s4c                                     4404       5       5       0   MyCode      
+     t5s4d                                     4409       3       3       0   MyCode      
+     t5s4e                                     440C       1       1       0   MyCode      
+     exit5                                     440D       1       1       0   MyCode      
+     isubrout                                  440E      11      17       1   MyCode      
+     NEW_CINT                                  441F      11      17       0   MyCode      
+     NXT_INT                                   4430       B      11       0   MyCode      
+     backspace                                 443B      1C      28       1   MyCode      
+     bkspexit                                  4457       1       1       0   MyCode      
+     conversion                                4458      10      16       1   MyCode      
+     convloop                                  4468      28      40       0   MyCode      
+     ERR1                                      4490       7       7       0   MyCode      
+     loopfin                                   4497       A      10       0   MyCode      
+     cnvexit                                   44A1       7       7       0   MyCode      
+     PUTCHAR1                                  44A8       F      15       1   MyCode      
+     PUTCHAR                                   44B7       F      15       8   MyCode      
+     mess_exit                                 44C6       E      14       0   MyCode      
+     ERR_DELAY                                 44D4      14      20       0   MyCode      
+     err_exit                                  44E8       E      14       0   MyCode      
+     clrcurs                                   44F6       8       8       3   MyCode      
+     clearbuffer                               44FE       E      14       4   MyCode      
+     TOP                                       450C      29      41       1   MyCode      
+     SAWMSG                                    4535      29      41       1   MyCode      
+     SEG7MSG                                   455E      29      41       1   MyCode      
+     SQUAREMSG                                 4587      29      41       1   MyCode      
+     SEG15MSG                                  45B0      29      41       1   MyCode      
+     BACKSPACE                                 45D9       2       2       1   MyCode      
+     E1                                        45DB      14      20       1   MyCode      
+     E2                                        45EF      14      20       1   MyCode      
+     E3                                        4603      14      20       1   MyCode      
+     SAWTOOTH                                  4617       1       1       1   MyCode      
+     VAR00001                                  4618       2       2       0   MyCode      
+     VAR00002                                  461A       1       1       0   MyCode      
+     VAR00003                                  461B       2       2       0   MyCode      
+     VAR00004                                  461D       1       1       0   MyCode      
+     VAR00005                                  461E       2       2       0   MyCode      
+     SINE_7                                    4620       1       1       1   MyCode      
+     VAR00006                                  4621       2       2       0   MyCode      
+     VAR00007                                  4623       1       1       0   MyCode      
+     VAR00008                                  4624       2       2       0   MyCode      
+     VAR00009                                  4626       1       1       0   MyCode      
+     VAR00010                                  4627       2       2       0   MyCode      
+     VAR00011                                  4629       1       1       0   MyCode      
+     VAR00012                                  462A       2       2       0   MyCode      
+     VAR00013                                  462C       1       1       0   MyCode      
+     VAR00014                                  462D       2       2       0   MyCode      
+     VAR00015                                  462F       1       1       0   MyCode      
+     VAR00016                                  4630       2       2       0   MyCode      
+     VAR00017                                  4632       1       1       0   MyCode      
+     VAR00018                                  4633       2       2       0   MyCode      
+     VAR00019                                  4635       1       1       0   MyCode      
+     VAR00020                                  4636       2       2       0   MyCode      
+     SQUARE                                    4638       1       1       1   MyCode      
+     VAR00021                                  4639       2       2       0   MyCode      
+     VAR00022                                  463B       1       1       0   MyCode      
+     VAR00023                                  463C       2       2       0   MyCode      
+     VAR00024                                  463E       1       1       0   MyCode      
+     VAR00025                                  463F       2       2       0   MyCode      
+     VAR00026                                  4641       1       1       0   MyCode      
+     VAR00027                                  4642       2       2       0   MyCode      
+     VAR00028                                  4644       1       1       0   MyCode      
+     VAR00029                                  4645       2       2       0   MyCode      
+     SINE_15                                   4647       1       1       1   MyCode      
+     VAR00030                                  4648       2       2       0   MyCode      
+     VAR00031                                  464A       1       1       0   MyCode      
+     VAR00032                                  464B       2       2       0   MyCode      
+     VAR00033                                  464D       1       1       0   MyCode      
+     VAR00034                                  464E       2       2       0   MyCode      
+     VAR00035                                  4650       1       1       0   MyCode      
+     VAR00036                                  4651       2       2       0   MyCode      
+     VAR00037                                  4653       1       1       0   MyCode      
+     VAR00038                                  4654       2       2       0   MyCode      
+     VAR00039                                  4656       1       1       0   MyCode      
+     VAR00040                                  4657       2       2       0   MyCode      
+     VAR00041                                  4659       1       1       0   MyCode      
+     VAR00042                                  465A       2       2       0   MyCode      
+     VAR00043                                  465C       1       1       0   MyCode      
+     VAR00044                                  465D       2       2       0   MyCode      
+     VAR00045                                  465F       1       1       0   MyCode      
+     VAR00046                                  4660       2       2       0   MyCode      
+     VAR00047                                  4662       1       1       0   MyCode      
+     VAR00048                                  4663       2       2       0   MyCode      
+     VAR00049                                  4665       1       1       0   MyCode      
+     VAR00050                                  4666       2       2       0   MyCode      
+     VAR00051                                  4668       1       1       0   MyCode      
+     VAR00052                                  4669       2       2       0   MyCode      
+     VAR00053                                  466B       1       1       0   MyCode      
+     VAR00054                                  466C       2       2       0   MyCode      
+     VAR00055                                  466E       1       1       0   MyCode      
+     VAR00056                                  466F       2       2       0   MyCode      
+     VAR00057                                  4671       1       1       0   MyCode      
+     VAR00058                                  4672       2       2       0   MyCode      
+     VAR00059                                  4674       1       1       0   MyCode      
+     VAR00060                                  4675       2       2       0   MyCode      
      Entry                                     C000       0       0       1   .init       
      _Startup                                  C000      13      19       0   .init       
      STARTUP_PLL                               C013      20      32       1   .init       
@@ -684,8 +659,8 @@ OBJECT LIST SORTED BY ADDRESS
      STARTUP_PWM                               C092      1D      29       0   .init       
      STARTUP_IO                                C0AF      34      52       1   .init       
      VAR00035                                  FFCE       2       2       0   .text       
-     VAR00066                                  FFEE       2       2       0   .text       
-     VAR00065                                  FFFE       2       2       0   .text       
+     VAR00062                                  FFEE       2       2       0   .text       
+     VAR00061                                  FFFE       2       2       0   .text       
 
 *********************************************************************************************
 UNUSED-OBJECTS SECTION
@@ -751,11 +726,12 @@ UPDATELCD_L1              USES SETADDR LVREF_BUF OUTSTRING LVACT_BUF LERR_BUF
                                 LEFF_BUF 
 UPDATELCD_L2              USES SETADDR LKP_BUF OUTSTRING LKI_BUF 
 main                      USES t1state t2state t3state t4state t5state 
-top                       USES TASK_1 TASK_2 TASK_3 TASK_4 
+top                       USES TASK_1 TASK_2 TASK_3 TASK_4 TASK_5 
 TASK_1                    USES t1state 
-t1s0                      USES INTERVAL 
+t1s0                      USES INTERVAL t1state 
 TASK_2                    USES t2state 
-t2s0                      USES SELECT_FLG KEY_FLG COUNT clearbuffer t2state 
+t2s0                      USES SELECT_FLG KEY_FLG COUNT WAVE_NUM clearbuffer 
+                                t2state 
 t2s1                      USES KEY_FLG KEY_BUFF SELECT_FLG t2state 
 skip_select               USES t2state 
 skipBS                    USES t2state 
@@ -763,29 +739,29 @@ skipENT                   USES t2state
 skipDIGIT                 USES KEY_FLG 
 t2s2                      USES COUNT SELECT_FLG 
 toomany                   USES KEY_FLG t2state 
-skip_e                    USES BUFFER COUNT KEY_BUFF KEY_FLG t2state t4state 
+skip_e                    USES BUFFER COUNT KEY_BUFF KEY_FLG t2state MSG_NUM 
 t2s3                      USES clrcurs COUNT 
 skip_NO_DIGITS            USES conversion NINT COUNT BUFFER 
 check_error               USES t2state MM_ERR NINT KEY_FLG clearbuffer 
                                 CURSOR_OFF 
-skipERROR                 USES RUN clearbuffer CURSOR_OFF KEY_FLG SELECT_FLG 
-                                DWAVE NINTOK 
+skipERROR                 USES clearbuffer CURSOR_OFF KEY_FLG SELECT_FLG DWAVE 
+                                NINTOK 
 t2s4                      USES t4state t2state KEY_FLG 
-t2s5                      USES SELECT_FLG DWAVE NINTOK t2state RUN KEY_BUFF 
-                                WAVE_NUM t4state KEY_FLG 
+t2s5                      USES SELECT_FLG DWAVE NINTOK RUN KEY_BUFF WAVE_NUM 
+                                t4state t2state KEY_FLG 
 t2s6                      USES MM_ERR MSG_NUM 
 skip_toolarge             USES MSG_NUM 
 skip_zeromag              USES MSG_NUM 
 skip_zerodigits           USES t2state clearbuffer KEY_FLG 
 TASK_3                    USES t3state 
-t3s0                      USES INITKEY t3state 
+t3s0                      USES INITKEY KEY_BUFF t3state 
 t3s1                      USES LKEY_FLG GETCHAR KEY_BUFF KEY_FLG t3state 
 t3s2                      USES KEY_FLG t3state 
 TASK_4                    USES t4state 
 t4s0                      USES INITLCD FIRSTCH SETADDR TICKS_ERR t4state 
 t4s1                      USES FIRSTCH MSG_NUM t4state 
 t4s2                      USES TOP FIRSTCH PUTCHAR 
-t4s3                      USES backspace t3state 
+t4s3                      USES COUNT SETADDR backspace t4state 
 t4s4                      USES SAWMSG FIRSTCH PUTCHAR 
 t4s5                      USES SEG7MSG FIRSTCH PUTCHAR 
 t4s6                      USES SQUAREMSG FIRSTCH PUTCHAR 
@@ -795,16 +771,18 @@ t4s9                      USES E2 FIRSTCH PUTCHAR
 t4s10                     USES E3 FIRSTCH PUTCHAR 
 t4s11                     USES COUNT SETADDR CURSOR_ON KEY_BUFF OUTCHAR 
                                 t4state 
-char1                     USES PUTCHAR1 t5state 
-t5s0                      USES t5state 
+char1                     USES PUTCHAR1 
+TASK_5                    USES t5state 
+t5s0                      USES RUN CSEG LSEG SEGINC SEGPTR NINT CINT NINTOK 
+                                WAVEPTR VALUE t5state 
 t5s1                      USES WAVE_NUM 
-t5w1                      USES VAR00001 t5state 
-t5w2                      USES VAR00007 t5state 
-t5w3                      USES VAR00017 t5state 
-t5w4                      USES VAR00033 t5state 
+t5w1                      USES SAWTOOTH WAVEPTR t5state 
+t5w2                      USES SINE_7 WAVEPTR t5state 
+t5w3                      USES SQUARE WAVEPTR t5state 
+t5w4                      USES SINE_15 WAVEPTR t5state 
 t5s2                      USES DWAVE WAVEPTR CSEG VALUE LSEG SEGINC SEGPTR 
-                                DPRMPT t5state 
-t5s3                      USES NINTOK t5state 
+                                t5state 
+t5s3                      USES NINTOK RUN t5state 
 t5s4                      USES RUN NEWBTI LSEG CSEG WAVEPTR SEGPTR 
 t5s4a                     USES SEGPTR LSEG SEGINC 
 t5s4b                     USES VALUE SEGINC 
@@ -861,5 +839,5 @@ STATISTIC SECTION
 ExeFile:
 --------
 Number of blocks to be downloaded: 10
-Total size of all blocks to be downloaded: 3288
+Total size of all blocks to be downloaded: 2861
 

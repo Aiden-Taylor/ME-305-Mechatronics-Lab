@@ -89,12 +89,12 @@ MSG_NUM DS.B 1
 RUN DS.B 1
 CINT DS.W 1 
 NEWBTI DS.B 1  
-WAVEPTR DS.B 1  
+WAVEPTR DS.W 1  
 CSEG DS.B 1 
 LSEG DS.B 1  
-SEGPTR DS.B 1  
-SEGINC DS.B 1  
-VALUE DS.B 1 
+SEGPTR DS.W 1  
+SEGINC DS.W 1  
+VALUE DS.W 1 
 DWAVE DS.B 1 
 DPRMPT DS.B 1
 NINTOK DS.B 1 
@@ -147,7 +147,9 @@ top:
         jsr TASK_2
         jsr TASK_3
         jsr TASK_4
+        ;bgnd
         jsr TASK_5
+        ;movb #$01, NEWBTI
         bra top       
          
 spin:   bra   spin                     ; endless horizontal loop
@@ -166,7 +168,7 @@ t1s0:
 
 ;Step 1: Pre-initialization
 		   
-		   movw #$03E8, INTERVAL ; Determine the number of bus clock counts that corresponds to 0.1 msec.
+		   movw #1000, INTERVAL ; Determine the number of bus clock counts that corresponds to 0.1 msec.
 		   
 ;Step 2: Timer Initialization
 		   
@@ -224,6 +226,7 @@ t2s0: ; init TASK_2
         clr SELECT_FLG 
         clr KEY_FLG 
         clr COUNT
+        clr WAVE_NUM
         jsr clearbuffer                             ;clear buffer
         movb #$01, t2state                          ;set next state
         lbra exit2                                  ;exit
@@ -325,7 +328,7 @@ skip_e:
         inc COUNT                                   ;increment count 
         clr KEY_FLG                                 ;set key flag to 0 to acknowledge KEYPAD
         movb #$01 , t2state                         ;set the state back to 1  
-        movb #$0B, t4state                          ;set state in display task to echo the char
+        movb #$0B, MSG_NUM                          ;set state in display task to echo the char
         lbra exit2                                  ;exit 
 
 ;__________________________________________________________________________________
@@ -377,12 +380,11 @@ skipERROR:
 
 ;if there are no errors, clear the select and key flags and buffer and exit     
       
-      movb #$01, RUN 
       jsr clearbuffer                               ;set run to be true if there are no errors 
       jsr CURSOR_OFF 
       clr KEY_FLG 
       clr SELECT_FLG  
-      movb #$01, DWAVE 
+      clr DWAVE 
       movb #$01, NINTOK 
       lbra exit2                                    ;exit
 
@@ -401,7 +403,7 @@ t2s5: ;SELECT state
  
          
        movb #$01, SELECT_FLG                       ;set the SELECT_FLG to be true
-       clr DWAVE                                   ;clear the display wave flag 
+       movb #$01, DWAVE                                   ;clear the display wave flag 
        clr NINTOK                                  ;clear NINTOK 
        clr RUN                                     ;clear run 
        ldaa KEY_BUFF                               ;load a with whats in KEY_BUFF 
@@ -476,6 +478,7 @@ exit2:
 t3s0:   ;init
         
         jsr INITKEY       ;initialize keypad
+        clr KEY_BUFF
         movb #$01, t3state
         rts
         
@@ -563,8 +566,11 @@ t4s2:  ;set screen
 ;________________________________________________________________________________________
 t4s3:   ;backspace 
 
+        ldaa COUNT 
+        adda #$5B
+        jsr SETADDR 
         jsr backspace           ;go to backspace subroutine 
-        movb #$01, t3state      ;reset to state 1 
+        movb #$01, t4state      ;reset to state 1 
         rts                     ;exit      
         
 ;________________________________________________________________________________________
@@ -624,7 +630,7 @@ t4s9:   ;invalid magnitude message
         
         ldx #E2
         ldaa #$55               ;set LCD position to 61
-        tst FIRSTCH 
+        tst FIRSTCH                       
         bne char1
         jsr PUTCHAR
         rts 
@@ -640,14 +646,17 @@ t4s10:  ;no digits entered message
         rts 
 ;________________________________________________________________________________________
 t4s11:   ;echo 
-
+        
         ldaa COUNT 
         adda #$5A
         jsr SETADDR 
         jsr CURSOR_ON 
+        
         ldab KEY_BUFF           ;load accumulator b with whats in KEY_BUFF 
         jsr OUTCHAR             ;display the inputted digit 
         movb #$01, t4state      ;reset to state 1
+        
+        rts
 
 char1: 
   
@@ -674,6 +683,16 @@ char1:
 
 t5s0:   ;init    
         
+        clr RUN 
+        clr CSEG
+        clr LSEG 
+        clrw SEGINC 
+        clrw SEGPTR
+        clrw NINT
+        clrw CINT  
+        clr NINTOK 
+        clrw WAVEPTR 
+        clrw VALUE  
         movb #$01, t5state                   
 
 ;________________________________________________________________________________________
@@ -682,6 +701,7 @@ t5s1:  ;wait for wave
              
 ;set the corrrect wave address  
        
+       ;bgnd
        ldaa WAVE_NUM 
        lbeq exit5 
        deca 
@@ -695,26 +715,28 @@ t5s1:  ;wait for wave
        rts
        
 t5w1:
-
        ldx #SAWTOOTH
+       stx WAVEPTR
        movb #$02, t5state
        rts  
 
 t5w2: 
-
-       ldx #SQUARE
+       ldx #SINE_7
+       stx WAVEPTR
        movb #$02, t5state
        rts 
+  
       
-t5w3: 
-
-       ldx #SINE_7
+t5w3:       
+       ldx #SQUARE
+       stx WAVEPTR
        movb #$02, t5state
        rts 
 
 t5w4: 
 
        ldx #SINE_15
+       stx WAVEPTR
        movb #$02, t5state
        rts  
       
@@ -726,6 +748,7 @@ t5s2:  ;new wave
 
 
         tst DWAVE ; wait for display of wave message
+        ;bgnd
         bne t5s2a
         ldx WAVEPTR ; point to start of data for wave
         movb 0,X, CSEG ; get number of wave segments
@@ -750,40 +773,42 @@ t5s2:  ;new wave
 t5s3:  ;wait for NINT        
         
      ;set run if correct nint
+     ;needs more stuff 
      
         tst NINTOK
         beq exit5 
+        movb #$01, RUN 
         movb #$04, t5state 
         rts 
          
 ;________________________________________________________________________________________
 
 t5s4:  ;Display wave  
-
+        ;bgnd
         tst RUN
-        beq t5s4c ; do not update function generator if RUN=0
+        beq t5s4c         ; do not update function generator if RUN=0
         tst NEWBTI
-        beq t5s4e ; do not update function generator if NEWBTI=0
-        dec LSEG ; decrement segment length counter
-        bne t5s4b ; if not at end, simply update DAC output
-        dec CSEG ; if at end, decrement segment counter
-        bne t5s4a ; if not last segment, skip reinit of wave
-        ldx WAVEPTR ; point to start of data for wave
-        movb 0,X, CSEG ; get number of wave segments
-        inx ; inc SEGPTR to start of first segment
+        beq t5s4e         ; do not update function generator if NEWBTI=0
+        dec LSEG          ; decrement segment length counter
+        bne t5s4b         ; if not at end, simply update DAC output
+        dec CSEG          ; if at end, decrement segment counter
+        bne t5s4a         ; if not last segment, skip reinit of wave
+        ldx WAVEPTR       ; point to start of data for wave
+        movb 0,X, CSEG    ; get number of wave segments
+        inx               ; inc SEGPTR to start of first segment
         inx
         inx
-        stx SEGPTR ; store incremented SEGPTR
+        stx SEGPTR        ; store incremented SEGPTR
         t5s4a: ldx SEGPTR ; point to start of new segment
-        movb 0,X, LSEG ; initialize segment length counter
-        movw 1,X, SEGINC ; load segment increment
-        inx ; inc SEGPTR to next segment
+        movb 0,X, LSEG    ; initialize segment length counter
+        movw 1,X, SEGINC  ; load segment increment
+        inx               ; inc SEGPTR to next segment
         inx
         inx
-        stx SEGPTR ; store incremented SEGPTR
-        t5s4b: ldd VALUE ; get current DAC input value
-        addd SEGINC ; add SEGINC to current DAC input value
-        std VALUE ; store incremented DAC input value
+        stx SEGPTR        ; store incremented SEGPTR
+        t5s4b: ldd VALUE  ; get current DAC input value
+        addd SEGINC       ; add SEGINC to current DAC input value
+        std VALUE         ; store incremented DAC input value
         bra t5s4d
         t5s4c: movb #$01, t5state ; set next state
         t5s4d: clr NEWBTI
@@ -803,21 +828,21 @@ t5s4:  ;Display wave
 isubrout:
 
 ;first check run is one 
-
+       ;bgnd
        tst RUN 
        beq NXT_INT
 
 ;next check if CINT is zero 
         
-       tst CINT 
+       tstw CINT 
        beq NEW_CINT 
-       dec CINT  
+       decw CINT  
        bra NXT_INT 
         
 NEW_CINT: 
 
-       ldaa NINT 
-       staa CINT 
+       ldd NINT 
+       std CINT 
        movb #$01, NEWBTI 
        ldd VALUE 
        jsr OUTDACA 
@@ -827,7 +852,7 @@ NXT_INT:
         ldd TC0                ; read current timer count  
         addd INTERVAL          ; add interval 
         std TC0                ; store result  
-        bset TFLG1, %11111111  ; clear timer channel 0 flag by writing a 1 to it
+        bset TFLG1, $01        ; clear timer channel 0 flag by writing a 1 to it
        
         
         rti
@@ -1017,77 +1042,73 @@ E1:	DC.B 'MAGNITUDE TOO LARGE', $00	;message for when MAGNITUDE TOO LARGE
 E2:	DC.B 'INVALID MAGNITUDE  ', $00	;message for when INVALID MAGNITUDE  
 E3:	DC.B 'NO DIGITS ENTERED  ', $00	;message for when NO DIGITS ENTERED    
 
-SAWTOOTH:
-		DC.B 2 		; number of segments for SAWTOOTH
-		DC.W 0	 	; initial DAC input value
-		DC.B 19	 	; length for segment_1
-		DC.W 172 	; increment for segment_1
-		DC.B 1	 	; length for segment_2
-		DC.W -3268 	; increment for segment_2
+SAWTOOTH:	DC.B 2 		; number of segments for SAWTOOTH
+      		DC.W 3276	 	; initial DAC input value
+      		DC.B 1	 	; length for segment_1
+      		DC.W 3276 	; increment for segment_1
+      		DC.B 9	 	; length for segment_2
+      		DC.W -364 	; increment for segment_2
 		
-SQUARE:
-		DC.B 4 		; number of segments for TRIANGLE
-		DC.W 0	 	; initial DAC input value
-		DC.B 9	 	; length for segment_1
-		DC.W 0 		; increment for segment_1
-		DC.B 1	 	; length for segment_2
-		DC.W 3268 	; increment for segment_2
-		DC.B 9	 	; length for segment_3
-		DC.W 0	 	; increment for segment_3
-		DC.B 9	 	; length for segment_4
-		DC.W -3268 	; increment for segment_4
+SINE_7:   DC.B 7		; number of segments for SINE_7
+      		DC.W 2048	; initial DAC input value
+      		DC.B 25		; length for segment_1
+      		DC.W 33		; increment for segment_1
+      		DC.B 50		; length for segment_2
+      		DC.W 8		; increment for segment_2
+      		DC.B 50		; length for segment_3
+      		DC.W -8		; increment for segment_3
+      		DC.B 50		; length for segment_4
+      		DC.W -33	; increment for segment_4
+      		DC.B 50		; length for segment_5
+      		DC.W -8		; increment for segment_5
+      		DC.B 50		; length for segment_6
+      		DC.W 8		; increment for segment_6
+      		DC.B 25		; length for segment_7
+      		DC.W 33		; increment for segment_7
+  		
+SQUARE:	  DC.B 4 		; number of segments for SQUARE
+      		DC.W 0	 	; initial DAC input value
+      		DC.B 9	 	; length for segment_1
+      		DC.W 0 		; increment for segment_1
+      		DC.B 1	 	; length for segment_2
+      		DC.W 3268 ; increment for segment_2
+      		DC.B 9	 	; length for segment_3
+      		DC.W 0	 	; increment for segment_3
+      		DC.B 1	 	; length for segment_4
+      		DC.W -3268 	; increment for segment_4
 		
-SINE_7:
-		DC.B 7		; number of segments for SINE_7
-		DC.W 2048	; initial DAC input value
-		DC.B 25		; length for segment_1
-		DC.W 33		; increment for segment_1
-		DC.B 50		; length for segment_2
-		DC.W 8		; increment for segment_2
-		DC.B 50		; length for segment_3
-		DC.W -8		; increment for segment_3
-		DC.B 50		; length for segment_4
-		DC.W -33	; increment for segment_4
-		DC.B 50		; length for segment_5
-		DC.W -8		; increment for segment_5
-		DC.B 50		; length for segment_6
-		DC.W 8		; increment for segment_6
-		DC.W 33		; length for segment_7
-		DC.B 25		; increment for segment_7
-		
-SINE_15:
-		DC.B 15 	; number of segments for SINE
-		DC.W 2048 	; initial DAC input value
-		DC.B 10		; length for segment_1
-		DC.W 41 	; increment for segment_1
-		DC.B 21 	; length for segment_2
-		DC.W 37 	; increment for segment_2
-		DC.B 21 	; length for segment_3
-		DC.W 25 	; increment for segment_3
-		DC.B 21 	; length for segment_4
-		DC.W 9 		; increment for segment_4
-		DC.B 21 	; length for segment_5
-		DC.W -9 	; increment for segment_5
-		DC.B 21 	; length for segment_6
-		DC.W -25 	; increment for segment_6
-		DC.B 21 	; length for segment_7
-		DC.W -37 	; increment for segment_7
-		DC.B 20 	; length for segment_8
-		DC.W -41 	; increment for segment_8
-		DC.B 21 	; length for segment_9
-		DC.W -37 	; increment for segment_9
-		DC.B 21 	; length for segment_10
-		DC.W -25 	; increment for segment_10
-		DC.B 21 	; length for segment_11
-		DC.W -9 	; increment for segment_11
-		DC.B 21 	; length for segment_12
-		DC.W 9 		; increment for segment_12
-		DC.B 21 	; length for segment_13
-		DC.W 25 	; increment for segment_13
-		DC.B 21 	; length for segment_14
-		DC.W 37 	; increment for segment_14
-		DC.B 10 	; length for segment_15
-		DC.W 41 	; increment for segment_15
+SINE_15:	DC.B 15 	; number of segments for SINE
+      		DC.W 2048 ; initial DAC input value
+      		DC.B 10		; length for segment_1
+      		DC.W 41 	; increment for segment_1
+      		DC.B 21 	; length for segment_2
+      		DC.W 37 	; increment for segment_2
+      		DC.B 21 	; length for segment_3
+      		DC.W 25 	; increment for segment_3
+      		DC.B 21 	; length for segment_4
+      		DC.W 9 		; increment for segment_4
+      		DC.B 21 	; length for segment_5
+      		DC.W -9 	; increment for segment_5
+      		DC.B 21 	; length for segment_6
+      		DC.W -25 	; increment for segment_6
+      		DC.B 21 	; length for segment_7
+      		DC.W -37 	; increment for segment_7
+      		DC.B 20 	; length for segment_8
+      		DC.W -41 	; increment for segment_8
+      		DC.B 21 	; length for segment_9
+      		DC.W -37 	; increment for segment_9
+      		DC.B 21 	; length for segment_10
+      		DC.W -25 	; increment for segment_10
+      		DC.B 21 	; length for segment_11
+      		DC.W -9 	; increment for segment_11
+      		DC.B 21 	; length for segment_12
+      		DC.W 9 		; increment for segment_12
+      		DC.B 21 	; length for segment_13
+      		DC.W 25 	; increment for segment_13
+      		DC.B 21 	; length for segment_14
+      		DC.W 37 	; increment for segment_14
+      		DC.B 10 	; length for segment_15
+      		DC.W 41 	; increment for segment_15
 
 ;/------------------------------------------------------------------------------------\
 ;| Vectors                                                                            |
