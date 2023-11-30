@@ -1,0 +1,100 @@
+;***************************************************************************************************           
+;* Delay Routines                                                                                  * 
+;*************************************************************************************************** 
+;* Summary:                                                                                        *
+;*  The following is a summary of the I/O functionality provided in the ME 305 library. These      *
+;*  commands are in the form of subroutines that have been placed in the Libraries folder of the   *
+;*  Codewarrior Project provided during Lab 1.                                                     *
+;*  IMPORTANT NOTE: Many of the MCU pins are in connected to hardware and should not be used.      *
+;*  +	Pins 4 - 6 of PORT M and all of PORT B are used for communication with the LCD module.       *
+;*  +	Pin 7 of PORT J, and the pins 0 - 5 of PORT K are used for communication with the keypad.    *
+;*  +	Pins 1 and 2 of PORT H are used for SPI communication with the encoder counter and DAC       *
+;*  +	Pins 4 - 7 of PORT A and AN10 are used with the motor driver.                                *
+;*  None of these pins should be used for anything besides interacting with the associated         *
+;*  hardware described above.                                                                      *
+;*                                                                                                 *
+;* Author: Charlie Refvem                                                                          *
+;*  Cal Poly University                                                                            *
+;*  2015 - 2016                                                                                    *
+;*                                                                                                 *
+;* Revision History:                                                                               *
+;*  WRM 09/15/16                                                                                   * 
+;*   - Reversed comments on TSCR1, which had been inadvertently reversed                           * 
+;*  WRM & CTR 09/18/16                                                                             *
+;*   - Switched DELAY_MILLI to use timer channel 1 [TC1] interrupts                                *
+;*  WRM 01/04/18                                                                                   *
+;*   - Reversed comments on TSCR1, which had been inadvertently reversed (prior revision corrected *
+;*       the inadvertently reversed TSCR1 comments in only one of two places)                      *
+;*   - Changed DELAY_MILLI and DELAY_MICRO to set TSFRZ to stop timer in FREEZE mode               *
+;*  WRM 03/09/2020                                                                                 *
+;*   - updated a few comments that had fallen out of date with prior edits                         *
+;*   - WARNING: DELAY_MILLI still changed the TIMER Module prescaler: USE with CAUTION             *
+;*  WRM 03/09/2020                                                                                 *
+;*   - removed the prescaler change in DELAY_MILLI and corrected what I think was an error in      *
+;*       the previous DELAY count: 4 x 2500 =1000, but 10,000 clock ticks make 1 msec              *
+;*  ToDo:                                                                                          *
+;*   -                                                                                             *
+;***************************************************************************************************
+;---------------------------------------------------------------------------------------------------
+            INCLUDE 'derivative.inc' 
+            
+            XDEF  DELAY_MICRO, DELAY_MILLI
+
+Lib_Delay:  SECTION            
+                        
+DELAY_MICRO:
+            movb  #%10110000,TSCR1                    ; Enable Timer
+;                   ||||\__/
+;                   ||||  \____________________________ Don't Care 
+;                   ||| \______________________________ TFFCA= 1 (a read/write from an input capture causes CnF to clear)
+;                   || \_______________________________ TSFRZ= 1 (Stops timer from running in freeze mode)
+;                   | \________________________________ TSWAIT=0 (Allows timer to continue running in wait mode)
+;                    \_________________________________ TEN=1 (Enable counter)
+
+
+            movb  #%00000000,TSCR2     
+;                   |\_/|\_/
+;                   | | |  \____________________________ PR2:PR1:PR0=001 (Prescaler set to 1)
+;                   | |  \______________________________ TCRE=0 (Counter reset is inhibited  and counter free runs) 
+;                   |  \________________________________ Don't Care
+;                    \__________________________________ TOI=0 (interrupt inhibited)
+                                                       
+            bset  TIOS,#mTIOS_IOS1                     ; Timer channel 0 acts as output compare
+            
+            ldd   TCNT                                 ; Load D with current timer count
+MICRO_Loop: 
+            addd  #10                                  ; Add to it the desired count
+            std   TC1                                  ; Store that value in T compare 0
+            brclr TFLG1,#mTFLG1_C1F,*                  ; Loop in place until Compare flag is high
+            dbne  x,MICRO_Loop
+            rts
+; End subroutine
+
+
+                        
+DELAY_MILLI:
+            movb  #%10110000,TSCR1                    ; Enable Timer
+;                   ||||\__/
+;                   ||||  \____________________________ Don't Care 
+;                   ||| \______________________________ TFFCA= 1 (a read/write from an input capture causes CnF to clear)
+;                   || \_______________________________ TSFRZ= 1 (Stops timer from running in freeze mode)
+;                   | \________________________________ TSWAIT=0 (Allows timer to continue running in wait mode)
+;                    \_________________________________ TEN=1 (Enable counter)
+
+
+            movb  #%00000000,TSCR2     
+;                   |\_/|\_/
+;                   | | |  \____________________________ PR2:PR1:PR0=010 (Prescaler set to 1)
+;                   | |  \______________________________ TCRE=0 (Counter reset is inhibited  and counter free runs) 
+;                   |  \________________________________ Don't Care
+;                    \__________________________________ TOI=0 (interrupt inhibited)
+                                                       
+            bset  TIOS,#mTIOS_IOS1                     ; Timer channel 0 acts as output compare
+            
+            ldd   TCNT                                 ; Load D with current timer count
+MILLI_Loop: 
+            addd  #10000                               ; Add to it the desired count
+            std   TC1                                  ; Store that value in T compare 0
+            brclr TFLG1,#mTFLG1_C1F,*                  ; Loop in place until Compare flag is high
+            dbne  x,MILLI_Loop
+            rts
