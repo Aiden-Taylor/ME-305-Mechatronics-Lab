@@ -1,0 +1,90 @@
+;/-------------------------------------------------------------------------------------------------\                                                                                              
+;| Keypad Subroutines                                                                              |
+;|-------------------------------------------------------------------------------------------------|
+;| HARDWARE DESCRIPTION                                                                            |
+;| Manufacturer:                                                                                   |
+;| Model Number:                                                                                   |
+;| Summary:                                                                                        |
+;| Pins Used:                                                                                      |
+;|                                                                                                 |
+;| SUBROUTINE DESCRIPTION                                                                          |
+;|                                                                                                 |  
+;\-------------------------------------------------------------------------------------------------/ 
+;
+            INCLUDE 'derivative.inc' 
+            XDEF  INITKEY, ISR_KEYPAD, LKEY_FLG, GETCHAR
+
+LIBRARY_RAM: SECTION                        
+KEYREADY    DS.B  1                                       ; Key is ready to read
+LCHARACTER  DS.B  1                                       ; Character captured from KP
+LKEY_FLG    DS.B  1                                       ; Keypad Flag
+
+Lib_Keypad: SECTION
+
+
+; Equates
+KeypadPort  EQU   PORTK                                   ; Port which keypad is on
+KeypadDDR   EQU   DDRK                                    ; Port which keypad is on
+mKeypadA    EQU   mPORTK_PK0                              ; Data channel A from keypad
+mKeypadB    EQU   mPORTK_PK1                              ; Data channel B from keypad
+mKeypadC    EQU   mPORTK_PK2                              ; Data channel C from keypad
+mKeypadD    EQU   mPORTK_PK3                              ; Data channel D from keypad
+mKeypadE    EQU   mPORTK_PK4                              ; Data channel E from keypad
+mKeypadOE   EQU   mPORTK_PK5                              ; ~Output_enable from keypad
+
+KWPort      EQU   PTJ                                     ; Key Wakeup Data Register
+KWDDR       EQU   DDRJ                                    ; Key Wakeup Data Direction Register
+KWIE        EQU   PIEJ                                    ; Key Wakeup Interrupt Enable Register
+KWIF        EQU   PIFJ                                    ; Key Wakeup Interrupt Flag Register
+KWPE        EQU   PERJ                                    ; Key Wakeup Pull Device Enable 
+KWPP        EQU   PPSJ                                    ; Key Wakeup Polarity Select
+mKeypadDA   EQU   mPTJ_PTJ7                               ; Key Wakeup pin               
+
+
+INITKEY:
+            movb  #$FF,LCHARACTER                         ; Clear Key
+            clr   LKEY_FLG
+
+            bset  KeypadDDR,#mKeypadOE                    ; Set Keypad ~OE as an ouput     
+            bclr  KeypadPort,#mKeypadOE                   ; Set Keypad ~OE low to enable output
+                                                         
+            bclr  KeypadDDR,#mKeypadA                     ; Set Keypad Data A as an input
+            bclr  KeypadDDR,#mKeypadB                     ; Set Keypad Data B as an input
+            bclr  KeypadDDR,#mKeypadC                     ; Set Keypad Data C as an input
+            bclr  KeypadDDR,#mKeypadD                     ; Set Keypad Data D as an input
+            bclr  KeypadDDR,#mKeypadE                     ; Set Keypad Data E as an input
+            
+            bset  KWPE,     #mKeypadDA                    ; Enable pull device on key wakeup
+            bclr  KWPP,     #mKeypadDA                    ; Set pull device to pull down
+            
+            bclr  KWDDR,    #mKeypadDA                    ; Set Keypad DA as an input
+            movb  #$FF,     KWIF                          ; Clear keypad wakeup flag
+            bset  KWIE,     #mKeypadDA                    ; Set Keypad Interrupt enable for Data Available
+            cli                                           ; Enable key-wake-up interrupt globally
+            
+            rts
+            
+            
+GETCHAR:    
+            ldab  LCHARACTER
+            cmpb  #$FF
+            beq   GETCHAR
+            movb  #$FF,LCHARACTER
+            clr   LKEY_FLG
+EXIT:       rts       
+            
+
+
+ISR_KEYPAD:                      
+            ldaa  KeypadPort                              ; Read data from the keypad
+            anda  #%00011111                              ; Zero out first three bits
+            ldx   #KEYPAD_TABLE                           ; Load x with address of keypad lookup table
+            movb  a,x,LCHARACTER                          ; Decode the keypress using the lookup table   
+            movb  #$01,LKEY_FLG
+            brset KWPort,#mKeypadDA, *                    ; Wait until the key is released             
+            movb  #$FF,KWIF                               ; Clear keypad wakeup flag
+            rti
+            
+            
+KEYPAD_TABLE:
+            FCB   $43,$38,$34,$30,$44,$39,$35,$31,$45,$41,$36,$32,$46,$42,$37,$33,$0A,$08,$F2,$F1

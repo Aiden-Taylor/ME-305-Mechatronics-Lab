@@ -1,0 +1,166 @@
+;/-------------------------------------------------------------------------------------------------\                                                                                              
+;| Encoder Subroutines                                                                             |
+;|-------------------------------------------------------------------------------------------------|
+;| HARDWARE DESCRIPTION                                                                            |
+;| Manufacturer:     LSI Computer Systems, Inc.                                                    |
+;| Model Number:     LS7366R                                                                       |
+;| Summary:          LS7366R is a 32-bit CMOS counter, with direct interface for quadrature        |
+;|                   clocks from incremental encoders. For communications with microprocessors     |
+;|                   or microcontrollers, it provides a 4-wire SPI/MICROWIRE bus.                  |
+;| Pins Used:        PE4 (ECLK)                                                                    |
+;|                   PS4 (MISO)                                                                    |
+;|                   PS5 (MOSI)                                                                    |
+;|                   PS6 (SCK)                                                                     |
+;|                   PT6 (CS)                                                                      |
+;|                                                                                                 |
+;| SUBROUTINE DESCRIPTION                                                                          | 
+;| STARTUP_ENCODER:  Initializes the encoder counter and configures the chip for for continous     |  
+;|                   counting in 4x quadrature mode.                                               |
+;| READ_ENCODER:     Reads the current value from the encoder counter and returns it in D          |
+;|                                                                                                 |  
+;\-------------------------------------------------------------------------------------------------/ 
+;
+            INCLUDE 'derivative.inc'     
+            XDEF  STARTUP_ENCODER, READ_ENCODER, DISABLE_ENCODER
+
+Lib_Encoder:SECTION
+
+       
+; Encoder Counter Equates
+ENCPort     EQU   PTH                                  ; Port which Encoder Counter is on
+ENCDDR      EQU   DDRH                                 ; Port which Encoder Counter is on
+mENCSS      EQU   mPTH_PTH0                            ; Pin for Encoder counter slave select
+
+
+
+STARTUP_ENCODER:
+            ; Configure Mode Register 0 
+            bclr  ENCPort,  #mENCSS;                  ; Set Port T pin 6 low
+            
+            brclr SPI0SR,   #mSPI0SR_SPTEF, *         ; Wait until the output buffer is clear 
+            movb  #%10001000,SPI0DR                   ; Write to Mode Register 0 Command   
+;                   \/\ /\ /
+;                    | |  | 
+;                    | |   \___________________________ Don't Care 
+;                    |  \______________________________ B5:B4:B3=001 (select MDR0)
+;                     \________________________________ B7:B6=10 (Write register)
+;                       
+            brclr SPI0SR,   #mSPI0SR_SPIF, *          ; Wait until the output buffer is clear 
+                                                                                            
+            tst   SPI0DR                              ; Read SPI Data register to clear SPIF                                                  
+                                                                                               
+            brclr SPI0SR,   #mSPI0SR_SPTEF, *         ; Wait until the output buffer is clear
+            movb  #%11000011,SPI0DR                   ; Write to Mode Register 0 Command   
+;                   ||\/\/\/       
+;                   || | | |
+;                   || | |  \__________________________ B1:B0=11 (x4 Quadrature Count)
+;                   || |  \____________________________ B3:B2=00 (Free Run) 
+;                   ||  \______________________________ B5:B4=10 (Reset CNTR)
+;                   | \________________________________ B6=1 (Synchronous Index)
+;                    \_________________________________ B7=1 (Filter Divisor=2)   
+            brclr SPI0SR,   #mSPI0SR_SPIF, *          ; Wait until the output buffer is clear  
+                                                                                            
+            tst   SPI0DR                              ; Read SPI Data register to clear SPIF
+            
+            bset  ENCPort,  #mENCSS;                  ; Set Port T pin 6 high 
+            
+            ; Configure Mode Register 1 
+            bclr  ENCPort,  #mENCSS;                  ; Set Port T pin 6 low
+            
+            brclr SPI0SR,   #mSPI0SR_SPTEF, *         ; Wait until the output buffer is clear 
+            movb  #%10010000,SPI0DR                   ; Write to Mode Register 0 Command   
+;                   \/\ /\ /
+;                    | |  | 
+;                    | |   \__________________________ Don't Care 
+;                    |  \_____________________________ B5:B4:B3=010 (select MDR1)
+;                     \_______________________________ B7:B6=10 (Write register)
+;                       
+            brclr SPI0SR,   #mSPI0SR_SPIF, *          ; Wait until the output buffer is clear 
+                                                                                            
+            tst   SPI0DR                              ; Read SPI Data register to clear SPIF                                                  
+                                                                                               
+            brclr SPI0SR,   #mSPI0SR_SPTEF, *         ; Wait until the output buffer is clear
+            movb  #%00000010,SPI0DR                   ; Write to Mode Register 0 Command   
+;                   ||||||\/
+;                   |||||| |
+;                   ||||||  \__________________________ B1:B0=10 (2 Byte Counter Mode)
+;                   ||||| \____________________________ B2=0 (Enable Counting
+;                   |||| \_____________________________ B3=0 (Unused
+;                   ||| \______________________________ B4=0 (NOP) 
+;                   || \_______________________________ B5=0 (NOP)
+;                   | \________________________________ B6=0 (NOP)
+;                    \_________________________________ B7=0 (NOP)
+  
+            brclr SPI0SR,   #mSPI0SR_SPIF, *          ; Wait until the output buffer is clear  
+                                                                                            
+            tst   SPI0DR                              ; Read SPI Data register to clear SPIF
+            
+            bset  ENCPort,  #mENCSS;                  ; Set Port T pin 6 high
+            rts
+;------------------------------------------------------------------------------------------------------
+READ_ENCODER:            
+            bclr  ENCPort,  #mENCSS;                  ; Set Port T pin 6 low
+            
+            ; Send Read Command and get first byte
+            brclr SPI0SR,   #mSPI0SR_SPTEF, *         ; Wait until the output buffer is clear 
+            movb  #%01100000,SPI0DR                   ; Send a 1 if able   
+;                   \/\ /\ /
+;                    | |  | 
+;                    | |   \___________________________ Don't Care 
+;                    |  \______________________________ B5:B4:B3=100 (select CNTR)
+;                     \________________________________ B7:B6=01 (Read register)
+            brclr SPI0SR,   #mSPI0SR_SPIF, *          ; Wait until the input buffer is full                                                                  
+            tst   SPI0DR                              ; Read SPI Data register to clear SPIF                              ;
+            
+            ; Send dummy byte to read first byte
+            brclr SPI0SR,   #mSPI0SR_SPTEF, *         ; Wait until the output buffer is clear 
+            movb  #%00000000, SPI0DR                  ; Send a 0 to get bit to read                    
+            brclr SPI0SR,   #mSPI0SR_SPIF, *          ; Wait until the input buffer is full 
+            ; Read BYTE 1                          
+            ldaa  SPI0DR                              ; Read SPI Data register and store in A                                                  
+            
+            ; Send dummy byte to read next byte
+            brclr SPI0SR,   #mSPI0SR_SPTEF, *         ; Wait until the output buffer is clear 
+            movb  #%00000000, SPI0DR                  ; Send a 0 to get bit to read                    
+            brclr SPI0SR,   #mSPI0SR_SPIF, *          ; Wait until the input buffer is full 
+            ; Read BYTE 2
+            ldab  SPI0DR                              ; Read SPI Data register and store in B                                                 
+            
+            
+            bset  ENCPort,  #mENCSS;                  ; Set Port T pin 7 high 
+            rts                                                    
+;------------------------------------------------------------------------------------------------------
+DISABLE_ENCODER:            
+            ; Configure Mode Register 1 
+            bclr  ENCPort,  #mENCSS;                  ; Set Port T pin 6 low
+            
+            brclr SPI0SR,   #mSPI0SR_SPTEF, *         ; Wait until the output buffer is clear 
+            movb  #%10010000,SPI0DR                   ; Write to Mode Register 0 Command   
+;                   \/\ /\ /
+;                    | |  | 
+;                    | |   \__________________________ Don't Care 
+;                    |  \_____________________________ B5:B4:B3=010 (select MDR1)
+;                     \_______________________________ B7:B6=10 (Write register)
+;                       
+            brclr SPI0SR,   #mSPI0SR_SPIF, *          ; Wait until the output buffer is clear 
+                                                                                            
+            tst   SPI0DR                              ; Read SPI Data register to clear SPIF                                                  
+                                                                                               
+            brclr SPI0SR,   #mSPI0SR_SPTEF, *         ; Wait until the output buffer is clear
+            movb  #%00000110,SPI0DR                   ; Write to Mode Register 0 Command   
+;                   ||||||\/
+;                   |||||| |
+;                   ||||||  \__________________________ B1:B0=10 (2 Byte Counter Mode)
+;                   ||||| \____________________________ B2=1 (Disable Counting)
+;                   |||| \_____________________________ B3=0 (Unused
+;                   ||| \______________________________ B4=0 (NOP) 
+;                   || \_______________________________ B5=0 (NOP)
+;                   | \________________________________ B6=0 (NOP)
+;                    \_________________________________ B7=0 (NOP)
+  
+            brclr SPI0SR,   #mSPI0SR_SPIF, *          ; Wait until the output buffer is clear  
+                                                                                            
+            tst   SPI0DR                              ; Read SPI Data register to clear SPIF
+            
+            bset  ENCPort,  #mENCSS;                  ; Set Port T pin 6 high
+            rts                                                               

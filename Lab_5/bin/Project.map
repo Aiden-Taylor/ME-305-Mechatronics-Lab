@@ -1,5 +1,5 @@
 
-PROGRAM "C:\Users\jcfay\OneDrive - Cal Poly\2. Mechatronics Lab\Lab_5\bin\Project.abs"
+PROGRAM "C:\Users\ataylo86\Downloads\Lab_5\Lab_5\bin\Project.abs"
 
 *********************************************************************************************
 TARGET SECTION
@@ -13,13 +13,11 @@ Linker      : SmartLinker V-5.0.40 Build 10203, Jul 23 2010
 FILE SECTION
 ---------------------------------------------------------------------------------------------
 main.asm.o                              Model: SMALL,         Lang: Assembler
-Lib_Delay.asm.o (ME305LibV3.0.lib)      Model: SMALL,         Lang: Assembler
-Lib_Encoder.asm.o (ME305LibV3.0.lib)    Model: SMALL,         Lang: Assembler
-Lib_Keypad.asm.o (ME305LibV3.0.lib)     Model: SMALL,         Lang: Assembler
-Lib_LCD.asm.o (ME305LibV3.0.lib)        Model: SMALL,         Lang: Assembler
-Lib_Motor.asm.o (ME305LibV3.0.lib)      Model: SMALL,         Lang: Assembler
-Lib_Startup.asm.o (ME305LibV3.0.lib)    Model: SMALL,         Lang: Assembler
-Lib_IF.asm.o (ME305LibV3.0.lib)         Model: SMALL,         Lang: Assembler
+Lib_Delay.asm.o (ME305LIBV3.0.lib)      Model: SMALL,         Lang: Assembler
+Lib_Encoder.asm.o (ME305LIBV3.0.lib)    Model: SMALL,         Lang: Assembler
+Lib_Keypad.asm.o (ME305LIBV3.0.lib)     Model: SMALL,         Lang: Assembler
+Lib_Startup.asm.o (ME305LIBV3.0.lib)    Model: SMALL,         Lang: Assembler
+Lib_Interface.asm.o (ME305LIBV3.0.lib)  Model: SMALL,         Lang: Assembler
 
 *********************************************************************************************
 STARTUP SECTION
@@ -32,22 +30,18 @@ Section Name                    Size  Type     From       To       Segment
 ---------------------------------------------------------------------------------------------
 .init                            227     R     0xC000     0xC0E2   ROM_C000
 .stack                          1024   R/W     0x2000     0x23FF   RAM
-.data                             32   R/W     0x2400     0x241F   RAM
-LIBRARY_RAM                       94   R/W     0x1000     0x105D   LIBRAM
-MyCode                           185     R     0x4000     0x40B8   ROM_4000
-Lib_Motor                        145     R      0x800      0x890   EEPROM
-Lib_Keypad                       117     R      0x891      0x905   EEPROM
-Lib_Encoder                      177     R      0x906      0x9B6   EEPROM
-Lib_LCD                          578     R      0x9B7      0xBF8   EEPROM
-Lib_Delay                         56     R      0xBF9      0xC30   EEPROM
+LIBRARY_RAM                        3   R/W     0x1000     0x1002   LIBRAM
+MyCode                             5     R     0x4000     0x4004   ROM_4000
+Lib_Keypad                       117     R      0x800      0x874   EEPROM
+Lib_Encoder                      177     R      0x875      0x925   EEPROM
+Lib_Delay                         56     R      0x926      0x95D   EEPROM
 main.asm__ORG00001                 2     R     0xFFFE     0xFFFF   .absSeg0
-main.asm__ORG00002                 2     R     0xFFEE     0xFFEF   .absSeg1
-ME305LibV3.0_Lib_IF.asm__ORG00001          2     R     0xFFCE     0xFFCF   .absSeg2
-Lib_IF                          2102     R   0xFE8000   0xFE8835   PAGE_FE
+ME305LIBV3.0_Lib_Interface.asm__ORG00001          2     R     0xFFCE     0xFFCF   .absSeg1
+main.asm._SEC000000               21   R/W     0x2400     0x2414   RAM
 
 Summary of section sizes per section type:
-READ_ONLY (R):         E09 (dec:     3593)
-READ_WRITE (R/W):      47E (dec:     1150)
+READ_ONLY (R):         24A (dec:      586)
+READ_WRITE (R/W):      418 (dec:     1048)
 
 *********************************************************************************************
 VECTOR-ALLOCATION SECTION
@@ -62,388 +56,140 @@ MODULE:                 -- main.asm.o --
 - PROCEDURES:
      main                                      4000       3       3       1   MyCode      
      spin                                      4003       2       2       0   MyCode      
-     TC0ISR                                    4005      20      32       1   MyCode      
-     measurements                              4025      48      72       0   MyCode      
-     skip_low_threshold                        406D       8       8       0   MyCode      
-     skip_high_threshold                       4075      1A      26       0   MyCode      
-     skip_update                               408F       9       9       0   MyCode      
-     end                                       4098       B      11       0   MyCode      
-     SDBA                                      40A3       E      14       2   MyCode      
-     NEG                                       40B1       3       3       0   MyCode      
-     DONE                                      40B4       5       5       0   MyCode      
 - VARIABLES:
-     RUN                                       2400       1       1       7   .data       
-     CL                                        2401       1       1       5   .data       
-     V_ref                                     2402       2       2       5   .data       
-     V_act                                     2404       2       2       3   .data       
-     Theta_NEW                                 2406       2       2       2   .data       
-     Theta_OLD                                 2408       2       2       3   .data       
-     KP                                        240A       2       2       5   .data       
-     KI                                        240C       2       2       6   .data       
-     ERR                                       240E       2       2       3   .data       
-     EFF                                       2410       2       2       2   .data       
-     ESUM                                      2412       2       2       3   .data       
-     UPDATE_COUNT                              2414       1       1       1   .data       
-     UPDATE_FLG1                               2415       1       1       4   .data       
-     MOTOR_POWER                               2416       2       2       0   .data       
-     P_POWER                                   2418       2       2       0   .data       
-     I_POWER                                   241A       2       2       0   .data       
-     CURRENT                                   241C       2       2       0   .data       
-     A_star                                    241E       2       2       1   .data       
+     RUN                                       2400       1       1       0   main.asm._SEC000000
+     CL                                        2401       1       1       0   main.asm._SEC000000
+     V_ref                                     2402       2       2       0   main.asm._SEC000000
+     Theta_OLD                                 2404       2       2       0   main.asm._SEC000000
+     KP                                        2406       2       2       0   main.asm._SEC000000
+     KI                                        2408       2       2       0   main.asm._SEC000000
+     UPDATE_FLG1                               240A       1       1       0   main.asm._SEC000000
+     V_act_DISP                                240B       2       2       0   main.asm._SEC000000
+     ERR_DISP                                  240D       2       2       0   main.asm._SEC000000
+     EFF_DISP                                  240F       2       2       0   main.asm._SEC000000
+     INTERVAL                                  2411       2       2       0   main.asm._SEC000000
+     IFENTRY                                   2413       2       2       1   main.asm._SEC000000
      VAR00001                                  FFFE       2       2       0   .text       
-     VAR00002                                  FFEE       2       2       0   .text       
-MODULE:                 -- Lib_Delay.asm.o (ME305LibV3.0.lib) --
+MODULE:                 -- Lib_Delay.asm.o (ME305LIBV3.0.lib) --
 - PROCEDURES:
-     DELAY_MICRO                                BF9       F      15       5   Lib_Delay   
-     MICRO_Loop                                 C08       D      13       0   Lib_Delay   
-     DELAY_MILLI                                C15       F      15       2   Lib_Delay   
-     MILLI_Loop                                 C24       D      13       0   Lib_Delay   
+     DELAY_MICRO                                926       F      15       1   Lib_Delay   
+     MICRO_Loop                                 935       D      13       0   Lib_Delay   
+     DELAY_MILLI                                942       F      15       1   Lib_Delay   
+     MILLI_Loop                                 951       D      13       0   Lib_Delay   
 - VARIABLES:
-MODULE:                 -- Lib_Encoder.asm.o (ME305LibV3.0.lib) --
+MODULE:                 -- Lib_Encoder.asm.o (ME305LIBV3.0.lib) --
 - PROCEDURES:
-     STARTUP_ENCODER                            906      51      81       1   Lib_Encoder 
-     READ_ENCODER                               957      37      55       2   Lib_Encoder 
-     DISABLE_ENCODER                            98E      29      41       1   Lib_Encoder 
+     STARTUP_ENCODER                            875      51      81       0   Lib_Encoder 
+     READ_ENCODER                               8C6      37      55       0   Lib_Encoder 
+     DISABLE_ENCODER                            8FD      29      41       1   Lib_Encoder 
 - VARIABLES:
-MODULE:                 -- Lib_Keypad.asm.o (ME305LibV3.0.lib) --
+MODULE:                 -- Lib_Keypad.asm.o (ME305LIBV3.0.lib) --
 - PROCEDURES:
-     INITKEY                                    891      35      53       1   Lib_Keypad  
-     GETCHAR                                    8C6      10      16       1   Lib_Keypad  
-     ISR_KEYPAD                                 8D6      1C      28       1   Lib_Keypad  
-     VAR00001                                   8F2      14      20       1   Lib_Keypad  
+     INITKEY                                    800      35      53       0   Lib_Keypad  
+     GETCHAR                                    835      10      16       0   Lib_Keypad  
+     ISR_KEYPAD                                 845      1C      28       1   Lib_Keypad  
+     VAR00001                                   861      14      20       1   Lib_Keypad  
 - VARIABLES:
      KEYREADY                                  1000       1       1       0   LIBRARY_RAM 
      LCHARACTER                                1001       1       1       4   LIBRARY_RAM 
-     LKEY_FLG                                  1002       1       1       4   LIBRARY_RAM 
-MODULE:                 -- Lib_LCD.asm.o (ME305LibV3.0.lib) --
-- PROCEDURES:
-     INITLCD                                    9B7      6F     111       1   Lib_LCD     
-     LCD_RESET                                  A26      19      25       3   Lib_LCD     
-     LCD_WRITE                                  A3F      18      24       7   Lib_LCD     
-     BF_TEST                                    A57      14      20       0   Lib_LCD     
-     LCD_READ                                   A6B      14      20       2   Lib_LCD     
-     DISP_OFF                                   A7F       8       8       1   Lib_LCD     
-     DISP_ON                                    A87       8       8       1   Lib_LCD     
-     CURSOR_ON                                  A8F       8       8       1   Lib_LCD     
-     CURSOR_OFF                                 A97       1       1       0   Lib_LCD     
-     SETADDR                                    A98       E      14      24   Lib_LCD     
-     GETADDR                                    AA6       C      12       6   Lib_LCD     
-     CLRSCREEN                                  AB2      1C      28       3   Lib_LCD     
-     OUTCHAR_AT                                 ACE       3       3       0   Lib_LCD     
-     OUTCHAR                                    AD1       C      12       4   Lib_LCD     
-     BS_HANDLE                                  ADD       C      12       0   Lib_LCD     
-     OUTSTRING_AT                               AE9       3       3       8   Lib_LCD     
-     OUTSTRING                                  AEC       2       2      11   Lib_LCD     
-     OUTLOOP                                    AEE       9       9       0   Lib_LCD     
-     OUTEXIT                                    AF7       3       3       0   Lib_LCD     
-     LCDTEMPLATE                                AFA      1E      30       1   Lib_LCD     
-     UPDATELCD_L1                               B18      31      49       2   Lib_LCD     
-     UPDATELCD_L2                               B49      1B      27       2   Lib_LCD     
-     INITMESS_L1                                B64      27      39       1   Lib_LCD     
-     INITMESS_L2                                B8B      28      40       1   Lib_LCD     
-     LCDTEMPLATE_L1                             BB3      29      41       1   Lib_LCD     
-     LCDTEMPLATE_L2                             BDC      1D      29       1   Lib_LCD     
-- VARIABLES:
-     LVREF_BUF                                 1003       4       4       7   LIBRARY_RAM 
-     LVREF_NULL                                1007       1       1       0   LIBRARY_RAM 
-     LVACT_BUF                                 1008       4       4       4   LIBRARY_RAM 
-     LVACT_NULL                                100C       1       1       0   LIBRARY_RAM 
-     LERR_BUF                                  100D       4       4       5   LIBRARY_RAM 
-     LERR_NULL                                 1011       1       1       0   LIBRARY_RAM 
-     LEFF_BUF                                  1012       4       4       4   LIBRARY_RAM 
-     LEFF_NULL                                 1016       1       1       0   LIBRARY_RAM 
-     LKP_BUF                                   1017       5       5       5   LIBRARY_RAM 
-     LKP_NULL                                  101C       1       1       0   LIBRARY_RAM 
-     LKI_BUF                                   101D       5       5       5   LIBRARY_RAM 
-     LKI_NULL                                  1022       1       1       0   LIBRARY_RAM 
-MODULE:                 -- Lib_Motor.asm.o (ME305LibV3.0.lib) --
-- PROCEDURES:
-     STARTUP_MOTOR                              800      22      34       1   Lib_Motor   
-     ENABLE_MOTOR                               822       D      13       1   Lib_Motor   
-     DISABLE_MOTOR                              82F       D      13       1   Lib_Motor   
-     UPDATE_MOTOR                               83C      14      20       2   Lib_Motor   
-     CCW_MOTOR                                  850       F      15       0   Lib_Motor   
-     BRAKE_MOTOR                                85F       D      13       0   Lib_Motor   
-     CURRENT_MOTOR                              86C      25      37       0   Lib_Motor   
-- VARIABLES:
-MODULE:                 -- Lib_Startup.asm.o (ME305LibV3.0.lib) --
+     LKEY_FLG                                  1002       1       1       3   LIBRARY_RAM 
+MODULE:                 -- Lib_Startup.asm.o (ME305LIBV3.0.lib) --
 - PROCEDURES:
      _Startup                                  C000      13      19       0   .init       
      Entry                                     C000       0       0       1   .init       
      STARTUP_PLL                               C013      20      32       1   .init       
      STARTUP_SPI0                              C033      45      69       1   .init       
-     STARTUP_ATD1                              C078      1A      26       1   .init       
-     STARTUP_PWM                               C092      1D      29       1   .init       
+     STARTUP_ATD1                              C078      1A      26       0   .init       
+     STARTUP_PWM                               C092      1D      29       0   .init       
      STARTUP_IO                                C0AF      34      52       1   .init       
 - VARIABLES:
 - LABELS:
      __SEG_END_SSTACK                          2400       0       0       1               
-MODULE:                 -- Lib_IF.asm.o (ME305LibV3.0.lib) --
+MODULE:                 -- Lib_Interface.asm.o (ME305LIBV3.0.lib) --
 - PROCEDURES:
-     IFENTRY                                 FE8000      12      18       1   Lib_IF      
-     Loop                                    FE8012       E      14       0   Lib_IF      
-     TASK_1                                  FE8020       A      10       1   Lib_IF      
-     jumptable_1                             FE802A       3       3       0   Lib_IF      
-     VAR00001                                FE802D       2       2       0   Lib_IF      
-     VAR00002                                FE802F       2       2       0   Lib_IF      
-     t1state0                                FE8031      2F      47       1   Lib_IF      
-     t1state1                                FE8060       1       1       1   Lib_IF      
-     TASK_2                                  FE8061       A      10       1   Lib_IF      
-     jumptable_2                             FE806B       3       3       0   Lib_IF      
-     VAR00003                                FE806E       2       2       0   Lib_IF      
-     VAR00004                                FE8070       2       2       0   Lib_IF      
-     VAR00005                                FE8072       2       2       0   Lib_IF      
-     VAR00006                                FE8074       2       2       0   Lib_IF      
-     VAR00007                                FE8076       2       2       0   Lib_IF      
-     VAR00008                                FE8078       2       2       0   Lib_IF      
-     VAR00009                                FE807A       2       2       0   Lib_IF      
-     VAR00010                                FE807C       2       2       0   Lib_IF      
-     VAR00011                                FE807E       2       2       0   Lib_IF      
-     VAR00012                                FE8080       2       2       0   Lib_IF      
-     VAR00013                                FE8082       2       2       0   Lib_IF      
-     VAR00014                                FE8084       2       2       0   Lib_IF      
-     VAR00015                                FE8086       2       2       0   Lib_IF      
-     VAR00016                                FE8088       2       2       0   Lib_IF      
-     VAR00017                                FE808A       2       2       0   Lib_IF      
-     t2state0                                FE808C      52      82       1   Lib_IF      
-     t2s0a                                   FE80DE      84     132       0   Lib_IF      
-     t2state1                                FE8162       9       9       1   Lib_IF      
-     t2s1a                                   FE816B      13      19       0   Lib_IF      
-     t2s1b                                   FE817E       D      13       0   Lib_IF      
-     t2s1c                                   FE818B       D      13       0   Lib_IF      
-     t2s1d                                   FE8198       D      13       0   Lib_IF      
-     t2s1e                                   FE81A5       D      13       0   Lib_IF      
-     t2s1f                                   FE81B2       D      13       0   Lib_IF      
-     t2s1g                                   FE81BF       D      13       0   Lib_IF      
-     t2s1h                                   FE81CC       D      13       0   Lib_IF      
-     t2s1i                                   FE81D9       D      13       0   Lib_IF      
-     t2s1j                                   FE81E6       D      13       0   Lib_IF      
-     t2s1k                                   FE81F3       D      13       0   Lib_IF      
-     t2s1l                                   FE8200       A      10       0   Lib_IF      
-     exit_t2s1                               FE820A       1       1       0   Lib_IF      
-     t2state2                                FE820B      19      25       1   Lib_IF      
-     exit_t2s2                               FE8224       6       6       0   Lib_IF      
-     t2state3                                FE822A      1E      30       1   Lib_IF      
-     exit_t2s3                               FE8248       6       6       0   Lib_IF      
-     t2state4                                FE824E      12      18       1   Lib_IF      
-     t2s4a                                   FE8260       3       3       0   Lib_IF      
-     t2s4b                                   FE8263       5       5       0   Lib_IF      
-     exit_t2s4                               FE8268       6       6       0   Lib_IF      
-     t2state5                                FE826E      15      21       1   Lib_IF      
-     t2s5a                                   FE8283       8       8       0   Lib_IF      
-     t2s5b                                   FE828B      21      33       0   Lib_IF      
-     t2s5c                                   FE82AC      19      25       0   Lib_IF      
-     t2s5d                                   FE82C5      1B      27       0   Lib_IF      
-     t2s5e                                   FE82E0      19      25       0   Lib_IF      
-     t2s5f                                   FE82F9      1E      30       0   Lib_IF      
-     exit_t2s5                               FE8317       6       6       0   Lib_IF      
-     t2state6                                FE831D      17      23       1   Lib_IF      
-     exit_t2s6                               FE8334       6       6       0   Lib_IF      
-     t2state7                                FE833A      13      19       1   Lib_IF      
-     t2state8                                FE834D      1F      31       1   Lib_IF      
-     exit_t2s8                               FE836C       6       6       0   Lib_IF      
-     t2state9                                FE8372      21      33       1   Lib_IF      
-     exit_t2s9                               FE8393       6       6       0   Lib_IF      
-     t2stateA                                FE8399      16      22       1   Lib_IF      
-     t2sAa                                   FE83AF      12      18       0   Lib_IF      
-     exit_t2sA                               FE83C1       6       6       0   Lib_IF      
-     t2stateB                                FE83C7      26      38       1   Lib_IF      
-     t2sBa                                   FE83ED       B      11       0   Lib_IF      
-     exit_t2sB                               FE83F8       6       6       0   Lib_IF      
-     t2stateC                                FE83FE      11      17       1   Lib_IF      
-     t2sC1                                   FE840F      19      25       0   Lib_IF      
-     t2sC2                                   FE8428      17      23       0   Lib_IF      
-     exit_t2sC                               FE843F       6       6       0   Lib_IF      
-     t2stateD                                FE8445      1B      27       1   Lib_IF      
-     t2sDa                                   FE8460       4       4       0   Lib_IF      
-     t2sDb                                   FE8464      19      25       0   Lib_IF      
-     t2sDc                                   FE847D       4       4       0   Lib_IF      
-     t2sDd                                   FE8481      1A      26       0   Lib_IF      
-     t2sDe                                   FE849B      16      22       0   Lib_IF      
-     t2sDf                                   FE84B1       4       4       0   Lib_IF      
-     t2sDg                                   FE84B5       8       8       0   Lib_IF      
-     exit_t2sD                               FE84BD       9       9       0   Lib_IF      
-     t2stateE                                FE84C6      26      38       1   Lib_IF      
-     TASK_3                                  FE84EC       A      10       1   Lib_IF      
-     jumptable_3                             FE84F6       3       3       0   Lib_IF      
-     VAR00018                                FE84F9       2       2       0   Lib_IF      
-     VAR00019                                FE84FB       2       2       0   Lib_IF      
-     VAR00020                                FE84FD       2       2       0   Lib_IF      
-     t3state0                                FE84FF       C      12       1   Lib_IF      
-     t3state1                                FE850B      15      21       1   Lib_IF      
-     t3s1a                                   FE8520       1       1       0   Lib_IF      
-     t3state2                                FE8521       A      10       1   Lib_IF      
-     t3s2a                                   FE852B       1       1       0   Lib_IF      
-     TASK_4                                  FE852C       A      10       1   Lib_IF      
-     jumptable_4                             FE8536       3       3       0   Lib_IF      
-     VAR00021                                FE8539       2       2       0   Lib_IF      
-     VAR00022                                FE853B       2       2       0   Lib_IF      
-     VAR00023                                FE853D       2       2       0   Lib_IF      
-     VAR00024                                FE853F       2       2       0   Lib_IF      
-     VAR00025                                FE8541       2       2       0   Lib_IF      
-     VAR00026                                FE8543       2       2       0   Lib_IF      
-     VAR00027                                FE8545       2       2       0   Lib_IF      
-     VAR00028                                FE8547       2       2       0   Lib_IF      
-     VAR00029                                FE8549       2       2       0   Lib_IF      
-     VAR00030                                FE854B       2       2       0   Lib_IF      
-     VAR00031                                FE854D       2       2       0   Lib_IF      
-     VAR00032                                FE854F       2       2       0   Lib_IF      
-     VAR00033                                FE8551       2       2       0   Lib_IF      
-     VAR00034                                FE8553       2       2       0   Lib_IF      
-     t4state0                                FE8555      1A      26       1   Lib_IF      
-     t4state1                                FE856F       B      11       1   Lib_IF      
-     t4s1a                                   FE857A       B      11       0   Lib_IF      
-     t4s1b                                   FE8585       B      11       0   Lib_IF      
-     t4s1c                                   FE8590       B      11       0   Lib_IF      
-     t4s1d                                   FE859B       B      11       0   Lib_IF      
-     t4s1e                                   FE85A6       B      11       0   Lib_IF      
-     t4s1f                                   FE85B1       B      11       0   Lib_IF      
-     t4s1g                                   FE85BC       B      11       0   Lib_IF      
-     t4s1h                                   FE85C7       B      11       0   Lib_IF      
-     t4s1i                                   FE85D2       B      11       0   Lib_IF      
-     t4s1j                                   FE85DD       B      11       0   Lib_IF      
-     t4s1k                                   FE85E8       B      11       0   Lib_IF      
-     t4s1l                                   FE85F3       1       1       0   Lib_IF      
-     t4state2                                FE85F4      15      21       1   Lib_IF      
-     t4state3                                FE8609       9       9       1   Lib_IF      
-     t4s3a                                   FE8612       2       2       0   Lib_IF      
-     t4s3b                                   FE8614       C      12       0   Lib_IF      
-     t4state4                                FE8620       F      15       1   Lib_IF      
-     t4state5                                FE862F      23      35       1   Lib_IF      
-     t4state6                                FE8652      16      22       1   Lib_IF      
-     t4state7                                FE8668      16      22       1   Lib_IF      
-     t4state8                                FE867E      14      20       1   Lib_IF      
-     t4state9                                FE8692      19      25       1   Lib_IF      
-     t4stateA                                FE86AB       E      14       1   Lib_IF      
-     t4sAa                                   FE86B9       3       3       0   Lib_IF      
-     t4sAb                                   FE86BC      12      18       0   Lib_IF      
-     t4stateB                                FE86CE       E      14       1   Lib_IF      
-     t4sBa                                   FE86DC       3       3       0   Lib_IF      
-     t4sBb                                   FE86DF      12      18       0   Lib_IF      
-     t4stateC                                FE86F1       E      14       1   Lib_IF      
-     t4sCa                                   FE86FF       3       3       0   Lib_IF      
-     t4sCb                                   FE8702      12      18       0   Lib_IF      
-     t4stateD                                FE8714       E      14       1   Lib_IF      
-     SM_BUF_blank                            FE8722       A      10       4   Lib_IF      
-     LG_BUF_blank                            FE872C       F      15       4   Lib_IF      
-     ASCII_2_Bin                             FE873B      10      16       1   Lib_IF      
-     conv_loop                               FE874B      21      33       0   Lib_IF      
-     conv_done                               FE876C       5       5       0   Lib_IF      
-     TOO_LARGE                               FE8771       3       3       0   Lib_IF      
-     exit_ASCII_2_Bin                        FE8774       9       9       0   Lib_IF      
-     Bin_2_ASCII                             FE877D       E      14      14   Lib_IF      
-     con_loop                                FE878B      12      18       0   Lib_IF      
-     con_top                                 FE879D       7       7       0   Lib_IF      
-     unstack_loop                            FE87A4      11      17       0   Lib_IF      
-     con_end                                 FE87B5       6       6       0   Lib_IF      
-     VREF_PRMPT                              FE87BB       B      11       1   Lib_IF      
-     BSPACE_FM                               FE87C6       4       4       1   Lib_IF      
-     BLANK4                                  FE87CA       5       5       0   Lib_IF      
-     BLANK5                                  FE87CF       6       6       2   Lib_IF      
-     BLANK13                                 FE87D5       E      14       0   Lib_IF      
-     BLANK27                                 FE87E3      1C      28       1   Lib_IF      
-     L2_TEMPLATE                             FE87FF      1D      29       1   Lib_IF      
-     RUN_MESS                                FE881C       4       4       1   Lib_IF      
-     STP_MESS                                FE8820       4       4       1   Lib_IF      
-     CL_MESS                                 FE8824       3       3       1   Lib_IF      
-     OL_MESS                                 FE8827       3       3       1   Lib_IF      
-     D_ON_MESS                               FE882A       6       6       1   Lib_IF      
-     D_OFF_MESS                              FE8830       6       6       1   Lib_IF      
 - VARIABLES:
-     V_entry                                   1023       1       1      14   LIBRARY_RAM 
-     KP_entry                                  1024       1       1      11   LIBRARY_RAM 
-     KI_entry                                  1025       1       1      11   LIBRARY_RAM 
-     NEG_FLG                                   1026       1       1       8   LIBRARY_RAM 
-     SIGN_FLG                                  1027       1       1      10   LIBRARY_RAM 
-     DISP_ON                                   1028       1       1       5   LIBRARY_RAM 
-     V_act                                     1029       2       2       2   LIBRARY_RAM 
-     Kscale                                    102B       2       2       1   LIBRARY_RAM 
-     ERR                                       102D       2       2       2   LIBRARY_RAM 
-     EFF                                       102F       2       2       2   LIBRARY_RAM 
-     ESUM                                      1031       2       2       1   LIBRARY_RAM 
-     V_act_DISP                                1033       2       2       2   LIBRARY_RAM 
-     ERR_DISP                                  1035       2       2       2   LIBRARY_RAM 
-     EFF_DISP                                  1037       2       2       2   LIBRARY_RAM 
-     UPDATE_FLG2                               1039       1       1       1   LIBRARY_RAM 
-     KEY_BUF                                   103A       1       1       4   LIBRARY_RAM 
-     KEY_FLG                                   103B       1       1       5   LIBRARY_RAM 
-     INTERVAL                                  103C       2       2       3   LIBRARY_RAM 
-     COUNT                                     103E       1       1      15   LIBRARY_RAM 
-     BUFFER                                    103F       5       5       4   LIBRARY_RAM 
-     t1state                                   1044       1       1       3   LIBRARY_RAM 
-     t2state                                   1045       1       1      29   LIBRARY_RAM 
-     t3state                                   1046       1       1       5   LIBRARY_RAM 
-     t4state                                   1047       1       1      27   LIBRARY_RAM 
-     t5state                                   1048       1       1       1   LIBRARY_RAM 
-     t6state                                   1049       1       1       1   LIBRARY_RAM 
-     ECHO                                      104A       1       1       5   LIBRARY_RAM 
-     ECHO_SIGN                                 104B       1       1       5   LIBRARY_RAM 
-     B_SPACE                                   104C       1       1       4   LIBRARY_RAM 
-     V_ref_prep                                104D       1       1       4   LIBRARY_RAM 
-     KP_prep                                   104E       1       1       4   LIBRARY_RAM 
-     KI_prep                                   104F       1       1       4   LIBRARY_RAM 
-     update_L1                                 1050       1       1       5   LIBRARY_RAM 
-     update_L2                                 1051       1       1       5   LIBRARY_RAM 
-     D_RUN                                     1052       1       1       7   LIBRARY_RAM 
-     D_LOOP                                    1053       1       1       5   LIBRARY_RAM 
-     D_DISP                                    1054       1       1       5   LIBRARY_RAM 
-     D_HCUR                                    1055       1       1       6   LIBRARY_RAM 
-     MOTOR_POWER                               1056       2       2       0   LIBRARY_RAM 
-     P_POWER                                   1058       2       2       0   LIBRARY_RAM 
-     I_POWER                                   105A       2       2       0   LIBRARY_RAM 
-     CURRENT                                   105C       2       2       0   LIBRARY_RAM 
      VAR00035                                  FFCE       2       2       0   .text       
 
 *********************************************************************************************
 MODULE STATISTIC
   Name                                      Data   Code  Const
 ---------------------------------------------------------------------------------------------
-  main.asm.o                                  32    185      4
-  Lib_Delay.asm.o (ME305LibV3.0.lib)           0     56      0
-  Lib_Encoder.asm.o (ME305LibV3.0.lib)         0    177      0
-  Lib_Keypad.asm.o (ME305LibV3.0.lib)          3    117      0
-  Lib_LCD.asm.o (ME305LibV3.0.lib)            32    578      0
-  Lib_Motor.asm.o (ME305LibV3.0.lib)           0    145      0
-  Lib_Startup.asm.o (ME305LibV3.0.lib)         0    227      0
-  Lib_IF.asm.o (ME305LibV3.0.lib)             59   2102      2
+  main.asm.o                                  21      5      2
+  Lib_Delay.asm.o (ME305LIBV3.0.lib)           0     56      0
+  Lib_Encoder.asm.o (ME305LIBV3.0.lib)         0    177      0
+  Lib_Keypad.asm.o (ME305LIBV3.0.lib)          3    117      0
+  Lib_Startup.asm.o (ME305LIBV3.0.lib)         0    227      0
+  Lib_Interface.asm.o (ME305LIBV3.0.lib)       0      0      2
   other                                     1024      0      0
 
 *********************************************************************************************
 SECTION USE IN OBJECT-ALLOCATION SECTION
 ---------------------------------------------------------------------------------------------
 SECTION: ".text"
-  VAR00035 VAR00002 VAR00001 
-SECTION: ".data"
-  RUN CL V_ref V_act Theta_NEW Theta_OLD KP KI ERR EFF ESUM UPDATE_COUNT 
-  UPDATE_FLG1 MOTOR_POWER P_POWER I_POWER CURRENT A_star 
+  VAR00035 VAR00001 
 SECTION: ".init"
   Entry _Startup STARTUP_PLL STARTUP_SPI0 STARTUP_ATD1 STARTUP_PWM STARTUP_IO 
 SECTION: "LIBRARY_RAM"
-  KEYREADY LCHARACTER LKEY_FLG LVREF_BUF LVREF_NULL LVACT_BUF LVACT_NULL 
-  LERR_BUF LERR_NULL LEFF_BUF LEFF_NULL LKP_BUF LKP_NULL LKI_BUF LKI_NULL 
-  V_entry KP_entry KI_entry NEG_FLG SIGN_FLG DISP_ON V_act Kscale ERR EFF ESUM 
-  V_act_DISP ERR_DISP EFF_DISP UPDATE_FLG2 KEY_BUF KEY_FLG INTERVAL COUNT 
-  BUFFER t1state t2state t3state t4state t5state t6state ECHO ECHO_SIGN B_SPACE 
-  V_ref_prep KP_prep KI_prep update_L1 update_L2 D_RUN D_LOOP D_DISP D_HCUR 
-  MOTOR_POWER P_POWER I_POWER CURRENT 
+  KEYREADY LCHARACTER LKEY_FLG 
 SECTION: "MyCode"
-  main spin TC0ISR measurements skip_low_threshold skip_high_threshold 
-  skip_update end SDBA NEG DONE 
-SECTION: "Lib_Motor"
-  STARTUP_MOTOR ENABLE_MOTOR DISABLE_MOTOR UPDATE_MOTOR CCW_MOTOR BRAKE_MOTOR 
-  CURRENT_MOTOR 
+  main spin 
 SECTION: "Lib_Keypad"
   INITKEY GETCHAR ISR_KEYPAD VAR00001 
 SECTION: "Lib_Encoder"
   STARTUP_ENCODER READ_ENCODER DISABLE_ENCODER 
-SECTION: "Lib_LCD"
-  INITLCD LCD_RESET LCD_WRITE BF_TEST LCD_READ DISP_OFF DISP_ON CURSOR_ON 
-  CURSOR_OFF SETADDR GETADDR CLRSCREEN OUTCHAR_AT OUTCHAR BS_HANDLE 
-  OUTSTRING_AT OUTSTRING OUTLOOP OUTEXIT LCDTEMPLATE UPDATELCD_L1 UPDATELCD_L2 
-  INITMESS_L1 INITMESS_L2 LCDTEMPLATE_L1 LCDTEMPLATE_L2 
 SECTION: "Lib_Delay"
   DELAY_MICRO MICRO_Loop DELAY_MILLI MILLI_Loop 
-SECTION: "Lib_IF"
+SECTION: "main.asm._SEC000000"
+  RUN CL V_ref Theta_OLD KP KI UPDATE_FLG1 V_act_DISP ERR_DISP EFF_DISP 
+  INTERVAL IFENTRY 
+
+*********************************************************************************************
+OBJECT LIST SORTED BY ADDRESS
+     Name                                      Addr   hSize   dSize     Ref    Section   RLIB
+---------------------------------------------------------------------------------------------
+     INITKEY                                    800      35      53       0   Lib_Keypad  
+     GETCHAR                                    835      10      16       0   Lib_Keypad  
+     ISR_KEYPAD                                 845      1C      28       1   Lib_Keypad  
+     VAR00001                                   861      14      20       1   Lib_Keypad  
+     STARTUP_ENCODER                            875      51      81       0   Lib_Encoder 
+     READ_ENCODER                               8C6      37      55       0   Lib_Encoder 
+     DISABLE_ENCODER                            8FD      29      41       1   Lib_Encoder 
+     DELAY_MICRO                                926       F      15       1   Lib_Delay   
+     MICRO_Loop                                 935       D      13       0   Lib_Delay   
+     DELAY_MILLI                                942       F      15       1   Lib_Delay   
+     MILLI_Loop                                 951       D      13       0   Lib_Delay   
+     KEYREADY                                  1000       1       1       0   LIBRARY_RAM 
+     LCHARACTER                                1001       1       1       4   LIBRARY_RAM 
+     LKEY_FLG                                  1002       1       1       3   LIBRARY_RAM 
+     RUN                                       2400       1       1       0   main.asm._SEC000000
+     CL                                        2401       1       1       0   main.asm._SEC000000
+     V_ref                                     2402       2       2       0   main.asm._SEC000000
+     Theta_OLD                                 2404       2       2       0   main.asm._SEC000000
+     KP                                        2406       2       2       0   main.asm._SEC000000
+     KI                                        2408       2       2       0   main.asm._SEC000000
+     UPDATE_FLG1                               240A       1       1       0   main.asm._SEC000000
+     V_act_DISP                                240B       2       2       0   main.asm._SEC000000
+     ERR_DISP                                  240D       2       2       0   main.asm._SEC000000
+     EFF_DISP                                  240F       2       2       0   main.asm._SEC000000
+     INTERVAL                                  2411       2       2       0   main.asm._SEC000000
+     IFENTRY                                   2413       2       2       1   main.asm._SEC000000
+     main                                      4000       3       3       1   MyCode      
+     spin                                      4003       2       2       0   MyCode      
+     Entry                                     C000       0       0       1   .init       
+     _Startup                                  C000      13      19       0   .init       
+     STARTUP_PLL                               C013      20      32       1   .init       
+     STARTUP_SPI0                              C033      45      69       1   .init       
+     STARTUP_ATD1                              C078      1A      26       0   .init       
+     STARTUP_PWM                               C092      1D      29       0   .init       
+     STARTUP_IO                                C0AF      34      52       1   .init       
+     VAR00035                                  FFCE       2       2       0   .text       
+     VAR00001                                  FFFE       2       2       0   .text       
+
+*********************************************************************************************
+UNUSED-OBJECTS SECTION
+---------------------------------------------------------------------------------------------
+NOT USED PROCEDURES
+Lib_Interface.asm.o (ME305LIBV3.0.lib):
   IFENTRY Loop TASK_1 jumptable_1 VAR00001 VAR00002 t1state0 t1state1 TASK_2 
   jumptable_2 VAR00003 VAR00004 VAR00005 VAR00006 VAR00007 VAR00008 VAR00009 
   VAR00010 VAR00011 VAR00012 VAR00013 VAR00014 VAR00015 VAR00016 VAR00017 
@@ -463,324 +209,16 @@ SECTION: "Lib_IF"
   TOO_LARGE exit_ASCII_2_Bin Bin_2_ASCII con_loop con_top unstack_loop con_end 
   VREF_PRMPT BSPACE_FM BLANK4 BLANK5 BLANK13 BLANK27 L2_TEMPLATE RUN_MESS 
   STP_MESS CL_MESS OL_MESS D_ON_MESS D_OFF_MESS 
-
-*********************************************************************************************
-OBJECT LIST SORTED BY ADDRESS
-     Name                                      Addr   hSize   dSize     Ref    Section   RLIB
----------------------------------------------------------------------------------------------
-     STARTUP_MOTOR                              800      22      34       1   Lib_Motor   
-     ENABLE_MOTOR                               822       D      13       1   Lib_Motor   
-     DISABLE_MOTOR                              82F       D      13       1   Lib_Motor   
-     UPDATE_MOTOR                               83C      14      20       2   Lib_Motor   
-     CCW_MOTOR                                  850       F      15       0   Lib_Motor   
-     BRAKE_MOTOR                                85F       D      13       0   Lib_Motor   
-     CURRENT_MOTOR                              86C      25      37       0   Lib_Motor   
-     INITKEY                                    891      35      53       1   Lib_Keypad  
-     GETCHAR                                    8C6      10      16       1   Lib_Keypad  
-     ISR_KEYPAD                                 8D6      1C      28       1   Lib_Keypad  
-     VAR00001                                   8F2      14      20       1   Lib_Keypad  
-     STARTUP_ENCODER                            906      51      81       1   Lib_Encoder 
-     READ_ENCODER                               957      37      55       2   Lib_Encoder 
-     DISABLE_ENCODER                            98E      29      41       1   Lib_Encoder 
-     INITLCD                                    9B7      6F     111       1   Lib_LCD     
-     LCD_RESET                                  A26      19      25       3   Lib_LCD     
-     LCD_WRITE                                  A3F      18      24       7   Lib_LCD     
-     BF_TEST                                    A57      14      20       0   Lib_LCD     
-     LCD_READ                                   A6B      14      20       2   Lib_LCD     
-     DISP_OFF                                   A7F       8       8       1   Lib_LCD     
-     DISP_ON                                    A87       8       8       1   Lib_LCD     
-     CURSOR_ON                                  A8F       8       8       1   Lib_LCD     
-     CURSOR_OFF                                 A97       1       1       0   Lib_LCD     
-     SETADDR                                    A98       E      14      24   Lib_LCD     
-     GETADDR                                    AA6       C      12       6   Lib_LCD     
-     CLRSCREEN                                  AB2      1C      28       3   Lib_LCD     
-     OUTCHAR_AT                                 ACE       3       3       0   Lib_LCD     
-     OUTCHAR                                    AD1       C      12       4   Lib_LCD     
-     BS_HANDLE                                  ADD       C      12       0   Lib_LCD     
-     OUTSTRING_AT                               AE9       3       3       8   Lib_LCD     
-     OUTSTRING                                  AEC       2       2      11   Lib_LCD     
-     OUTLOOP                                    AEE       9       9       0   Lib_LCD     
-     OUTEXIT                                    AF7       3       3       0   Lib_LCD     
-     LCDTEMPLATE                                AFA      1E      30       1   Lib_LCD     
-     UPDATELCD_L1                               B18      31      49       2   Lib_LCD     
-     UPDATELCD_L2                               B49      1B      27       2   Lib_LCD     
-     INITMESS_L1                                B64      27      39       1   Lib_LCD     
-     INITMESS_L2                                B8B      28      40       1   Lib_LCD     
-     LCDTEMPLATE_L1                             BB3      29      41       1   Lib_LCD     
-     LCDTEMPLATE_L2                             BDC      1D      29       1   Lib_LCD     
-     DELAY_MICRO                                BF9       F      15       5   Lib_Delay   
-     MICRO_Loop                                 C08       D      13       0   Lib_Delay   
-     DELAY_MILLI                                C15       F      15       2   Lib_Delay   
-     MILLI_Loop                                 C24       D      13       0   Lib_Delay   
-     KEYREADY                                  1000       1       1       0   LIBRARY_RAM 
-     LCHARACTER                                1001       1       1       4   LIBRARY_RAM 
-     LKEY_FLG                                  1002       1       1       4   LIBRARY_RAM 
-     LVREF_BUF                                 1003       4       4       7   LIBRARY_RAM 
-     LVREF_NULL                                1007       1       1       0   LIBRARY_RAM 
-     LVACT_BUF                                 1008       4       4       4   LIBRARY_RAM 
-     LVACT_NULL                                100C       1       1       0   LIBRARY_RAM 
-     LERR_BUF                                  100D       4       4       5   LIBRARY_RAM 
-     LERR_NULL                                 1011       1       1       0   LIBRARY_RAM 
-     LEFF_BUF                                  1012       4       4       4   LIBRARY_RAM 
-     LEFF_NULL                                 1016       1       1       0   LIBRARY_RAM 
-     LKP_BUF                                   1017       5       5       5   LIBRARY_RAM 
-     LKP_NULL                                  101C       1       1       0   LIBRARY_RAM 
-     LKI_BUF                                   101D       5       5       5   LIBRARY_RAM 
-     LKI_NULL                                  1022       1       1       0   LIBRARY_RAM 
-     V_entry                                   1023       1       1      14   LIBRARY_RAM 
-     KP_entry                                  1024       1       1      11   LIBRARY_RAM 
-     KI_entry                                  1025       1       1      11   LIBRARY_RAM 
-     NEG_FLG                                   1026       1       1       8   LIBRARY_RAM 
-     SIGN_FLG                                  1027       1       1      10   LIBRARY_RAM 
-     DISP_ON                                   1028       1       1       5   LIBRARY_RAM 
-     V_act                                     1029       2       2       2   LIBRARY_RAM 
-     Kscale                                    102B       2       2       1   LIBRARY_RAM 
-     ERR                                       102D       2       2       2   LIBRARY_RAM 
-     EFF                                       102F       2       2       2   LIBRARY_RAM 
-     ESUM                                      1031       2       2       1   LIBRARY_RAM 
-     V_act_DISP                                1033       2       2       2   LIBRARY_RAM 
-     ERR_DISP                                  1035       2       2       2   LIBRARY_RAM 
-     EFF_DISP                                  1037       2       2       2   LIBRARY_RAM 
-     UPDATE_FLG2                               1039       1       1       1   LIBRARY_RAM 
-     KEY_BUF                                   103A       1       1       4   LIBRARY_RAM 
-     KEY_FLG                                   103B       1       1       5   LIBRARY_RAM 
-     INTERVAL                                  103C       2       2       3   LIBRARY_RAM 
-     COUNT                                     103E       1       1      15   LIBRARY_RAM 
-     BUFFER                                    103F       5       5       4   LIBRARY_RAM 
-     t1state                                   1044       1       1       3   LIBRARY_RAM 
-     t2state                                   1045       1       1      29   LIBRARY_RAM 
-     t3state                                   1046       1       1       5   LIBRARY_RAM 
-     t4state                                   1047       1       1      27   LIBRARY_RAM 
-     t5state                                   1048       1       1       1   LIBRARY_RAM 
-     t6state                                   1049       1       1       1   LIBRARY_RAM 
-     ECHO                                      104A       1       1       5   LIBRARY_RAM 
-     ECHO_SIGN                                 104B       1       1       5   LIBRARY_RAM 
-     B_SPACE                                   104C       1       1       4   LIBRARY_RAM 
-     V_ref_prep                                104D       1       1       4   LIBRARY_RAM 
-     KP_prep                                   104E       1       1       4   LIBRARY_RAM 
-     KI_prep                                   104F       1       1       4   LIBRARY_RAM 
-     update_L1                                 1050       1       1       5   LIBRARY_RAM 
-     update_L2                                 1051       1       1       5   LIBRARY_RAM 
-     D_RUN                                     1052       1       1       7   LIBRARY_RAM 
-     D_LOOP                                    1053       1       1       5   LIBRARY_RAM 
-     D_DISP                                    1054       1       1       5   LIBRARY_RAM 
-     D_HCUR                                    1055       1       1       6   LIBRARY_RAM 
-     MOTOR_POWER                               1056       2       2       0   LIBRARY_RAM 
-     P_POWER                                   1058       2       2       0   LIBRARY_RAM 
-     I_POWER                                   105A       2       2       0   LIBRARY_RAM 
-     CURRENT                                   105C       2       2       0   LIBRARY_RAM 
-     RUN                                       2400       1       1       7   .data       
-     CL                                        2401       1       1       5   .data       
-     V_ref                                     2402       2       2       5   .data       
-     V_act                                     2404       2       2       3   .data       
-     Theta_NEW                                 2406       2       2       2   .data       
-     Theta_OLD                                 2408       2       2       3   .data       
-     KP                                        240A       2       2       5   .data       
-     KI                                        240C       2       2       6   .data       
-     ERR                                       240E       2       2       3   .data       
-     EFF                                       2410       2       2       2   .data       
-     ESUM                                      2412       2       2       3   .data       
-     UPDATE_COUNT                              2414       1       1       1   .data       
-     UPDATE_FLG1                               2415       1       1       4   .data       
-     MOTOR_POWER                               2416       2       2       0   .data       
-     P_POWER                                   2418       2       2       0   .data       
-     I_POWER                                   241A       2       2       0   .data       
-     CURRENT                                   241C       2       2       0   .data       
-     A_star                                    241E       2       2       1   .data       
-     main                                      4000       3       3       1   MyCode      
-     spin                                      4003       2       2       0   MyCode      
-     TC0ISR                                    4005      20      32       1   MyCode      
-     measurements                              4025      48      72       0   MyCode      
-     skip_low_threshold                        406D       8       8       0   MyCode      
-     skip_high_threshold                       4075      1A      26       0   MyCode      
-     skip_update                               408F       9       9       0   MyCode      
-     end                                       4098       B      11       0   MyCode      
-     SDBA                                      40A3       E      14       2   MyCode      
-     NEG                                       40B1       3       3       0   MyCode      
-     DONE                                      40B4       5       5       0   MyCode      
-     Entry                                     C000       0       0       1   .init       
-     _Startup                                  C000      13      19       0   .init       
-     STARTUP_PLL                               C013      20      32       1   .init       
-     STARTUP_SPI0                              C033      45      69       1   .init       
-     STARTUP_ATD1                              C078      1A      26       1   .init       
-     STARTUP_PWM                               C092      1D      29       1   .init       
-     STARTUP_IO                                C0AF      34      52       1   .init       
-     VAR00035                                  FFCE       2       2       0   .text       
-     VAR00002                                  FFEE       2       2       0   .text       
-     VAR00001                                  FFFE       2       2       0   .text       
-     IFENTRY                                 FE8000      12      18       1   Lib_IF      
-     Loop                                    FE8012       E      14       0   Lib_IF      
-     TASK_1                                  FE8020       A      10       1   Lib_IF      
-     jumptable_1                             FE802A       3       3       0   Lib_IF      
-     VAR00001                                FE802D       2       2       0   Lib_IF      
-     VAR00002                                FE802F       2       2       0   Lib_IF      
-     t1state0                                FE8031      2F      47       1   Lib_IF      
-     t1state1                                FE8060       1       1       1   Lib_IF      
-     TASK_2                                  FE8061       A      10       1   Lib_IF      
-     jumptable_2                             FE806B       3       3       0   Lib_IF      
-     VAR00003                                FE806E       2       2       0   Lib_IF      
-     VAR00004                                FE8070       2       2       0   Lib_IF      
-     VAR00005                                FE8072       2       2       0   Lib_IF      
-     VAR00006                                FE8074       2       2       0   Lib_IF      
-     VAR00007                                FE8076       2       2       0   Lib_IF      
-     VAR00008                                FE8078       2       2       0   Lib_IF      
-     VAR00009                                FE807A       2       2       0   Lib_IF      
-     VAR00010                                FE807C       2       2       0   Lib_IF      
-     VAR00011                                FE807E       2       2       0   Lib_IF      
-     VAR00012                                FE8080       2       2       0   Lib_IF      
-     VAR00013                                FE8082       2       2       0   Lib_IF      
-     VAR00014                                FE8084       2       2       0   Lib_IF      
-     VAR00015                                FE8086       2       2       0   Lib_IF      
-     VAR00016                                FE8088       2       2       0   Lib_IF      
-     VAR00017                                FE808A       2       2       0   Lib_IF      
-     t2state0                                FE808C      52      82       1   Lib_IF      
-     t2s0a                                   FE80DE      84     132       0   Lib_IF      
-     t2state1                                FE8162       9       9       1   Lib_IF      
-     t2s1a                                   FE816B      13      19       0   Lib_IF      
-     t2s1b                                   FE817E       D      13       0   Lib_IF      
-     t2s1c                                   FE818B       D      13       0   Lib_IF      
-     t2s1d                                   FE8198       D      13       0   Lib_IF      
-     t2s1e                                   FE81A5       D      13       0   Lib_IF      
-     t2s1f                                   FE81B2       D      13       0   Lib_IF      
-     t2s1g                                   FE81BF       D      13       0   Lib_IF      
-     t2s1h                                   FE81CC       D      13       0   Lib_IF      
-     t2s1i                                   FE81D9       D      13       0   Lib_IF      
-     t2s1j                                   FE81E6       D      13       0   Lib_IF      
-     t2s1k                                   FE81F3       D      13       0   Lib_IF      
-     t2s1l                                   FE8200       A      10       0   Lib_IF      
-     exit_t2s1                               FE820A       1       1       0   Lib_IF      
-     t2state2                                FE820B      19      25       1   Lib_IF      
-     exit_t2s2                               FE8224       6       6       0   Lib_IF      
-     t2state3                                FE822A      1E      30       1   Lib_IF      
-     exit_t2s3                               FE8248       6       6       0   Lib_IF      
-     t2state4                                FE824E      12      18       1   Lib_IF      
-     t2s4a                                   FE8260       3       3       0   Lib_IF      
-     t2s4b                                   FE8263       5       5       0   Lib_IF      
-     exit_t2s4                               FE8268       6       6       0   Lib_IF      
-     t2state5                                FE826E      15      21       1   Lib_IF      
-     t2s5a                                   FE8283       8       8       0   Lib_IF      
-     t2s5b                                   FE828B      21      33       0   Lib_IF      
-     t2s5c                                   FE82AC      19      25       0   Lib_IF      
-     t2s5d                                   FE82C5      1B      27       0   Lib_IF      
-     t2s5e                                   FE82E0      19      25       0   Lib_IF      
-     t2s5f                                   FE82F9      1E      30       0   Lib_IF      
-     exit_t2s5                               FE8317       6       6       0   Lib_IF      
-     t2state6                                FE831D      17      23       1   Lib_IF      
-     exit_t2s6                               FE8334       6       6       0   Lib_IF      
-     t2state7                                FE833A      13      19       1   Lib_IF      
-     t2state8                                FE834D      1F      31       1   Lib_IF      
-     exit_t2s8                               FE836C       6       6       0   Lib_IF      
-     t2state9                                FE8372      21      33       1   Lib_IF      
-     exit_t2s9                               FE8393       6       6       0   Lib_IF      
-     t2stateA                                FE8399      16      22       1   Lib_IF      
-     t2sAa                                   FE83AF      12      18       0   Lib_IF      
-     exit_t2sA                               FE83C1       6       6       0   Lib_IF      
-     t2stateB                                FE83C7      26      38       1   Lib_IF      
-     t2sBa                                   FE83ED       B      11       0   Lib_IF      
-     exit_t2sB                               FE83F8       6       6       0   Lib_IF      
-     t2stateC                                FE83FE      11      17       1   Lib_IF      
-     t2sC1                                   FE840F      19      25       0   Lib_IF      
-     t2sC2                                   FE8428      17      23       0   Lib_IF      
-     exit_t2sC                               FE843F       6       6       0   Lib_IF      
-     t2stateD                                FE8445      1B      27       1   Lib_IF      
-     t2sDa                                   FE8460       4       4       0   Lib_IF      
-     t2sDb                                   FE8464      19      25       0   Lib_IF      
-     t2sDc                                   FE847D       4       4       0   Lib_IF      
-     t2sDd                                   FE8481      1A      26       0   Lib_IF      
-     t2sDe                                   FE849B      16      22       0   Lib_IF      
-     t2sDf                                   FE84B1       4       4       0   Lib_IF      
-     t2sDg                                   FE84B5       8       8       0   Lib_IF      
-     exit_t2sD                               FE84BD       9       9       0   Lib_IF      
-     t2stateE                                FE84C6      26      38       1   Lib_IF      
-     TASK_3                                  FE84EC       A      10       1   Lib_IF      
-     jumptable_3                             FE84F6       3       3       0   Lib_IF      
-     VAR00018                                FE84F9       2       2       0   Lib_IF      
-     VAR00019                                FE84FB       2       2       0   Lib_IF      
-     VAR00020                                FE84FD       2       2       0   Lib_IF      
-     t3state0                                FE84FF       C      12       1   Lib_IF      
-     t3state1                                FE850B      15      21       1   Lib_IF      
-     t3s1a                                   FE8520       1       1       0   Lib_IF      
-     t3state2                                FE8521       A      10       1   Lib_IF      
-     t3s2a                                   FE852B       1       1       0   Lib_IF      
-     TASK_4                                  FE852C       A      10       1   Lib_IF      
-     jumptable_4                             FE8536       3       3       0   Lib_IF      
-     VAR00021                                FE8539       2       2       0   Lib_IF      
-     VAR00022                                FE853B       2       2       0   Lib_IF      
-     VAR00023                                FE853D       2       2       0   Lib_IF      
-     VAR00024                                FE853F       2       2       0   Lib_IF      
-     VAR00025                                FE8541       2       2       0   Lib_IF      
-     VAR00026                                FE8543       2       2       0   Lib_IF      
-     VAR00027                                FE8545       2       2       0   Lib_IF      
-     VAR00028                                FE8547       2       2       0   Lib_IF      
-     VAR00029                                FE8549       2       2       0   Lib_IF      
-     VAR00030                                FE854B       2       2       0   Lib_IF      
-     VAR00031                                FE854D       2       2       0   Lib_IF      
-     VAR00032                                FE854F       2       2       0   Lib_IF      
-     VAR00033                                FE8551       2       2       0   Lib_IF      
-     VAR00034                                FE8553       2       2       0   Lib_IF      
-     t4state0                                FE8555      1A      26       1   Lib_IF      
-     t4state1                                FE856F       B      11       1   Lib_IF      
-     t4s1a                                   FE857A       B      11       0   Lib_IF      
-     t4s1b                                   FE8585       B      11       0   Lib_IF      
-     t4s1c                                   FE8590       B      11       0   Lib_IF      
-     t4s1d                                   FE859B       B      11       0   Lib_IF      
-     t4s1e                                   FE85A6       B      11       0   Lib_IF      
-     t4s1f                                   FE85B1       B      11       0   Lib_IF      
-     t4s1g                                   FE85BC       B      11       0   Lib_IF      
-     t4s1h                                   FE85C7       B      11       0   Lib_IF      
-     t4s1i                                   FE85D2       B      11       0   Lib_IF      
-     t4s1j                                   FE85DD       B      11       0   Lib_IF      
-     t4s1k                                   FE85E8       B      11       0   Lib_IF      
-     t4s1l                                   FE85F3       1       1       0   Lib_IF      
-     t4state2                                FE85F4      15      21       1   Lib_IF      
-     t4state3                                FE8609       9       9       1   Lib_IF      
-     t4s3a                                   FE8612       2       2       0   Lib_IF      
-     t4s3b                                   FE8614       C      12       0   Lib_IF      
-     t4state4                                FE8620       F      15       1   Lib_IF      
-     t4state5                                FE862F      23      35       1   Lib_IF      
-     t4state6                                FE8652      16      22       1   Lib_IF      
-     t4state7                                FE8668      16      22       1   Lib_IF      
-     t4state8                                FE867E      14      20       1   Lib_IF      
-     t4state9                                FE8692      19      25       1   Lib_IF      
-     t4stateA                                FE86AB       E      14       1   Lib_IF      
-     t4sAa                                   FE86B9       3       3       0   Lib_IF      
-     t4sAb                                   FE86BC      12      18       0   Lib_IF      
-     t4stateB                                FE86CE       E      14       1   Lib_IF      
-     t4sBa                                   FE86DC       3       3       0   Lib_IF      
-     t4sBb                                   FE86DF      12      18       0   Lib_IF      
-     t4stateC                                FE86F1       E      14       1   Lib_IF      
-     t4sCa                                   FE86FF       3       3       0   Lib_IF      
-     t4sCb                                   FE8702      12      18       0   Lib_IF      
-     t4stateD                                FE8714       E      14       1   Lib_IF      
-     SM_BUF_blank                            FE8722       A      10       4   Lib_IF      
-     LG_BUF_blank                            FE872C       F      15       4   Lib_IF      
-     ASCII_2_Bin                             FE873B      10      16       1   Lib_IF      
-     conv_loop                               FE874B      21      33       0   Lib_IF      
-     conv_done                               FE876C       5       5       0   Lib_IF      
-     TOO_LARGE                               FE8771       3       3       0   Lib_IF      
-     exit_ASCII_2_Bin                        FE8774       9       9       0   Lib_IF      
-     Bin_2_ASCII                             FE877D       E      14      14   Lib_IF      
-     con_loop                                FE878B      12      18       0   Lib_IF      
-     con_top                                 FE879D       7       7       0   Lib_IF      
-     unstack_loop                            FE87A4      11      17       0   Lib_IF      
-     con_end                                 FE87B5       6       6       0   Lib_IF      
-     VREF_PRMPT                              FE87BB       B      11       1   Lib_IF      
-     BSPACE_FM                               FE87C6       4       4       1   Lib_IF      
-     BLANK4                                  FE87CA       5       5       0   Lib_IF      
-     BLANK5                                  FE87CF       6       6       2   Lib_IF      
-     BLANK13                                 FE87D5       E      14       0   Lib_IF      
-     BLANK27                                 FE87E3      1C      28       1   Lib_IF      
-     L2_TEMPLATE                             FE87FF      1D      29       1   Lib_IF      
-     RUN_MESS                                FE881C       4       4       1   Lib_IF      
-     STP_MESS                                FE8820       4       4       1   Lib_IF      
-     CL_MESS                                 FE8824       3       3       1   Lib_IF      
-     OL_MESS                                 FE8827       3       3       1   Lib_IF      
-     D_ON_MESS                               FE882A       6       6       1   Lib_IF      
-     D_OFF_MESS                              FE8830       6       6       1   Lib_IF      
-
-*********************************************************************************************
-UNUSED-OBJECTS SECTION
----------------------------------------------------------------------------------------------
+NOT USED VARIABLES
+main.asm.o:
+  LVREF_BUF LVACT_BUF LERR_BUF LEFF_BUF LKP_BUF LKI_BUF 
+Lib_Interface.asm.o (ME305LIBV3.0.lib):
+  V_entry LVREF_BUF KP_entry KI_entry NEG_FLG SIGN_FLG DISP_ON LVACT_BUF V_act 
+  Kscale ERR LERR_BUF EFF ESUM LEFF_BUF V_act_DISP ERR_DISP EFF_DISP LKP_BUF 
+  UPDATE_FLG2 KEY_BUF KEY_FLG INTERVAL LKI_BUF COUNT BUFFER t1state t2state 
+  t3state t4state t5state t6state ECHO ECHO_SIGN B_SPACE V_ref_prep KP_prep 
+  KI_prep update_L1 update_L2 D_RUN D_LOOP D_DISP D_HCUR MOTOR_POWER P_POWER 
+  I_POWER CURRENT 
 
 *********************************************************************************************
 COPYDOWN SECTION
@@ -789,190 +227,14 @@ COPYDOWN SECTION
 *********************************************************************************************
 OBJECT-DEPENDENCIES SECTION
 ---------------------------------------------------------------------------------------------
-STARTUP_MOTOR             USES DISABLE_MOTOR 
 INITKEY                   USES LCHARACTER LKEY_FLG 
 GETCHAR                   USES LCHARACTER LKEY_FLG 
 ISR_KEYPAD                USES VAR00001 LCHARACTER LKEY_FLG 
-INITLCD                   USES LVREF_BUF LVACT_BUF LERR_BUF LEFF_BUF LKI_BUF 
-                                LKP_BUF LCD_RESET DELAY_MICRO LCD_WRITE DISP_OFF 
-                                CLRSCREEN DISP_ON SETADDR INITMESS_L1 OUTSTRING 
-                                INITMESS_L2 DELAY_MILLI 
-BF_TEST                   USES LCD_READ DELAY_MICRO 
-DISP_OFF                  USES LCD_WRITE 
-DISP_ON                   USES LCD_WRITE 
-CURSOR_ON                 USES LCD_WRITE 
-SETADDR                   USES LCD_WRITE 
-GETADDR                   USES LCD_READ 
-CLRSCREEN                 USES LCD_WRITE GETADDR SETADDR OUTCHAR 
-OUTCHAR_AT                USES SETADDR 
-OUTCHAR                   USES LCD_WRITE 
-BS_HANDLE                 USES GETADDR SETADDR 
-OUTSTRING_AT              USES SETADDR 
-OUTLOOP                   USES OUTCHAR 
-LCDTEMPLATE               USES CLRSCREEN SETADDR LCDTEMPLATE_L1 OUTSTRING 
-                                LCDTEMPLATE_L2 
-UPDATELCD_L1              USES SETADDR LVREF_BUF OUTSTRING LVACT_BUF LERR_BUF 
-                                LEFF_BUF 
-UPDATELCD_L2              USES SETADDR LKP_BUF OUTSTRING LKI_BUF 
 main                      USES IFENTRY 
-TC0ISR                    USES UPDATE_COUNT V_act V_act_DISP ERR ERR_DISP EFF 
-                                EFF_DISP UPDATE_FLG1 
-measurements              USES READ_ENCODER Theta_NEW Theta_OLD V_act V_ref 
-                                ERR ESUM SDBA KI KP 
-skip_high_threshold       USES A_star RUN UPDATE_MOTOR EFF 
-skip_update               USES UPDATE_MOTOR ESUM 
-end                       USES INTERVAL 
 _Startup                  USES __SEG_END_SSTACK STARTUP_PLL STARTUP_IO 
                                 STARTUP_SPI0 DISABLE_ENCODER main 
 STARTUP_SPI0              USES DELAY_MILLI 
 STARTUP_ATD1              USES DELAY_MICRO 
-IFENTRY                   USES t1state t2state t3state t4state t5state t6state 
-Loop                      USES TASK_1 TASK_2 TASK_3 TASK_4 
-TASK_1                    USES t1state 
-VAR00001                  USES t1state0 
-VAR00002                  USES t1state1 
-t1state0                  USES INTERVAL t1state 
-TASK_2                    USES t2state 
-VAR00003                  USES t2state0 
-VAR00004                  USES t2state1 
-VAR00005                  USES t2state2 
-VAR00006                  USES t2state3 
-VAR00007                  USES t2state4 
-VAR00008                  USES t2state5 
-VAR00009                  USES t2state6 
-VAR00010                  USES t2state7 
-VAR00011                  USES t2state8 
-VAR00012                  USES t2state9 
-VAR00013                  USES t2stateA 
-VAR00014                  USES t2stateB 
-VAR00015                  USES t2stateC 
-VAR00016                  USES t2stateD 
-VAR00017                  USES t2stateE 
-t2state0                  USES RUN CL DISP_ON V_entry KP_entry KI_entry 
-                                NEG_FLG SIGN_FLG D_RUN D_LOOP D_DISP D_HCUR ECHO 
-                                ECHO_SIGN B_SPACE V_ref_prep KP_prep KI_prep update_L1 
-                                update_L2 UPDATE_FLG1 COUNT LVREF_BUF 
-t2s0a                     USES V_ref LVREF_BUF Bin_2_ASCII V_act LVACT_BUF ERR 
-                                LERR_BUF EFF LEFF_BUF KP LKP_BUF KI LKI_BUF Kscale 
-                                t2state STARTUP_ATD1 STARTUP_PWM STARTUP_ENCODER 
-                                STARTUP_MOTOR ENABLE_MOTOR READ_ENCODER Theta_OLD 
-t2state1                  USES KEY_FLG 
-t2s1a                     USES KEY_FLG KEY_BUF t2state 
-t2s1b                     USES t2state 
-t2s1c                     USES t2state 
-t2s1d                     USES t2state 
-t2s1e                     USES t2state 
-t2s1f                     USES t2state 
-t2s1g                     USES t2state 
-t2s1h                     USES t2state 
-t2s1i                     USES t2state 
-t2s1j                     USES t2state 
-t2s1k                     USES t2state 
-t2s1l                     USES UPDATE_FLG1 t2state 
-t2state2                  USES V_entry SIGN_FLG COUNT ECHO_SIGN 
-exit_t2s2                 USES t2state 
-t2state3                  USES V_entry SIGN_FLG COUNT NEG_FLG ECHO_SIGN 
-exit_t2s3                 USES t2state 
-t2state4                  USES COUNT SIGN_FLG NEG_FLG 
-t2s4a                     USES COUNT 
-t2s4b                     USES B_SPACE 
-exit_t2s4                 USES t2state 
-t2state5                  USES COUNT V_entry SIGN_FLG NEG_FLG 
-t2s5a                     USES KP_entry KI_entry 
-t2s5b                     USES ASCII_2_Bin V_entry LVREF_BUF V_ref NEG_FLG 
-t2s5c                     USES LVREF_BUF SM_BUF_blank Bin_2_ASCII SIGN_FLG 
-                                NEG_FLG COUNT V_entry 
-t2s5d                     USES KP_entry KP LKP_BUF LG_BUF_blank Bin_2_ASCII 
-                                COUNT 
-t2s5e                     USES KI_entry KI LKI_BUF LG_BUF_blank Bin_2_ASCII 
-                                COUNT 
-t2s5f                     USES update_L1 update_L2 D_RUN D_LOOP D_DISP D_HCUR 
-exit_t2s5                 USES t2state 
-t2state6                  USES KP_entry KI_entry RUN D_RUN 
-exit_t2s6                 USES t2state 
-t2state7                  USES DISP_ON D_DISP t2state 
-t2state8                  USES V_entry KP_entry KI_entry SIGN_FLG NEG_FLG 
-                                V_ref_prep 
-exit_t2s8                 USES t2state 
-t2state9                  USES V_entry KP_entry KI_entry RUN D_RUN KP_prep 
-exit_t2s9                 USES t2state 
-t2stateA                  USES V_entry KP_entry KI_entry CL 
-t2sAa                     USES RUN D_RUN KI_prep KI_entry 
-exit_t2sA                 USES t2state 
-t2stateB                  USES V_entry KP_entry KI_entry CL KI ESUM D_HCUR 
-t2sBa                     USES D_LOOP t2state 
-exit_t2sB                 USES t2state 
-t2stateC                  USES V_entry KP_entry KI_entry 
-t2sC1                     USES BUFFER COUNT KEY_BUF ECHO 
-t2sC2                     USES BUFFER COUNT KEY_BUF ECHO 
-exit_t2sC                 USES t2state 
-t2stateD                  USES DISP_ON LVACT_BUF SM_BUF_blank V_act_DISP 
-t2sDb                     USES Bin_2_ASCII LERR_BUF SM_BUF_blank ERR_DISP 
-t2sDd                     USES Bin_2_ASCII LERR_BUF 
-t2sDe                     USES LEFF_BUF SM_BUF_blank EFF_DISP 
-t2sDg                     USES Bin_2_ASCII update_L1 
-exit_t2sD                 USES UPDATE_FLG1 t2state 
-t2stateE                  USES LKP_BUF LG_BUF_blank KP Bin_2_ASCII LKI_BUF KI 
-                                update_L2 UPDATE_FLG2 t2state 
-TASK_3                    USES t3state 
-VAR00018                  USES t3state0 
-VAR00019                  USES t3state1 
-VAR00020                  USES t3state2 
-t3state0                  USES INITKEY KEY_FLG t3state 
-t3state1                  USES LKEY_FLG GETCHAR KEY_BUF KEY_FLG t3state 
-t3state2                  USES KEY_FLG t3state 
-TASK_4                    USES t4state 
-VAR00021                  USES t4state0 
-VAR00022                  USES t4state1 
-VAR00023                  USES t4state2 
-VAR00024                  USES t4state3 
-VAR00025                  USES t4state4 
-VAR00026                  USES t4state5 
-VAR00027                  USES t4state6 
-VAR00028                  USES t4state7 
-VAR00029                  USES t4state8 
-VAR00030                  USES t4state9 
-VAR00031                  USES t4stateA 
-VAR00032                  USES t4stateB 
-VAR00033                  USES t4stateC 
-VAR00034                  USES t4stateD 
-t4state0                  USES INITLCD LCDTEMPLATE UPDATELCD_L1 UPDATELCD_L2 
-                                SETADDR CURSOR_ON t4state 
-t4state1                  USES ECHO t4state 
-t4s1a                     USES ECHO_SIGN t4state 
-t4s1b                     USES B_SPACE t4state 
-t4s1c                     USES V_ref_prep t4state 
-t4s1d                     USES KP_prep t4state 
-t4s1e                     USES KI_prep t4state 
-t4s1f                     USES update_L1 t4state 
-t4s1g                     USES update_L2 t4state 
-t4s1h                     USES D_RUN t4state 
-t4s1i                     USES D_LOOP t4state 
-t4s1j                     USES D_DISP t4state 
-t4s1k                     USES D_HCUR t4state 
-t4state2                  USES COUNT BUFFER OUTCHAR ECHO t4state 
-t4state3                  USES NEG_FLG 
-t4s3b                     USES OUTCHAR ECHO_SIGN t4state 
-t4state4                  USES BSPACE_FM OUTSTRING B_SPACE t4state 
-t4state5                  USES BLANK27 OUTSTRING_AT VREF_PRMPT SETADDR V_entry 
-                                V_ref_prep t4state 
-t4state6                  USES BLANK5 OUTSTRING_AT SETADDR KP_prep t4state 
-t4state7                  USES BLANK5 OUTSTRING_AT SETADDR KI_prep t4state 
-t4state8                  USES GETADDR UPDATELCD_L1 SETADDR update_L1 t4state 
-t4state9                  USES L2_TEMPLATE OUTSTRING_AT UPDATELCD_L2 D_HCUR 
-                                update_L2 t4state 
-t4stateA                  USES GETADDR RUN STP_MESS 
-t4sAa                     USES RUN_MESS 
-t4sAb                     USES OUTSTRING_AT D_RUN SETADDR t4state 
-t4stateB                  USES GETADDR CL OL_MESS 
-t4sBa                     USES CL_MESS 
-t4sBb                     USES OUTSTRING_AT D_LOOP SETADDR t4state 
-t4stateC                  USES GETADDR DISP_ON D_OFF_MESS 
-t4sCa                     USES D_ON_MESS 
-t4sCb                     USES OUTSTRING_AT D_DISP SETADDR t4state 
-t4stateD                  USES SETADDR D_HCUR t4state 
-ASCII_2_Bin               USES BUFFER 
-conv_loop                 USES COUNT 
 
 *********************************************************************************************
 DEPENDENCY TREE
@@ -980,19 +242,13 @@ DEPENDENCY TREE
  main and _Startup Group
  | 
  +- main                
- |  | 
- |  +- IFENTRY             
- |       
+ |    
  +- Entry               
       
  _ORG00001           
  | 
  +- Entry                (see above)
     
- _ORG00002           
- | 
- +- TC0ISR              
-      
  _ORG00001           
  | 
  +- ISR_KEYPAD          
@@ -1005,6 +261,6 @@ STATISTIC SECTION
 
 ExeFile:
 --------
-Number of blocks to be downloaded: 11
-Total size of all blocks to be downloaded: 3593
+Number of blocks to be downloaded: 7
+Total size of all blocks to be downloaded: 586
 

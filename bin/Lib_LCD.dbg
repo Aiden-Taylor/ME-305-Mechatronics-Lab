@@ -1,0 +1,567 @@
+;***************************************************************************************************           
+;* ME 305 Library V2.0                                                                             * 
+;*************************************************************************************************** 
+;* Summary:                                                                                        *
+;*  The following is a summary of the I/O functionality provided in the ME 305 library. These      *
+;*  commands are in the form of subroutines that have been placed in the Libraries folder of the   *
+;*  Codewarrior Project provided during Lab 1.                                                     *
+;*  IMPORTANT NOTE: Many of the MCU pins are in connected to hardware and should not be used.      *
+;*  +	Bits 4 - 6 of PORT M and all of PORT B are used for communication with the LCD module.       *
+;*  +	Bit 7 of PORT J, and bits 0 - 5 of PORT K are used for communication with the keypad.        *
+;*  +	Bits 1 and 2 of PORT H are used for SPI communication with the encoder counter and DAC       *
+;*  +	Bits 4 - 7 of PORT A and AN10 are used with the motor driver.                                *
+;*  None of these pins should be used for anything besides interacting with the associated         *
+;*  hardware described above.                                                                      *
+;*                                                                                                 *
+;* Author: Charlie Refvem                                                                          *
+;*  Cal Poly University                                                                            *
+;*  Jan 2015                                                                                       *
+;*                                                                                                 *
+;* Revision History:                                                                               *
+;*  CTR 05/26/16                                                                                   * 
+;*   - Updated comment scheme                                                                      * 
+;*   - Added outstring_at and outchar_at                                                           * 
+;*  WRM 09/02/16                                                                                   * 
+;*   - Renamed CLEARSCREEN to CLRSCREEN and renamed LOADADDR to GETADDR                            * 
+;*   - Reversed order of KP & KI in LCDTEMPLATE_L2                                                 * 
+;*   - Assorted argument changes to increase compatiblity with the with pre-2016 library           * 
+;*  WRM 09/15/16                                                                                   * 
+;*   - Changed GETADDR to agree with pre-2016 library.  This change was overlooked in prior patch. * 
+;*   - Verified ME 305 Library V1.0 works correctly with Lab 3.                                    * 
+;*  WRM 10/03/16                                                                                   * 
+;*   - Cleared up bit vs. pin useage in the summary.                                               * 
+;*   - Reworked BACKSPACE.                                                                         * 
+;*   - Changed psha and pshb to pshd in several places; same for corresponding pulls               * 
+;*   - Revised Lab 5 display screen to make additional space to display operating state            * 
+;*   - Changed LEFRT to LEFF to better agree with revised Lab 5 display routines                   * 
+;*   - Named this version V1.1                                                                     *
+;*  CTR 01/07/17                                                                                   *
+;*   - Moved library variables to their own section in RAM                                         * 
+;*   - Renamed to V1.2                                                                             * 
+;*  CTR/WRM 01/08/17                                                                               *
+;*   - Fixed bug regarding periodic memory update (100 ms is too fast)                             *
+;*   - Renamed to V2.0                                                                             *
+;*  CTR/WRM 01/05/19                                                                               *
+;*   - Changed PWM period to 625, corresponding to PWM at 16.0kHz                                  *
+;*   - Renamed to V2.1                                                                             *
+;*  CTR/WRM 03/09/2020                                                                             *
+;*   - Changed PWM period to 650, corresponding to PWM at 15.385kHz                                *
+;*   - Renamed to V2.2                                                                             *
+;*  ToDo:                                                                                          *
+;*   - Revisit CURSOR_OFF                                                                          *
+;*   - Separate DISP and CURSOR functions                                                          *
+;***************************************************************************************************
+
+;/-------------------------------------------------------------------------------------------------\  
+;| Include all associated files                                                                    |
+;\-------------------------------------------------------------------------------------------------/
+; The following are external files to be included during assembly          
+ 
+            INCLUDE 'derivative.inc'         
+
+;/-------------------------------------------------------------------------------------------------\  
+;| External Definitions                                                                            |
+;\-------------------------------------------------------------------------------------------------/
+; All labels that are referenced by the linker need an external definition (even main)
+ 
+            XDEF  INITLCD, SETADDR, GETADDR, CLRSCREEN, CURSOR_ON, CURSOR_OFF, DISP_OFF
+            XDEF  OUTCHAR, OUTCHAR_AT, OUTSTRING, OUTSTRING_AT
+            XDEF  LCDTEMPLATE, UPDATELCD_L1, UPDATELCD_L2
+            XDEF  LVREF_BUF, LVACT_BUF, LERR_BUF,LEFF_BUF, LKP_BUF, LKI_BUF
+            
+;/-------------------------------------------------------------------------------------------------\  
+;| External References                                                                             |
+;\-------------------------------------------------------------------------------------------------/    
+; All labels from other files must have an external reference             
+                    
+            XREF  DELAY_MICRO, DELAY_MILLI
+
+              
+;/-------------------------------------------------------------------------------------------------\  
+;| Assembler Equates                                                                               |
+;\-------------------------------------------------------------------------------------------------/	
+; Constant values can be equated here
+
+LCD_DATA      EQU PORTB
+LCD_DATA_DIR  EQU DDRB
+LCD_CTRL      EQU PTM
+LCD_CTRL_DIR  EQU DDRM
+E             EQU mPTM_PTM6                               ; Enable Line
+RW            EQU mPTM_PTM5                               ; Read Write
+RS            EQU mPTM_PTM4                               ; Register Select
+Adr_mask      EQU E|RW|RS                                 ; LCD CTRL bits (E|RW|RS)
+LVREF_LENGTH  EQU 4
+LVACT_LENGTH  EQU 4
+LERR_LENGTH   EQU 4
+LEFF_LENGTH   EQU 4
+LKI_LENGTH    EQU 5
+LKP_LENGTH    EQU 5            
+              
+;/-------------------------------------------------------------------------------------------------\  
+;| Variables in RAM                                                                                |
+;\-------------------------------------------------------------------------------------------------/
+; The following variables are located in unpaged ram
+
+LIBRARY_RAM: SECTION
+                                                                                               
+LVREF_BUF  DS.B  LVREF_LENGTH                             ; Vref Buffer
+LVREF_NULL DS.B  1                           
+LVACT_BUF  DS.B  LVACT_LENGTH                             ; Vact Buffer 
+LVACT_NULL DS.B  1                           
+LERR_BUF   DS.B  LERR_LENGTH                              ; Error Buffer     
+LERR_NULL  DS.B  1                           
+LEFF_BUF   DS.B  LEFF_LENGTH                              ; Effort Buffer   
+LEFF_NULL  DS.B  1                           
+LKP_BUF    DS.B  LKP_LENGTH                               ; Kp Buffer     
+LKP_NULL   DS.B  1                           
+LKI_BUF    DS.B  LKI_LENGTH                               ; Ki Buffer                                                                      
+LKI_NULL   DS.B  1                           
+
+;/-------------------------------------------------------------------------------------------------\  
+;|  Main Routines                                                                                  |
+;\-------------------------------------------------------------------------------------------------/
+
+Lib_LCD       SECTION
+
+;-----------INITLCD---------------------------------------------------------------------------------
+; Initializes the LCD to a blank screen with the cursor turned off after showing a splash screen for
+; 3 seconds. 
+; Example:
+;		        jsr	  INITLCD		                              ; Initializes LCD screen
+
+INITLCD:
+            pshy                                          ; Save registers on stack
+            pshx
+            pshd                                          
+            
+; Initialize Variables
+            clr   LVREF_BUF+LVREF_LENGTH;                 ; Clear last byte of each buffer to act as
+            clr   LVACT_BUF+LVACT_LENGTH                  ; an ASCII stop
+            clr   LERR_BUF +LERR_LENGTH
+            clr   LEFF_BUF+LEFF_LENGTH
+            clr   LKI_BUF  +LKI_LENGTH
+            clr   LKP_BUF  +LKP_LENGTH
+            
+; Initialize Ports                                                                           
+            bset  LCD_DATA_DIR,#$FF                       ; LCD_DATA output
+            bset  LCD_CTRL_DIR,#Adr_mask                  ; LCD_CTRL output
+            bclr  LCD_DATA,#$FF                           ; clear LCD_DATA   
+            bclr  LCD_CTRL,#Adr_mask                      ; clear LCD_CTRL
+
+; Reset Display
+            ; Reset Command #1   
+            jsr   LCD_RESET                               ; send reset command
+            ldx   #2                                      ; set delay time
+            jsr   DELAY_MICRO                             ; sub for delay
+            
+            ; Reset Command #2
+            jsr   LCD_RESET                               ; send reset command         
+            ldx   #2                                      ; set delay time
+            jsr   DELAY_MICRO                             ; sub for delay
+
+            ; Reset Command #3
+            jsr   LCD_RESET                               ; send reset command          
+            ldx   #2                                      ; set delay time
+            jsr   DELAY_MICRO                             ; sub for delay
+            
+            ;Function Set Command: 8 bit bus, 2 rows, 5x7 dots  
+            ldab  #$38                                    ; function set command
+            jsr   LCD_WRITE                               ; write data to LCD      
+
+
+; Configure Display
+            jsr   DISP_OFF                                ; Display off      
+            jsr   CLRSCREEN                               ; Clear Display   
+            jsr   DISP_ON                                 ; Display on
+            
+; Splash top Display  
+            ldaa  #$00                                    ; Address of top left corner
+            jsr   SETADDR                                 
+            ldx   #INITMESS_L1                            ; Top splash message
+            jsr   OUTSTRING                               ; Display on screen
+            
+; Splash bottom display                                   
+            ldaa  #$40                                    ; Address of bottom left corner
+            jsr   SETADDR                                 
+            ldx   #INITMESS_L2                            ; Bottom splash message
+            jsr   OUTSTRING                               ; Display on screen
+                                        
+; Delay 3 seconds
+            ldx   #3000                                   ; Hold the screen for 3 seconds
+            jsr   DELAY_MILLI                                           
+                              
+; Send Clear Display     
+            jsr   CLRSCREEN                               ; Blank out the screen
+            
+            puld
+            pulx
+            puly
+            rts                                           ; Return From Subroutine
+  
+;-----------LCD_RESET-------------------------------------------------------------------------------
+; Routine sends LCD reset command. Used internally
+
+LCD_RESET:                               
+            pshb
+            ; Step 0 Set DDR
+            bset  LCD_DATA_DIR, #$FF                      ; Set LCD DDR to output
+            ; Step 1 set control bits                                      
+            bclr  LCD_CTRL,#Adr_mask                               
+            nop
+            ; Step 2 set enable bit
+            bset  LCD_CTRL, #E                            ; raise enable bit  
+            nop
+            ; Step 3 send data
+            movb  #$30, LCD_DATA                          ; send data
+            ; Step 4 clock in data                                                      
+            bclr  LCD_CTRL,#E                             ; clock in data by lowering E
+            pulb
+            
+            rts
+
+;-----------LCD_WRITE-------------------------------------------------------------------------------
+; Routine sends LCD Data
+; Assumes acc B contains data to write
+
+LCD_WRITE:                                
+            pshx
+            pshd
+            ; Step 0 Set DDR
+            bset  LCD_DATA_DIR, #$FF                      ; Set LCD DDR to output
+            ; Step 1 set control bits
+            bclr  LCD_CTRL,#RW
+            nop
+            ; Step 2 set enable bit
+            bset  LCD_CTRL,#E                             ; raise enable bit   
+            nop
+            nop
+            ; Step 3 send data
+            stab  LCD_DATA                                ; send data from ACCB       
+            nop
+            nop
+            ; Step 4 clock in data                                                      
+            bclr  LCD_CTRL,#E                             ; clock in data by lowering E
+            
+            ; Check busy flag
+BF_TEST:    
+            bclr  LCD_CTRL,#RS
+            jsr   LCD_READ
+            andb  #$80
+            bne   BF_TEST
+            ldx   #1
+            jsr   DELAY_MICRO 
+            puld
+            pulx
+            rts
+            
+;-----------LCD_READ--------------------------------------------------------------------------------
+; Routine reads LCD Data
+; Loads acc B with data read      
+    
+LCD_READ:                      
+            ; Step 0 Set DDRs
+            bclr  LCD_DATA_DIR, #$FF                      ; Set LCD DDR to input
+            ; Step 1 set control bits
+            bset  LCD_CTRL,#RW                            ; Set Read Bit
+            nop
+            ; Step 2 set enable bit
+            bset  LCD_CTRL,#E                             ; Set Enable Bit
+            nop
+            ; Step 3 send data
+            ldab  LCD_DATA                                ; Read Data Into ACCB
+            ; Step 4 clock in data
+            bclr  LCD_CTRL,#E                             ; clock in data by lowering E    
+            
+            rts
+            
+;-----------DISP_OFF--------------------------------------------------------------------------------
+; Disables the LCD module without changing any of the text on the display.
+; Example:
+;		        jsr	DISP_OFF		                              ; Temporarily disable LCD screen
+
+DISP_OFF:
+            pshb
+            ldab  #%00001000                               
+;                   \__/|||| 
+;                    |  ||| \_____________________________ B0=0 (Blink off)
+;                    |  || \______________________________ B1=0 (Cursor off)
+;                    |  | \_______________________________ B2=0 (Display off)
+;                    |   \________________________________ B3=1 (Indicates on/off command)
+;                     \___________________________________ B7:B4=0000
+            jsr   LCD_WRITE                               ; write data to LCD
+            pulb
+            
+            rts
+            
+;-----------DISP_ON---------------------------------------------------------------------------------     
+;Turns the display module back on with the cursor off.
+;Example:
+;		        jsr	  DISP_ON		                      ; Temporarily disable LCD screen
+
+DISP_ON:
+;Clear Display     
+            pshb
+            ldab  #%00001100                              
+;                   \_____/|
+;                      |    \_____________________________ B0=1
+;                       \_________________________________ B7:B1=0000000
+            jsr   LCD_WRITE                               ;write data to LCD
+            pulb
+            
+            rts
+            
+;-----------CURSOR_ON-------------------------------------------------------------------------------     
+; Enables the cursor on the LCD screen. If the display is off it will turn on when this command is
+; run. The subroutine is stack neutral and leaves all index registers and accumulators as is.
+;Example:
+;	        	jsr   CURSOR_ON		                            ; Enable LCD cursor
+                
+CURSOR_ON:     
+            pshb
+            ldab  #%00001110                               
+;                   \__/|||| 
+;                    |  ||| \_____________________________ B0=0 (Blink off)
+;                    |  || \______________________________ B1=0 (Cursor off)
+;                    |  | \_______________________________ B2=1 (Display on)
+;                    |   \________________________________ B3=1 (Indicates on/off command)
+;                     \___________________________________ B7:B4=0000
+            jsr   LCD_WRITE                               ;write data to LCD
+            pulb
+            
+            rts
+            
+;-----------CURSOR_OFF------------------------------------------------------------------------------     
+; Disables the cursor on the LCD screen. If the display is off it will turn on when this command is
+; run. The subroutine is stack neutral and leaves all index registers and accumulators as is.
+;Example:
+;	        	jsr   CURSOR_OFF		                          ; Enable LCD cursor
+
+CURSOR_OFF: ; at this point in time, CURSOR_OFF has not been implemented.  This is a stub. 
+
+            rts
+ 
+;-----------SETADDR---------------------------------------------------------------------------------     
+; Sets the LCD address. Input arguments: acc A contains the value to which the LCD cursor address
+; will be set.  Outputs returned: none..
+; Example:
+;		        ldaa  #$40			           ; Load acc A with addr of Row 2 Col 1
+;           jsr	  SETADDR	             ; Set the LCD address
+
+
+SETADDR:    
+            pshd     
+            oraa  #%10000000
+            tab                       
+            bclr  LCD_CTRL,#RS  
+            jsr   LCD_WRITE
+            puld
+            
+            rts
+            
+;-----------GETADDR---------------------------------------------------------------------------------     
+; Returns the current LCD address. This is the location where the next character will be displayed.
+; If enabled, the cursor will move to this address. Outputs: the LCD address will be returned in 
+; Accumulator A.
+;           jsr 	GETADDR		           ; Gets the LCD address
+;           staa	cur_addr		         ; Store the returned value in memory
+                       
+GETADDR:
+            pshb
+            bclr  LCD_CTRL,#RS
+            jsr   LCD_READ             ; puts LCDaddr in acc B
+            tba                        ; moves LCDaddr to acc A
+            pulb            
+            rts
+            
+;-----------CLRSCREEN-------------------------------------------------------------------------------     
+              
+CLRSCREEN:
+;Clear Display     
+            pshb
+            ldab  #%00000001                              
+;                   \_____/|
+;                      |    \_____________________________ B0=1
+;                       \_________________________________ B7:B1=0000000
+            jsr   LCD_WRITE                               ;write data to LCD
+            pulb
+            
+            rts
+            
+
+;-----------BACKSPACE-------------------------------------------------------------------------------     
+; Backspace function. This is used internally and should not be called by the user.
+
+BACKSPACE:
+            pshd
+            jsr   GETADDR  
+            deca
+            psha
+            jsr   SETADDR
+            ldab  #$20  
+            jsr   OUTCHAR
+            pula
+            jsr   SETADDR
+            puld
+            
+            rts
+            
+;-----------OUTCHAR/OUTCHAR_AT----------------------------------------------------------------------     
+; OUTCHAR outputs a single character to the LCD screen at the present cursor location, and the 
+; cursor location is automatically advanced.  Input arguments:  ASCII value of character to be
+; displayed is in acc B.  Outputs returned: none.
+;
+; OUTCHAR_AT outputs a single character to the LCD screen at a specified location, and the cursor
+; location is automatically advanced.  Input arguments:  LCD address at which the character will
+; be displayed is in acc A, and the ASCII value of character to be displayed is in acc B.
+; Outputs returned: none.
+; Example_1:
+;		        ldab  #character		       ; Load acc B with character be displayed
+;           jsr   OUTCHAR		           ; Output the character to the screen
+; Example_2:
+;		        ldaa  #$LCDaddr		         ; LCD address range is $00 - $27 and $40 - $67
+;           ldab  #character		       ; character is in 8-Bit ASCII
+;           jsr   OUTCHAR_AT		       ; Output the character to the screen
+
+OUTCHAR_AT:
+            jsr   SETADDR
+
+OUTCHAR:
+;Write one character to the screen   
+            cmpb  #$08
+            beq   BS_HANDLE
+            bset  LCD_CTRL,#RS
+            jsr   LCD_WRITE            ; write data to LCD  
+            
+            rts                                                                             
+            
+BS_HANDLE:                             ; ensures that BS moves cursor back one
+            psha
+            jsr   GETADDR
+            anda  #%01111111  
+            deca            
+            jsr   SETADDR
+            pula
+            
+            rts
+            
+;-----------OUTSTRING/OUTSTRING_AT------------------------------------------------------------------    
+; OUTSTRING outputs an entire string to the LCD screen beginning at the current cursor location.
+;.Input arguments: X contains the address of the first byte of the stored message to be displayed.
+; All messages must end with an end-of-string character (ASCII null OxOO).  Outputs returned: none.
+;
+; OUTSTRING_AT outputs an entire string to the LCD screen beginning at a specified location. Input
+; arguments:  LCD address at which the first character will be displayed is in acc A, and X contains
+; the address of the first byte of the stored message to be displayed.  All messages must end with
+; an end-of-string character (ASCII null OxOO).  Outputs returned: none.
+; Example_1:
+;		        ldx	  #MESSAGE		         ; Load index register X with address of message
+;           jsr 	OUTSTRING		         ; Output the message to the screen 
+; Example_2: 
+;		        ldaa	#$LCDaddr		         ; LCD address range is $00 - $27 and $40 - $67
+;           ldx	  #MESSAGE		         ; Load index register X with address of message
+;           jsr	  OUTSTRING_AT	       ; Output the message to the screen
+; If the message is known at assembly time, the string to be displayed can be generated and stored
+; in memory using assembler directive DC.B (define constant byte). An ACSII null character must be
+; appended to the end of the given string. Proper use of this is shown below.
+;MESSAGE: 	DC.B  'Hello World!',$00
+
+OUTSTRING_AT:
+            jsr   SETADDR
+
+OUTSTRING:
+; Write a string of characters to the screen       
+            pshx
+            pshb
+OUTLOOP:
+            ldab  1,x+
+            beq   OUTEXIT
+            jsr   OUTCHAR
+            bra   OUTLOOP 
+OUTEXIT:    
+            pulb
+            pulx
+            rts
+            
+;-----------LCDTEMPLATE-----------------------------------------------------------------------------     
+
+
+LCDTEMPLATE:
+            pshx
+            psha
+; Clear display    
+            jsr   CLRSCREEN                            
+
+; Display top line 
+            ldaa  #$00  
+            jsr   SETADDR
+            ldx   #LCDTEMPLATE_L1
+            jsr   OUTSTRING
+            
+; Display bottom line
+            ldaa  #$40
+            jsr   SETADDR
+            ldx   #LCDTEMPLATE_L2
+            jsr   OUTSTRING
+
+            pula
+            pulx
+            rts
+            
+;-----------UPDATELCD_L1----------------------------------------------------------------------------     
+
+UPDATELCD_L1:   
+            pshx
+            psha
+; Update V_ref
+            ldaa  #$00+06                                 ; Top row, sixth column
+            jsr   SETADDR
+            ldx   #LVREF_BUF
+            jsr   OUTSTRING
+; Update V_act
+            ldaa  #$00+17                                 ; Top row, seventeenth column
+            jsr   SETADDR
+            ldx   #LVACT_BUF
+            jsr   OUTSTRING
+; Update Err
+            ldaa  #$00+26                                 ; Top row, twenty-sixth column
+            jsr   SETADDR
+            ldx   #LERR_BUF
+            jsr   OUTSTRING   
+; Update Eff
+            ldaa  #$00+35                                 ; Top row, thirty-fifth column
+            jsr   SETADDR
+            ldx   #LEFF_BUF
+            jsr   OUTSTRING
+
+            pula
+            pulx
+            rts
+            
+;-----------UPDATELCD_L2----------------------------------------------------------------------------     
+
+UPDATELCD_L2:     
+            pshx
+            psha
+; Update 1024*KP
+            ldaa  #$40+08                                 ; Top row, eighth column
+            jsr   SETADDR
+            ldx   #LKP_BUF
+            jsr   OUTSTRING
+; Update 1024*KI
+            ldaa  #$40+22                                 ; Top row, twenty-second column
+            jsr   SETADDR
+            ldx   #LKI_BUF
+            jsr   OUTSTRING
+
+            pula
+            pulx
+            rts
+
+;/-------------------------------------------------------------------------------------------------\  
+;|  LCLD Messages                                                                                  |
+;\-------------------------------------------------------------------------------------------------/
+
+INITMESS_L1:    DC.B 'ME 305 Benchtop Unit with Library V3.0',$00
+INITMESS_L2:    DC.B 'By: C. Refvem, W. Murray, E. Wade, 2023',$00
+LCDTEMPLATE_L1: DC.B 'V_ref=     V_act=     Err=     Eff=    %',$00
+LCDTEMPLATE_L2: DC.B '1024*KP=      1024*KI=      ',$00
