@@ -1,0 +1,66 @@
+;/-------------------------------------------------------------------------------------------------\
+;|                               Digital/Analog Converter Subroutines                              |
+;|-------------------------------------------------------------------------------------------------|
+;|HARDWARE DESCRIPTION                                                                             |
+;|Manufacturer:      Microchip Techology Inc.                                                      |
+;|Model Number:      MCP4922                                                                       |
+;|Summary:           The MCP4922 devics is a dual 12-bit buffered voltage output DAC.              |
+;|                   The device operates over SPI with 10MHz clock support. Simultaneous           |
+;|                   latching of the dual DACs can be done with the ~LDAC pin.                     |
+;| Pins Used:        PS5 (MOSI)                                                                    |
+;|                   PS6 (SCK)                                                                     |
+;|                   PT7 (CS)                                                                      |
+;|                                                                                                 |
+;|SUBROUTINE DESCRIPTION                                                                           |
+;|OUTDACx:           Sends the least significant 12 bits of D to DAC channel A or B                |
+;|                   via SPI. First 4 bits of D are changed to configuration bits for the MCP4922  |
+;\-------------------------------------------------------------------------------------------------/
+
+            INCLUDE 'derivative.inc'     
+            XDEF  OUTDACA, OUTDACB
+            XREF  DELAY_1ms
+
+Lib_DAC:    SECTION
+
+; DAC Equates    
+DACPort     EQU   PTH                                  ; Port which DAC is on
+DACDDR      EQU   DDRH                                 ; Port which DAC is on
+mDACSS      EQU   mPTH_PTH1     
+
+
+OUTDACA:
+            anda  #%00001111                           ; Make sure the first four bits of D are zero
+            oraa  #%00110000                           ; Set the config bits of the SPI packet
+;                   ||||
+;                   ||| \_______________________________ !SHDN=1 (Active Mode Operation; Vout is available)
+;                   || \________________________________ !GA=1 (Output Gain=1; Vout=Vref*D/4096)
+;                   | \_________________________________ BUF=0 (Unbuffered)
+;                    \__________________________________ !A/B=0 (Write to DACA)
+            bra   OUTDAC
+
+OUTDACB:  
+            anda  #%00001111                           ; Make sure the first four bits of D are zero
+            oraa  #%10110000                           ; Set the config bits of the SPI packet
+;                   ||||
+;                   ||| \_______________________________ !SHDN=1 (Active Mode Operation; Vout is available)
+;                   || \________________________________ !GA=1 (Output Gain=1; Vout=Vref*D/4096)
+;                   | \_________________________________ BUF=0 (Unbuffered)
+;                    \__________________________________ !A/B=1 (Write to DACB)
+
+OUTDAC:            
+            bclr  DACPort,  #mDACSS;               ; Set Port T pin 7 high
+            
+            brclr SPI0SR,   #mSPI0SR_SPTEF, *         ; Wait until the output buffer is clear 
+            staa  SPI0DR                              ; Output first byte
+            brclr SPI0SR,   #mSPI0SR_SPIF, *          ; Wait until the output buffer is clear 
+                                                                                            
+            tst   SPI0DR                              ; Read SPI Data register to clear SPIF                                                  
+                                                                                               
+            brclr SPI0SR,   #mSPI0SR_SPTEF, *         ; Wait until the output buffer is clear 
+            stab  SPI0DR                              ; Output second byte                     
+            brclr SPI0SR,   #mSPI0SR_SPIF, *          ; Wait until the output buffer is clear  
+                                                                                            
+            tst   SPI0DR                              ; Read SPI Data register to clear SPIF
+            
+            bset  DACPort,  #mDACSS;                  ; Set Port T pin 7 high
+            rts        

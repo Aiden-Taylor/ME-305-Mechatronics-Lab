@@ -1,0 +1,116 @@
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+    1    1                      ;***************************************************************************************************           
+    2    2                      ;* Delay Routines                                                                                  * 
+    3    3                      ;*************************************************************************************************** 
+    4    4                      ;* Summary:                                                                                        *
+    5    5                      ;*  The following is a summary of the I/O functionality provided in the ME 305 library. These      *
+    6    6                      ;*  commands are in the form of subroutines that have been placed in the Libraries folder of the   *
+    7    7                      ;*  Codewarrior Project provided during Lab 1.                                                     *
+    8    8                      ;*  IMPORTANT NOTE: Many of the MCU pins are in connected to hardware and should not be used.      *
+    9    9                      ;*  +	Pins 4 - 6 of PORT M and all of PORT B are used for communication with the LCD module.       *
+   10   10                      ;*  +	Pin 7 of PORT J, and the pins 0 - 5 of PORT K are used for communication with the keypad.    *
+   11   11                      ;*  +	Pins 1 and 2 of PORT H are used for SPI communication with the encoder counter and DAC       *
+   12   12                      ;*  +	Pins 4 - 7 of PORT A and AN10 are used with the motor driver.                                *
+   13   13                      ;*  None of these pins should be used for anything besides interacting with the associated         *
+   14   14                      ;*  hardware described above.                                                                      *
+   15   15                      ;*                                                                                                 *
+   16   16                      ;* Author: Charlie Refvem                                                                          *
+   17   17                      ;*  Cal Poly University                                                                            *
+   18   18                      ;*  2015 - 2016                                                                                    *
+   19   19                      ;*                                                                                                 *
+   20   20                      ;* Revision History:                                                                               *
+   21   21                      ;*  WRM 09/15/16                                                                                   * 
+   22   22                      ;*   - Reversed comments on TSCR1, which had been inadvertently reversed                           * 
+   23   23                      ;*  WRM & CTR 09/18/16                                                                             *
+   24   24                      ;*   - Switched DELAY_MILLI to use timer channel 1 [TC1] interrupts                                *
+   25   25                      ;*  WRM 01/04/18                                                                                   *
+   26   26                      ;*   - Reversed comments on TSCR1, which had been inadvertently reversed (prior revision corrected *
+   27   27                      ;*       the inadvertently reversed TSCR1 comments in only one of two places)                      *
+   28   28                      ;*   - Changed DELAY_MILLI and DELAY_MICRO to set TSFRZ to stop timer in FREEZE mode               *
+   29   29                      ;*  WRM 03/09/2020                                                                                 *
+   30   30                      ;*   - updated a few comments that had fallen out of date with prior edits                         *
+   31   31                      ;*   - WARNING: DELAY_MILLI still changed the TIMER Module prescaler: USE with CAUTION             *
+   32   32                      ;*  WRM 03/09/2020                                                                                 *
+   33   33                      ;*   - removed the prescaler change in DELAY_MILLI and corrected what I think was an error in      *
+   34   34                      ;*       the previous DELAY count: 4 x 2500 =1000, but 10,000 clock ticks make 1 msec              *
+   35   35                      ;*  ToDo:                                                                                          *
+   36   36                      ;*   -                                                                                             *
+   37   37                      ;***************************************************************************************************
+   38   38                      ;---------------------------------------------------------------------------------------------------
+   39   39                                  INCLUDE 'derivative.inc' 
+16705   40                                  
+16706   41                                  XDEF  DELAY_MICRO, DELAY_MILLI
+16707   42                      
+16708   43                      Lib_Delay:  SECTION            
+16709   44                                              
+16710   45                      DELAY_MICRO:
+16711   46   000000 180B B000               movb  #%10110000,TSCR1                    ; Enable Timer
+             000004 46         
+16712   47                      ;                   ||||\__/
+16713   48                      ;                   ||||  \____________________________ Don't Care 
+16714   49                      ;                   ||| \______________________________ TFFCA= 1 (a read/write from an input capture causes CnF to clear)
+16715   50                      ;                   || \_______________________________ TSFRZ= 1 (Stops timer from running in freeze mode)
+16716   51                      ;                   | \________________________________ TSWAIT=0 (Allows timer to continue running in wait mode)
+16717   52                      ;                    \_________________________________ TEN=1 (Enable counter)
+16718   53                      
+16719   54                      
+16720   55   000005 180B 0000               movb  #%00000000,TSCR2     
+             000009 4D         
+16721   56                      ;                   |\_/|\_/
+16722   57                      ;                   | | |  \____________________________ PR2:PR1:PR0=001 (Prescaler set to 1)
+16723   58                      ;                   | |  \______________________________ TCRE=0 (Counter reset is inhibited  and counter free runs) 
+16724   59                      ;                   |  \________________________________ Don't Care
+16725   60                      ;                    \__________________________________ TOI=0 (interrupt inhibited)
+16726   61                                                                             
+16727   62   00000A 4C40 02                 bset  TIOS,#mTIOS_IOS1                     ; Timer channel 0 acts as output compare
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+16728   63                                  
+16729   64   00000D DC44                    ldd   TCNT                                 ; Load D with current timer count
+16730   65                      MICRO_Loop: 
+16731   66   00000F C300 0A                 addd  #10                                  ; Add to it the desired count
+16732   67   000012 5C52                    std   TC1                                  ; Store that value in T compare 0
+16733   68   000014 4F4E 02FC               brclr TFLG1,#mTFLG1_C1F,*                  ; Loop in place until Compare flag is high
+16734   69   000018 0435 F4                 dbne  x,MICRO_Loop
+16735   70   00001B 3D                      rts
+16736   71                      ; End subroutine
+16737   72                      
+16738   73                      
+16739   74                                              
+16740   75                      DELAY_MILLI:
+16741   76   00001C 180B B000               movb  #%10110000,TSCR1                    ; Enable Timer
+             000020 46         
+16742   77                      ;                   ||||\__/
+16743   78                      ;                   ||||  \____________________________ Don't Care 
+16744   79                      ;                   ||| \______________________________ TFFCA= 1 (a read/write from an input capture causes CnF to clear)
+16745   80                      ;                   || \_______________________________ TSFRZ= 1 (Stops timer from running in freeze mode)
+16746   81                      ;                   | \________________________________ TSWAIT=0 (Allows timer to continue running in wait mode)
+16747   82                      ;                    \_________________________________ TEN=1 (Enable counter)
+16748   83                      
+16749   84                      
+16750   85   000021 180B 0000               movb  #%00000000,TSCR2     
+             000025 4D         
+16751   86                      ;                   |\_/|\_/
+16752   87                      ;                   | | |  \____________________________ PR2:PR1:PR0=010 (Prescaler set to 1)
+16753   88                      ;                   | |  \______________________________ TCRE=0 (Counter reset is inhibited  and counter free runs) 
+16754   89                      ;                   |  \________________________________ Don't Care
+16755   90                      ;                    \__________________________________ TOI=0 (interrupt inhibited)
+16756   91                                                                             
+16757   92   000026 4C40 02                 bset  TIOS,#mTIOS_IOS1                     ; Timer channel 0 acts as output compare
+16758   93                                  
+16759   94   000029 DC44                    ldd   TCNT                                 ; Load D with current timer count
+16760   95                      MILLI_Loop: 
+16761   96   00002B C327 10                 addd  #10000                               ; Add to it the desired count
+16762   97   00002E 5C52                    std   TC1                                  ; Store that value in T compare 0
+16763   98   000030 4F4E 02FC               brclr TFLG1,#mTFLG1_C1F,*                  ; Loop in place until Compare flag is high
+16764   99   000034 0435 F4                 dbne  x,MILLI_Loop
+16765  100   000037 3D                      rts

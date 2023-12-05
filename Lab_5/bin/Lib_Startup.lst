@@ -1,0 +1,306 @@
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+    1    1                      ;***************************************************************************************************           
+    2    2                      ;* Lib_Startup.asm for Library Files ME305LIBV2.2.lib                                              * 
+    3    3                      ;***************************************************************************************************
+    4    4                      ;* Summary:                                                                                        *
+    5    5                      ;*  - Enables PLL and configures it for 20MHz clock                                                *
+    6    6                      ;*  - Enables PWM and configures the frequency for motor driving                                   *
+    7    7                      ;*  - Enables SPI and configures channel 0 for DAC communication                                   *
+    8    8                      ;*                                                                                                 * 
+    9    9                      ;*************************************************************************************************** 
+   10   10                      ;* Revision History:                                                                               *
+   11   11                      ;*  CTR 10/23/14                                                                                   *
+   12   12                      ;*   - Wrote Initial Code for 8 bit PWM                                                            *
+   13   13                      ;*  CTR 10/24/14                                                                                   *
+   14   14                      ;*   - Added 16 bit functionality to PWM and configured output                                     *
+   15   15                      ;*     for ~20KHz                                                                                  *
+   16   16                      ;*  CTR 10/25/14                                                                                   *
+   17   17                      ;*   - Added SPI initialization code                                                               *
+   18   18                      ;*   - Added DAC initialization code                                                               *
+   19   19                      ;*   - Wrote subroutine for communication with the DAC                                             *
+   20   20                      ;*  CTR 10/30/14                                                                                   *
+   21   21                      ;*   - Added Encoder Counter initialization code                                                   *
+   22   22                      ;*   - Wrote subroutine for communication with the enocder                                         *
+   23   23                      ;*   - Moved all startup code to individual subroutines                                            *
+   24   24                      ;*  CTR 11/03/14                                                                                   *
+   25   25                      ;*   - Added motor driver voltage update subroutine                                                *
+   26   26                      ;*   - Reorganized code to be more readable                                                        *
+   27   27                      ;*   - Added Startup code for ATD                                                                  *
+   28   28                      ;*   - Added current sense subroutine for motor driver                                             *
+   29   29                      ;*  CTR 11/05/14                                                                                   *
+   30   30                      ;*   - Changed ATD code for current sensing to the average of 8 readings                           *
+   31   31                      ;*   - Improved commenting format                                                                  *
+   32   32                      ;*  CTR 11/06/14                                                                                   *
+   33   33                      ;*   - Made all pins and ports equates in the top of the code to simplify things                   * 
+   34   34                      ;*   - Moved pins from port T to port A                                                            *
+   35   35                      ;*  CTR 11/07/14                                                                                   *
+   36   36                      ;*   - Moved data available pin to Port H for key wakeup                                           *
+   37   37                      ;*  CTR 11/08/14                                                                                   *
+   38   38                      ;*   - Split code up into seperate files linked together                                           *
+   39   39                      ;*   - Added key wakeup interrupt service routine to decode the keypad                             *  
+   40   40                      ;*************************************************************************************************** 
+   41   41                      
+   42   42                      
+   43   43                      ;***************************************************************************************************                                
+   44   44                      ;* Microcontroller Startup Subroutines                                                             *
+   45   45                      ;*************************************************************************************************** 
+   46   46                      ;*  The following are subroutines to configure the microcontoller internal hardware                *                                
+   47   47                      ;*  - Configure PLL                                                                                *  
+   48   48                      ;*  - Configure SPI0                                                                               *  
+   49   49                      ;*  - Configure ATD0                                                                               *  
+   50   50                      ;*************************************************************************************************** 
+   51   51                      
+   52   52                                  INCLUDE 'derivative.inc'     
+16718   53                                  XDEF  _Startup, Entry, STARTUP_PWM, STARTUP_ATD1
+16719   54                                  
+16720   55                                  XREF  __SEG_END_SSTACK 
+16721   56                                  XREF  main
+16722   57                                  XREF  STARTUP_ENCODER, DISABLE_ENCODER
+16723   58                                  XREF  STARTUP_MOTOR
+16724   59                                  XREF  INITKEY   
+16725   60                                  XREF  INITLCD
+16726   61                                  XREF  DELAY_MILLI
+16727   62                                  XREF  DELAY_MICRO
+16728   63                      
+16729   64                      ; DAC Equates    
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+16730   65          0000 0260   DACPort     EQU   PTH                                   ; Port which DAC is on
+16731   66          0000 0262   DACDDR      EQU   DDRH                                    ; Port which DAC is on
+16732   67          0000 0002   mDACSS      EQU   mPTH_PTH1                              ; Pin for DAC slave select         
+16733   68                      ; Encoder Counter Equates
+16734   69          0000 0260   ENCPort     EQU   PTH                                   ; Port which Encoder Counter is on
+16735   70          0000 0262   ENCDDR      EQU   DDRH                                    ; Port which Encoder Counter is on
+16736   71          0000 0001   mENCSS      EQU   mPTH_PTH0                              ; Pin for Encoder counter slave select
+16737   72                      
+16738   73                      
+16739   74                      
+16740   75                      ;/-------------------------------------------------------------------------------------------------\                                
+16741   76                      ;| Startup Code                                                                                    |
+16742   77                      ;|-------------------------------------------------------------------------------------------------|
+16743   78                      ;| - Uses PLL to set PLLCLK to 20MHz, which corresponds to a 10MHz ECLK                            | 
+16744   79                      ;| - Enables SPI on channel 0 for communication with the DAC and Encoder Counter                   |
+16745   80                      ;| - Enables PWM on channel 0 for the motor driver                                                 |
+16746   81                      ;| - Configures Encoder counter to be read in 2 byte continuous counting with x4 quadrature        | 
+16747   82                      ;| - Configures the Analog to digital hardware to read the current draw on the motor               | 
+16748   83                      ;| - Enables the motor so the main program code can change the speed                               | 
+16749   84                      ;\-------------------------------------------------------------------------------------------------/
+16750   85                      ;
+16751   86                      Lib_Startup:SECTION
+16752   87                      _Startup:
+16753   88                      Entry:   
+16754   89   000000 CFxx xx                 lds   #__SEG_END_SSTACK                     ; initialize the stack pointer    
+16755   90   000003 16xx xx                 jsr   STARTUP_PLL                           ; Initialize Phase Locked Loop    
+16756   91   000006 16xx xx                 jsr   STARTUP_IO                            ; Initialize all I/O pins (set pull devices)
+16757   92   000009 16xx xx                 jsr   STARTUP_SPI0                          ; Initialize SPI channel 0            
+16758   93   00000C 16xx xx                 jsr   DISABLE_ENCODER                       ; Ensures the encoder counter is not counting
+16759   94                                  ;jsr   STARTUP_MOTOR                         ; Initialize I/O pins for motor control
+16760   95                                  ;jsr   STARTUP_PWM                           ; Initialize PWM channel 0
+16761   96                                  ;jsr   STARTUP_ENCODER                       ; Initialize Encoder
+16762   97                                  ;jsr   STARTUP_ATD0                          ; Initialize Analog to Digital Converter
+16763   98                                  ;jsr   STARTUP_ATD1                          ; Initialize Analog to Digital Converter
+16764   99                                  ;jsr   INITKEY                               ; Enable keypad intterupts  
+16765  100                                  ;jsr   INITLCD
+16766  101                                  
+16767  102   00000F 1820 xxxx               lbra   main
+16768  103                                  
+16769  104                                  
+16770  105                      ;
+16771  106                      ;/-------------------------------------------------------------------------------------------------\                                
+16772  107                      ;| Use PLL to increase ECLK to 10MHz                                                               |
+16773  108                      ;|-------------------------------------------------------------------------------------------------|
+16774  109                      ;| This subroutine uses the Phase Locked Loop hardware to increase the execution clock on the MCU. |
+16775  110                      ;| The primary need for this is to increase the frequency and resolution of the PWM signal meant   | 
+16776  111                      ;| for controlling the motor drivers.                                                              |
+16777  112                      ;|                                                                                                 |
+16778  113                      ;| Phase Locked Loop Frequency Calculation                                                         |
+16779  114                      ;|  PLLCLK Goal is 20 MHz (2xECLK), compute SYNR and REFDV to set speed accordingly                |
+16780  115                      ;|  PLLCLK = 2 X OSCCLK X (SYNR+1)/(REFDV+1)                                                       |
+16781  116                      ;|  PLLCLK = 2 X 16MHz X (4 + 1)/(7 + 1)                                                           |
+16782  117                      ;|  PLLCLK = 32MHz X (5/8)                                                                         |
+16783  118                      ;|  PLLCLK = 20MHz                                                                                 |
+16784  119                      ;\-------------------------------------------------------------------------------------------------/
+16785  120                      ;
+16786  121                      
+16787  122                      STARTUP_PLL:         
+16788  123   000013 4D39 80                 bclr  CLKSEL,   #mCLKSEL_PLLSEL           ; Disengage PLL
+16789  124   000016 4C3A 40                 bset  PLLCTL,   #mPLLCTL_PLLON            ; Turn on PLL
+16790  125   000019 180B 0400               movb  #$04,     SYNR                      ; Set Synthesizer Register
+             00001D 34         
+16791  126   00001E 180B 0700               movb  #$07,     REFDV                     ; Clear reference divider register
+             000022 35         
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+16792  127   000023 A7                      nop                                       ; Wait one clock cycle
+16793  128   000024 A7                      nop                                       ; Wait second clock cycle
+16794  129   000025 4F37 08FC               brclr CRGFLG,   #mCRGFLG_LOCK,*           ; wait until PLL locks into the target frequency
+16795  130   000029 4C39 80                 bset  CLKSEL,   #mCLKSEL_PLLSEL           ; Re-engage PLL
+16796  131   00002C 4C3A 20                 bset  PLLCTL,   #mPLLCTL_AUTO             ; set automatic bandwidth control
+16797  132   00002F 4D1C 80                 bclr  ECLKCTL,  #mECLKCTL_NECLK           ; Makes the ECLK available out of DEBUG mode
+16798  133   000032 3D                      rts 
+16799  134                      ;
+16800  135                      ;
+16801  136                      ;/-------------------------------------------------------------------------------------------------\                                
+16802  137                      ;| Intiate SPI hardware and configure for Master Mode                                              |
+16803  138                      ;|-------------------------------------------------------------------------------------------------|
+16804  139                      ;| This subroutine enables the SPI hardware and configures it to operate at 2MHz in master mode.   |  
+16805  140                      ;| The configuration is compatible with both the MCP4922 DAC and LS7366R Encoder Counter acting as |  
+16806  141                      ;| slaves.                                                                                         |  
+16807  142                      ;\-------------------------------------------------------------------------------------------------/ 
+16808  143                      ;
+16809  144                      STARTUP_SPI0:
+16810  145   000033 4CD8 40                 bset  SPI0CR1,  #mSPI0CR1_SPE             ; Enable SPI system (dedicate pins PS4-PS7)
+16811  146   000036 4DD8 08                 bclr  SPI0CR1,  #mSPI0CR1_CPOL            ; Enable clock idle low
+16812  147   000039 4DD8 04                 bclr  SPI0CR1,  #mSPI0CR1_CPHA            ; Enable valid data on first clock edge
+16813  148   00003C 4CD8 10                 bset  SPI0CR1,  #mSPI0CR1_MSTR            ; Set SPI to master mode
+16814  149   00003F 4DD8 01                 bclr  SPI0CR1,  #mSPI0CR1_LSBFE           ; Configure LSBFE for MSB first
+16815  150   000042 4DD9 01                 bclr  SPI0CR2,  #mSPI0CR2_SPC0            ; Disable bidirectional configuration            
+16816  151   000045 180B 5000               movb  #%01010000,SPI0BR                   ; Set Baud Rate to ~2MHz                                                      
+             000049 DA         
+16817  152   00004A 1C02 6202               bset  DACDDR,   #mDACSS                   ; Enable Port T pin 7 as output For CS for DAC                            
+16818  153   00004E 1C02 6201               bset  ENCDDR,   #mENCSS                   ; Enable Port T pin 7 as output For CS for Encoder  
+16819  154   000052 1C02 6002               bset  DACPort,  #mDACSS;                  ; Set Port T pin 7 high
+16820  155   000056 1C02 6001               bset  ENCPort,  #mENCSS;                  ; Set Port T pin 6 high
+16821  156   00005A 3D                      rts                                    
+16822  157                      ;
+16823  158                      ;
+16824  159                      ;/-------------------------------------------------------------------------------------------------\                                
+16825  160                      ;| Intiate Analog to Digital Converter                                                             |
+16826  161                      ;|-------------------------------------------------------------------------------------------------|
+16827  162                      ;| This code initializes the ATD converter on channel 0 and configures it for an 8 conversion      |  
+16828  163                      ;| sequence.                                                                                       |  
+16829  164                      ;|                                                                                                 |  
+16830  165                      ;\-------------------------------------------------------------------------------------------------/ 
+16831  166                      ;
+16832  167                      STARTUP_ATD0:
+16833  168   00005B 1C02 C280               bset  ATD0CTL2, #mATD0CTL2_ADPU           ; ADPU=1 (Normal ATD operation)  
+16834  169   00005F 1C02 C240               bset  ATD0CTL2, #mATD0CTL2_AFFC           ; AFFC=1 (Any access will clear associated register)
+16835  170   000063 1C02 C220               bset  ATD0CTL2, #mATD0CTL2_AWAI           ; AWAI=1 (Powers down during wait mode)
+16836  171                                  
+16837  172   000067 CE00 05                 ldx   #5                                  ;set delay time
+16838  173   00006A 16xx xx                 jsr   DELAY_MILLI                         ;sub for 5ms delay
+16839  174                                  
+16840  175   00006D 180B 0202               movb  #%00000010,ATD0CTL3                 ; Set config bits in ATD0 control register 3
+             000071 C3         
+16841  176                      ;                   |\__/|\/
+16842  177                      ;                   |  | | | 
+16843  178                      ;                   |  | |  \__________________________ FRZ1:FRZ0=10 (finish current conversion then freeze in background mode
+16844  179                      ;                   |  |  \____________________________ FIFO=0 (Conversion results are placed in consecutive result registers)
+16845  180                      ;                   |   \______________________________ S8C:S4C:S2C:S1C=0000 (8 Conversion sequence limit)
+16846  181                      ;                    \_________________________________ Don't Care
+16847  182   000072 180B 0502               movb  #%00000101,ATD0CTL4                 ; Set config bits in ATD0 control register 4
+             000076 C4         
+16848  183                      ;                   |\/\___/
+16849  184                      ;                   | |  |  
+16850  185                      ;                   | |   \____________________________ PRS4:PRS3:PRS2:PRS1:PRS0=00101 (divide by 12)
+16851  186                      ;                   |  \_______________________________ SMP1:SMP0=00 (2 A/D conversion clock periods)
+16852  187                      ;                    \_________________________________ SRES8=0 (10-bit operation)            
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+16853  188   000077 3D                      rts 
+16854  189                      ; 
+16855  190                      STARTUP_ATD1:
+16856  191   000078 4C82 80                 bset  ATD1CTL2, #mATD1CTL2_ADPU           ; ADPU=1 (Normal ATD operation)  
+16857  192   00007B 4C82 40                 bset  ATD1CTL2, #mATD1CTL2_AFFC           ; AFFC=1 (Any access will clear associated register)
+16858  193   00007E 4C82 20                 bset  ATD1CTL2, #mATD1CTL2_AWAI           ; AWAI=1 (Powers down during wait mode)
+16859  194                                  
+16860  195   000081 CE00 04                 ldx   #4                                  ;set delay time
+16861  196   000084 16xx xx                 jsr   DELAY_MICRO                         ;sub for 20us delay
+16862  197                                  
+16863  198   000087 180B 0200               movb  #%00000010,ATD1CTL3                 ; Set config bits in ATD0 control register 3
+             00008B 83         
+16864  199                      ;                   |\__/|\/
+16865  200                      ;                   |  | | | 
+16866  201                      ;                   |  | |  \__________________________ FRZ1:FRZ0=10 (finish current conversion then freeze in background mode
+16867  202                      ;                   |  |  \____________________________ FIFO=0 (Conversion results are placed in consecutive result registers)
+16868  203                      ;                   |   \______________________________ S8C:S4C:S2C:S1C=0000 (8 Conversion sequence limit)
+16869  204                      ;                    \_________________________________ Don't Care
+16870  205   00008C 180B 0500               movb  #%00000101,ATD1CTL4                 ; Set config bits in ATD0 control register 4
+             000090 84         
+16871  206                      ;                   |\/\___/
+16872  207                      ;                   | |  |  
+16873  208                      ;                   | |   \____________________________ PRS4:PRS3:PRS2:PRS1:PRS0=00101 (divide by 12)
+16874  209                      ;                   |  \_______________________________ SMP1:SMP0=00 (2 A/D conversion clock periods)
+16875  210                      ;                    \_________________________________ SRES8=0 (10-bit operation)            
+16876  211   000091 3D                      rts 
+16877  212                      ;  
+16878  213                      ;/-------------------------------------------------------------------------------------------------\                                
+16879  214                      ;| Intiate Pulse Width Modulation Channel 01                                                       |
+16880  215                      ;|-------------------------------------------------------------------------------------------------|
+16881  216                      ;| Enable PWM at ~20KHz on channels 0 and 1 concatenated                                           |  
+16882  217                      ;| PWM in the ~20KHz range which is best for motor drivers                                         |  
+16883  218                      ;\-------------------------------------------------------------------------------------------------/                                
+16884  219                      ;
+16885  220                      STARTUP_PWM:
+16886  221   000092 1D03 0307               bclr  PWMPRCLK, #%00000111                ; Set Clock A Prescale value to 1
+16887  222   000096 1C03 0510               bset  PWMCTL,   #mPWMCTL_CON01            ; Concatenate Channels 0 and 1
+16888  223   00009A 1D03 0202               bclr  PWMCLK,   #mPWMCLK_PCLK1            ; Set Channel 1 PWM Clock to A     
+16889  224   00009E 1C03 0102               bset  PWMPOL,   #mPWMPOL_PPOL1            ; Set Channel 1 PWM polarity to high
+16890  225   0000A2 1D03 0402               bclr  PWMCAE,   #mPWMCAE_CAE1             ; Left Align Channel 1
+16891  226   0000A6 1879 031C               clrw  PWMDTY0                             ; Prevents PWM on startup   
+16892  227   0000AA 1C03 0002               bset  PWME,     #mPWME_PWME1              ; Enable PWM Channel 1  
+16893  228   0000AE 3D                      rts
+16894  229                      ;  
+16895  230                      ;/-------------------------------------------------------------------------------------------------\                                
+16896  231                      ;| PULL DOWN ALL I/O PORTS                                                                         |
+16897  232                      ;|-------------------------------------------------------------------------------------------------|
+16898  233                      ;| Pulls down the following ports:                                                                 |  
+16899  234                      ;| - PORTA                                                                                         |  
+16900  235                      ;| - PORTB                                                                                         |  
+16901  236                      ;| - PORTC                                                                                         |  
+16902  237                      ;| - PORTD                                                                                         |  
+16903  238                      ;| - PORTE                                                                                         |  
+16904  239                      ;| - PORTH                                                                                         |  
+16905  240                      ;| - PORTJ                                                                                         |  
+16906  241                      ;| - PORK                                                                                          |  
+16907  242                      ;| - PORTM                                                                                         |  
+16908  243                      ;| - PORTP                                                                                         |  
+16909  244                      ;| - PORTS                                                                                         |  
+16910  245                      ;| - PORTT                                                                                         |  
+16911  246                      ;\-------------------------------------------------------------------------------------------------/                                
+16912  247                      ;
+16913  248                      STARTUP_IO:
+16914  249   0000AF 4C0C 93                 bset  PUCR,     #%10010011                ; Enable core pull up/down on PORTS K E B A
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+16915  250                                  
+16916  251   0000B2 1C02 44FF               bset  PERT,     #%11111111                ; Enable pull on all pins of port T
+16917  252   0000B6 1C02 45FF               bset  PPST,     #%11111111                ; Set pull polarity to down for all pins
+16918  253                                  
+16919  254   0000BA 1C02 4CFF               bset  PERS,     #%11111111                ; Enable pull on all pins of port S
+16920  255   0000BE 1C02 4DFF               bset  PPSS,     #%11111111                ; Set pull polarity to down for all pins
+16921  256                                  
+16922  257   0000C2 1C02 54FF               bset  PERM,     #%11111111                ; Enable pull on all pins of port M
+16923  258   0000C6 1C02 55FF               bset  PPSM,     #%11111111                ; Set pull polarity to down for all pins
+16924  259                                  
+16925  260   0000CA 1C02 5CFF               bset  PERP,     #%11111111                ; Enable pull on all pins of port P
+16926  261   0000CE 1C02 5DFF               bset  PPSP,     #%11111111                ; Set pull polarity to down for all pins
+16927  262                                  
+16928  263   0000D2 1C02 64FF               bset  PERH,     #%11111111                ; Enable pull on all pins of port H
+16929  264   0000D6 1C02 65FF               bset  PPSH,     #%11111111                ; Set pull polarity to down for all pins
+16930  265                                  
+16931  266   0000DA 1C02 6CFF               bset  PERJ,     #%11111111                ; Enable pull on all pins of port J
+16932  267   0000DE 1C02 6DFF               bset  PPSJ,     #%11111111                ; Set pull polarity to down for all pins
+16933  268                                  
+16934  269   0000E2 3D                      rts
