@@ -129,7 +129,7 @@ P_POWER:      DS.W  1                  ; P-term of motor actuation value
 I_POWER:      DS.W  1                  ; I-term of motor actuation value
 
 CURRENT:      DS.W  1                  ; motor current in mA
-A_star:       DS.W  1                  ; 
+A_star:       DS.W  1                 ; 
 
 ;/------------------------------------------------------------------------------------\
 ;|  Main Program Code                                                                 |
@@ -247,7 +247,9 @@ skip_high_threshold:
 skip_update:
 
        ldd #$0000
-       jsr UPDATE_MOTOR 
+       std EFF
+       jsr UPDATE_MOTOR
+        
        clr ESUM 
        
 end: 
@@ -255,6 +257,9 @@ end:
 ;setup next interrupt 
        
        ldd V_act
+       ldy #$000D
+       emuls
+       addd #$0800
        jsr OUTDACA
        ldd TC0                ; read current timer count  
        addd INTERVAL          ; add interval 

@@ -147,7 +147,7 @@ Freescale HC12-Assembler
   129  129   00001A             I_POWER:      DS.W  1                  ; I-term of motor actuation value
   130  130                      
   131  131   00001C             CURRENT:      DS.W  1                  ; motor current in mA
-  132  132   00001E             A_star:       DS.W  1                  ; 
+  132  132   00001E             A_star:       DS.W  1                 ; 
   133  133                      
   134  134                      ;/------------------------------------------------------------------------------------\
   135  135                      ;|  Main Program Code                                                                 |
@@ -271,61 +271,66 @@ Freescale HC12-Assembler
   242  242   000088 CE02 71            ldx #$0271 
   243  243   00008B 1814               edivs
   244  244   00008D 7Dxx xx            sty EFF
-  245  245   000090 2009               bra end 
+  245  245   000090 200C               bra end 
   246  246                             
   247  247                      skip_update:
   248  248                      
   249  249   000092 CC00 00            ldd #$0000
-  250  250   000095 16xx xx            jsr UPDATE_MOTOR 
-  251  251   000098 79xx xx            clr ESUM 
+  250  250   000095 7Cxx xx            std EFF
+  251  251   000098 16xx xx            jsr UPDATE_MOTOR
 
 Freescale HC12-Assembler 
 (c) Copyright Freescale 1987-2010
 
  Abs. Rel.   Loc    Obj. code   Source line
  ---- ----   ------ ---------   -----------
-  252  252                             
-  253  253                      end: 
+  252  252                              
+  253  253   00009B 79xx xx            clr ESUM 
   254  254                             
-  255  255                      ;setup next interrupt 
+  255  255                      end: 
   256  256                             
-  257  257   00009B FCxx xx            ldd V_act
-  258  258   00009E 16xx xx            jsr OUTDACA
-  259  259   0000A1 DC50               ldd TC0                ; read current timer count  
-  260  260   0000A3 F3xx xx            addd INTERVAL          ; add interval 
-  261  261   0000A6 5C50               std TC0                ; store result  
-  262  262   0000A8 4C4E 01            bset TFLG1, $01        ; clear timer channel 0 flag by writing a 1 to it
-  263  263                                     
-  264  264   0000AB 0B                 rti
-  265  265                      
-  266  266                      SDBA:
-  267  267                      
-  268  268   0000AC 35                  pshy ; push one operand to the stack to enable addd
-  269  269   0000AD E380                addd 0, SP ; add the two numbers
-  270  270   0000AF 280C                bvc DONE ; exit if no overflow
-  271  271   0000B1 E780                tst 0, SP ; if overflow, determine sign of operands
-  272  272   0000B3 2B05                bmi NEG ; and saturate accordingly
-  273  273   0000B5 CC7F FF             ldd #Max_Pos
-  274  274   0000B8 2003                bra DONE
-  275  275                      
-  276  276   0000BA CC80 00     NEG:    ldd #Max_Neg
-  277  277                      
-  278  278                      DONE:   
-  279  279                      
-  280  280   0000BD 1B81                ins
-  281  281   0000BF 1B81                ins
-  282  282   0000C1 3D                  rts
-  283  283                      
+  257  257                      ;setup next interrupt 
+  258  258                             
+  259  259   00009E FCxx xx            ldd V_act
+  260  260   0000A1 CD00 0D            ldy #$000D
+  261  261   0000A4 1813               emuls
+  262  262   0000A6 C308 00            addd #$0800
+  263  263   0000A9 16xx xx            jsr OUTDACA
+  264  264   0000AC DC50               ldd TC0                ; read current timer count  
+  265  265   0000AE F3xx xx            addd INTERVAL          ; add interval 
+  266  266   0000B1 5C50               std TC0                ; store result  
+  267  267   0000B3 4C4E 01            bset TFLG1, $01        ; clear timer channel 0 flag by writing a 1 to it
+  268  268                                     
+  269  269   0000B6 0B                 rti
+  270  270                      
+  271  271                      SDBA:
+  272  272                      
+  273  273   0000B7 35                  pshy ; push one operand to the stack to enable addd
+  274  274   0000B8 E380                addd 0, SP ; add the two numbers
+  275  275   0000BA 280C                bvc DONE ; exit if no overflow
+  276  276   0000BC E780                tst 0, SP ; if overflow, determine sign of operands
+  277  277   0000BE 2B05                bmi NEG ; and saturate accordingly
+  278  278   0000C0 CC7F FF             ldd #Max_Pos
+  279  279   0000C3 2003                bra DONE
+  280  280                      
+  281  281   0000C5 CC80 00     NEG:    ldd #Max_Neg
+  282  282                      
+  283  283                      DONE:   
   284  284                      
-  285  285                      ;/------------------------------------------------------------------------------------\  
-  286  286                      ;| Vectors                                                                            | 
-  287  287                      ;\------------------------------------------------------------------------------------/
+  285  285   0000C8 1B81                ins
+  286  286   0000CA 1B81                ins
+  287  287   0000CC 3D                  rts
   288  288                      
-  289  289                      ; Add interrupt and reset vectors here:
-  290  290                      
-  291  291                               ORG  $FFFE                    ; reset vector address
-  292  292  a00FFFE xxxx                 DC.W Entry
-  293  293                               
-  294  294                               ORG   $FFEE
-  295  295  a00FFEE xxxx                 DC.W  TC0ISR
-  296  296                      
+  289  289                      
+  290  290                      ;/------------------------------------------------------------------------------------\  
+  291  291                      ;| Vectors                                                                            | 
+  292  292                      ;\------------------------------------------------------------------------------------/
+  293  293                      
+  294  294                      ; Add interrupt and reset vectors here:
+  295  295                      
+  296  296                               ORG  $FFFE                    ; reset vector address
+  297  297  a00FFFE xxxx                 DC.W Entry
+  298  298                               
+  299  299                               ORG   $FFEE
+  300  300  a00FFEE xxxx                 DC.W  TC0ISR
+  301  301                      
